@@ -21,6 +21,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.0",
+    "@sparticuz/chromium": "^141.0.0",
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.35.7",
     "bcryptjs": "^3.0.3",
@@ -33,6 +34,7 @@
     "next-auth": "^5.0.0-beta.30",
     "pdf-lib": "^1.17.1",
     "puppeteer": "^24.31.0",
+    "puppeteer-core": "^24.31.0",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",

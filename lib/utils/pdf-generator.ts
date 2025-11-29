@@ -1,8 +1,13 @@
 import puppeteer from 'puppeteer'
+import puppeteerCore from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 import QRCode from 'qrcode'
 import { PDFDocument } from 'pdf-lib'
 import fs from 'fs/promises'
 import path from 'path'
+
+// Detect if running on Vercel/serverless
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
 interface FuelEntryData {
   id: string
@@ -524,10 +529,23 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
   
   const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64, footerBase64)
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  })
+  let browser
+  
+  if (isServerless) {
+    // Vercel/Serverless: use puppeteer-core with @sparticuz/chromium
+    browser = await puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1920, height: 1080 },
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    })
+  } else {
+    // Local/Private server: use regular puppeteer
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+  }
 
   try {
     const page = await browser.newPage()
