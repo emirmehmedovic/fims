@@ -150,17 +150,36 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     }))
 
     // Calculate volume trend for last 30 days
-    const volumeTrend = await prisma.$queryRaw<Array<{ date: Date; volume: bigint }>>`
-      SELECT 
-        DATE(entry_date) as date,
-        SUM(quantity) as volume
-      FROM fuel_entries
-      WHERE is_active = true
-        AND entry_date >= ${last30Days}
-        ${warehouseId ? prisma.$queryRaw`AND warehouse_id = ${warehouseId}` : prisma.$queryRaw``}
-      GROUP BY DATE(entry_date)
-      ORDER BY date ASC
-    `.catch(() => [])
+    let volumeTrend: Array<{ date: Date; volume: bigint }> = []
+    try {
+      if (warehouseId) {
+        volumeTrend = await prisma.$queryRaw<Array<{ date: Date; volume: bigint }>>`
+          SELECT 
+            DATE(entry_date) as date,
+            SUM(quantity) as volume
+          FROM fuel_entries
+          WHERE is_active = true
+            AND entry_date >= ${last30Days}
+            AND warehouse_id = ${warehouseId}
+          GROUP BY DATE(entry_date)
+          ORDER BY date ASC
+        `
+      } else {
+        volumeTrend = await prisma.$queryRaw<Array<{ date: Date; volume: bigint }>>`
+          SELECT 
+            DATE(entry_date) as date,
+            SUM(quantity) as volume
+          FROM fuel_entries
+          WHERE is_active = true
+            AND entry_date >= ${last30Days}
+          GROUP BY DATE(entry_date)
+          ORDER BY date ASC
+        `
+      }
+    } catch (e) {
+      console.error('Volume trend query failed:', e)
+      volumeTrend = []
+    }
 
     const formattedVolumeTrend = Array.isArray(volumeTrend) 
       ? volumeTrend.map(v => ({

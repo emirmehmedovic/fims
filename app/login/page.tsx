@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Lock, User, Eye, EyeOff, Fuel } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -39,112 +40,133 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-50 flex items-center justify-center p-8">
-      <div className="w-full max-w-xl">
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-primary-600 flex items-center justify-center shadow-[var(--shadow-primary-lg)] mx-auto mb-4">
-            <Fuel className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-slate-900 flex">
+      {/* Left Side - Image (larger) */}
+      <div className="hidden lg:block lg:w-[55%] xl:w-[60%] relative">
+        <Image
+          src="/login.png"
+          alt="FIMS - Fuel Inventory Management"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-slate-900/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-slate-900/30" />
+        
+        {/* Branding on image */}
+        <div className="absolute bottom-0 left-0 right-0 p-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+              <Fuel className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-white font-bold text-2xl">FIMS</span>
           </div>
-          <h1 className="text-3xl font-bold text-dark-900">FIMS</h1>
-          <p className="text-dark-500 mt-1">Fuel Inventory Management System</p>
+          <h2 className="text-white text-3xl font-bold mb-2">
+            Fuel Inventory Management System
+          </h2>
+          <p className="text-white/70 text-lg max-w-md">
+            Praćenje isporuka i kontrolu kvaliteta
+          </p>
         </div>
+      </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-3xl p-12 shadow-[var(--shadow-soft-lg)] relative overflow-hidden border-[6px] border-white">
-          {/* Decorative gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-50/60 via-white/70 to-primary-100/50 opacity-70"></div>
-          <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-primary-200 rounded-full blur-xl opacity-60"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary-100 rounded-full blur-xl -mb-12 -ml-12 opacity-60"></div>
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-white lg:rounded-l-[3rem]">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-lg mx-auto mb-4">
+              <Fuel className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-dark-900">FIMS</h1>
+          </div>
 
-          <div className="relative z-10">
-            <div className="mb-10">
-              <h2 className="text-3xl font-bold text-dark-900 mb-2">Prijava</h2>
-              <p className="text-base text-dark-500">Unesite pristupne podatke</p>
+          {/* Welcome text */}
+          <div className="mb-10">
+            <h1 className="text-3xl font-bold text-dark-900 mb-2">Dobrodošli</h1>
+            <p className="text-dark-500">Prijavite se na svoj račun za nastavak</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-dark-700 mb-2">
+                Email adresa
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="vas.email@fims.local"
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-dark-900 placeholder-dark-400 focus:outline-none focus:ring-0 focus:border-primary-500 transition-all"
+                  required
+                />
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-7">
-              {/* Email Input */}
-              <div>
-                <label htmlFor="email" className="label">
-                  Email adresa
-                </label>
-                <div className="relative">
-                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-dark-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="vas.email@fims.local"
-                    className="input input-icon"
-                    required
-                  />
-                </div>
+            {/* Password Input */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-dark-700 mb-2">
+                Lozinka
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-14 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-dark-900 placeholder-dark-400 focus:outline-none focus:ring-0 focus:border-primary-500 transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+            </div>
 
-              {/* Password Input */}
-              <div>
-                <label htmlFor="password" className="label">
-                  Lozinka
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-dark-400" />
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="input input-icon pr-14"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-5 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-6 h-6" />
-                    ) : (
-                      <Eye className="w-6 h-6" />
-                    )}
-                  </button>
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-red-600 font-bold">!</span>
                 </div>
+                <p className="text-red-700 font-medium">{error}</p>
               </div>
+            )}
 
-              {/* Error Message */}
-              {error && (
-                <div className="p-4 border rounded-2xl text-sm flex items-start gap-2 shadow-[var(--shadow-soft)] bg-red-50 border-red-200 text-red-700">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-red-100">
-                    <span className="text-xs font-bold">!</span>
-                  </div>
-                  <p className="font-semibold">{error}</p>
-                </div>
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-dark-900 text-white font-semibold rounded-2xl hover:bg-dark-800 focus:outline-none focus:ring-4 focus:ring-dark-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Prijavljivanje...
+                </span>
+              ) : (
+                'Prijavi se'
               )}
+            </button>
+          </form>
 
-              {/* Login Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 px-5 bg-gradient-to-br from-dark-900 to-dark-800 text-white font-semibold rounded-2xl hover:from-dark-800 hover:to-dark-700 focus:outline-none focus:ring-2 focus:ring-dark-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[var(--shadow-soft-xl)] text-base"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Prijavljivanje...
-                  </span>
-                ) : (
-                  'Prijavi se'
-                )}
-              </button>
-            </form>
+          {/* Footer */}
+          <div className="mt-12 text-center">
+            <p className="text-sm text-dark-400">
+              © 2025 FIMS - Fuel Inventory Management System
+            </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6 text-xs text-dark-500">
-          <p>FIMS - Fuel Inventory Management System © 2025</p>
         </div>
       </div>
     </div>

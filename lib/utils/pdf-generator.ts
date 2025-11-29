@@ -82,7 +82,7 @@ export async function generateQRCode(data: string): Promise<string> {
   }
 }
 
-export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string): string {
+export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string, footerBase64: string): string {
   const currentDate = new Date().toLocaleDateString('bs-BA', {
     day: '2-digit',
     month: '2-digit',
@@ -94,363 +94,435 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string)
 <html lang="bs">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Izjava o usklađenosti - ${entry.registrationNumber}</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-family: Arial, sans-serif;
       font-size: 11px;
-      line-height: 1.4;
+      line-height: 1.3;
       color: #1a1a1a;
-      padding: 40px;
       background: white;
+      width: 210mm;
+      height: 297mm;
     }
     
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      border-bottom: 2px solid #0066cc;
-      padding-bottom: 20px;
-    }
-    
-    .header h1 {
-      font-size: 22px;
-      font-weight: 600;
-      color: #0066cc;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .header .subtitle {
-      font-size: 14px;
-      color: #666;
-    }
-    
-    .registration-badge {
-      display: inline-block;
-      background: #0066cc;
-      color: white;
-      padding: 8px 20px;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-    
-    .section {
-      margin-bottom: 25px;
-    }
-    
-    .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #0066cc;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #e0e0e0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    
-    .info-item {
+    .page {
+      width: 210mm;
+      height: 297mm;
       display: flex;
       flex-direction: column;
     }
     
-    .info-label {
-      font-size: 9px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin-bottom: 2px;
+    /* Header - full width edge to edge */
+    .header-container {
+      width: 100%;
+    }
+    .header-image {
+      width: 100%;
+      height: auto;
+      display: block;
     }
     
+    /* Main content */
+    .main-content {
+      flex: 1;
+      padding: 3mm 10mm;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Title */
+    .document-title {
+      text-align: center;
+      margin-bottom: 3mm;
+    }
+    .document-title h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .registration-badge {
+      display: inline-block;
+      background: #1a1a1a;
+      color: white;
+      padding: 4px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 3mm;
+    }
+    .characteristics-tag {
+      background: #e0e0e0;
+      color: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      margin-right: 3px;
+      display: inline-block;
+      margin-top: 2px;
+    }
+    
+    /* Sections grid */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm;
+      margin-bottom: 2mm;
+    }
+    
+    .section {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      padding: 2mm;
+    }
+    
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-transform: uppercase;
+      margin-bottom: 1.5mm;
+      padding-bottom: 1mm;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1mm;
+      align-items: center;
+    }
+    .info-label {
+      font-size: 10px;
+      color: #555;
+    }
     .info-value {
       font-size: 11px;
       color: #1a1a1a;
       font-weight: 500;
+      text-align: right;
     }
-    
     .info-value.highlight {
-      color: #0066cc;
-      font-weight: 600;
-    }
-    
-    .characteristics-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    
-    .characteristic-tag {
-      background: #e6f0ff;
-      color: #0066cc;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 10px;
-      font-weight: 500;
-    }
-    
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-    
-    .qr-section {
-      text-align: center;
-    }
-    
-    .qr-section img {
-      width: 80px;
-      height: 80px;
-    }
-    
-    .qr-section .qr-label {
-      font-size: 8px;
-      color: #888;
-      margin-top: 4px;
-    }
-    
-    .signature-section {
-      text-align: center;
-      min-width: 200px;
-    }
-    
-    .signature-line {
-      border-top: 1px solid #1a1a1a;
-      margin-top: 50px;
-      padding-top: 8px;
-    }
-    
-    .signature-label {
-      font-size: 10px;
-      color: #666;
-    }
-    
-    .watermark {
-      position: fixed;
-      bottom: 20px;
-      left: 40px;
-      font-size: 9px;
-      color: #ccc;
+      color: #1a1a1a;
+      font-weight: 700;
+      font-size: 12px;
     }
     
     .badge {
       display: inline-block;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 3px;
-      font-size: 10px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+    .badge-success { background: #d4edda; color: #155724; }
+    .badge-info { background: #e2e3e5; color: #383d41; }
+    
+    /* Declaration */
+    .declaration {
+      background: #f5f5f5;
+      border: 2px solid #1a1a1a;
+      border-radius: 4px;
+      padding: 4mm;
+      margin: 4mm 0;
+    }
+    .declaration-text {
+      font-size: 12px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      text-align: justify;
       font-weight: 500;
     }
     
-    .badge-success {
-      background: #e6f7ed;
-      color: #1a8754;
+    /* Signature area */
+    .signature-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: auto;
+      padding-top: 3mm;
+      border-top: 1px solid #eee;
     }
     
-    .badge-info {
-      background: #e6f0ff;
-      color: #0066cc;
+    .date-section {
+      flex: 0 0 30%;
+    }
+    .date-label {
+      font-size: 10px;
+      color: #666;
+    }
+    .date-value {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 2mm;
+    }
+    
+    .stamp-section {
+      flex: 0 0 45%;
+      text-align: right;
+    }
+    .stamp-section img {
+      width: 45mm;
+      height: auto;
+    }
+    .stamp-label {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2mm;
+    }
+    
+    /* Bottom section - QR and Logo side by side */
+    .bottom-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10mm;
+      padding: 3mm 10mm;
+      border-top: 1px solid #eee;
+    }
+    
+    .qr-box {
+      text-align: center;
+    }
+    .qr-box img {
+      width: 20mm;
+      height: 20mm;
+    }
+    .qr-box .qr-label {
+      font-size: 7px;
+      color: #888;
+      margin-top: 1mm;
+    }
+    
+    .logo-box {
+      text-align: center;
+    }
+    .logo-box img {
+      height: 20mm;
+      width: auto;
+      border-radius: 5px;
     }
     
     @media print {
-      body {
-        padding: 20px;
-      }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Izjava o usklađenosti</h1>
-    <div class="subtitle">Evidencija ulaza goriva u skladište</div>
-    <div class="registration-badge">Registarski broj: ${entry.registrationNumber}</div>
-  </div>
+  <div class="page">
+    <!-- Header - Full Width -->
+    <div class="header-container">
+      <img src="${headerBase64}" alt="HIFA PETROL" class="header-image" />
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Title -->
+      <div class="document-title">
+        <h1>Izjava o usklađenosti</h1>
+        <div class="registration-badge">Registarski broj: ${entry.registrationNumber}</div>
+      </div>
 
-  <div class="section">
-    <div class="section-title">Osnovne informacije</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Datum ulaza</span>
-        <span class="info-value">${formatDate(entry.entryDate)}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Skladište</span>
-        <span class="info-value">${entry.warehouse.code} - ${entry.warehouse.name}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Naziv proizvoda</span>
-        <span class="info-value highlight">${entry.productName}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Količina</span>
-        <span class="info-value highlight">${entry.quantity.toLocaleString()} L</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Viša kvaliteta</span>
-        <span class="info-value">
-          ${entry.isHigherQuality 
-            ? '<span class="badge badge-success">Da</span>' 
-            : '<span class="badge badge-info">Ne</span>'}
-        </span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Zemlja porijekla</span>
-        <span class="info-value">${entry.countryOfOrigin || '-'}</span>
-      </div>
-    </div>
-    ${entry.improvedCharacteristics.length > 0 ? `
-    <div style="margin-top: 15px;">
-      <span class="info-label">Poboljšane karakteristike</span>
-      <div class="characteristics-list">
-        ${entry.improvedCharacteristics.map(char => `
-          <span class="characteristic-tag">${char}</span>
-        `).join('')}
-      </div>
-    </div>
-    ` : ''}
-  </div>
+      <!-- Sections Grid -->
+      <div class="sections-grid">
+        <!-- Osnovne informacije -->
+        <div class="section">
+          <div class="section-title">Osnovne informacije</div>
+          <div class="info-row">
+            <span class="info-label">Datum ulaza:</span>
+            <span class="info-value">${formatDate(entry.entryDate)}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Skladište:</span>
+            <span class="info-value">${entry.warehouse.code} - ${entry.warehouse.name}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Naziv proizvoda:</span>
+            <span class="info-value highlight">${entry.productName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Količina:</span>
+            <span class="info-value highlight">${entry.quantity.toLocaleString()} L</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Zemlja porijekla:</span>
+            <span class="info-value">${entry.countryOfOrigin || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Viša kvaliteta:</span>
+            <span class="info-value">${entry.isHigherQuality ? '<span class="badge badge-success">Da</span>' : '<span class="badge badge-info">Ne</span>'}</span>
+          </div>
+          ${entry.isHigherQuality && entry.improvedCharacteristics.length > 0 ? `
+          <div class="info-row" style="flex-wrap: wrap;">
+            <span class="info-label">Karakteristike:</span>
+            <span class="info-value" style="flex: 1; text-align: right;">
+              ${entry.improvedCharacteristics.map(char => `<span class="characteristics-tag">${char}</span>`).join('')}
+            </span>
+          </div>
+          ` : ''}
+        </div>
 
-  <div class="section">
-    <div class="section-title">Dokumentacija</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Broj otpremnice</span>
-        <span class="info-value">${entry.deliveryNoteNumber || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Datum otpremnice</span>
-        <span class="info-value">${formatDate(entry.deliveryNoteDate)}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Broj carinske deklaracije</span>
-        <span class="info-value">${entry.customsDeclarationNumber || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Datum carinske deklaracije</span>
-        <span class="info-value">${formatDate(entry.customsDeclarationDate)}</span>
-      </div>
-    </div>
-  </div>
+        <!-- Dokumentacija -->
+        <div class="section">
+          <div class="section-title">Dokumentacija</div>
+          <div class="info-row">
+            <span class="info-label">Broj otpremnice:</span>
+            <span class="info-value">${entry.deliveryNoteNumber || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Datum otpremnice:</span>
+            <span class="info-value">${formatDate(entry.deliveryNoteDate)}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Broj carinske dekl.:</span>
+            <span class="info-value">${entry.customsDeclarationNumber || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Datum carinske dekl.:</span>
+            <span class="info-value">${formatDate(entry.customsDeclarationDate)}</span>
+          </div>
+        </div>
 
-  ${entry.laboratoryName || entry.testReportNumber ? `
-  <div class="section">
-    <div class="section-title">Laboratorijske informacije</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Naziv laboratorije</span>
-        <span class="info-value">${entry.laboratoryName || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Broj akreditacije</span>
-        <span class="info-value">${entry.labAccreditationNumber || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Broj izvještaja</span>
-        <span class="info-value">${entry.testReportNumber || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Datum izvještaja</span>
-        <span class="info-value">${formatDate(entry.testReportDate)}</span>
-      </div>
-    </div>
-  </div>
-  ` : ''}
+        <!-- Laboratorij -->
+        <div class="section">
+          <div class="section-title">Laboratorijske informacije</div>
+          <div class="info-row">
+            <span class="info-label">Naziv laboratorije:</span>
+            <span class="info-value">${entry.laboratoryName || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Broj akreditacije:</span>
+            <span class="info-value">${entry.labAccreditationNumber || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Broj izvještaja:</span>
+            <span class="info-value">${entry.testReportNumber || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Datum izvještaja:</span>
+            <span class="info-value">${formatDate(entry.testReportDate)}</span>
+          </div>
+        </div>
 
-  <div class="section">
-    <div class="section-title">Dobavljač i transport</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Dobavljač</span>
-        <span class="info-value">${entry.supplier ? `${entry.supplier.code} - ${entry.supplier.name}` : '-'}</span>
+        <!-- Transport -->
+        <div class="section">
+          <div class="section-title">Dobavljač i transport</div>
+          <div class="info-row">
+            <span class="info-label">Dobavljač:</span>
+            <span class="info-value">${entry.supplier?.name || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Prevoznik:</span>
+            <span class="info-value">${entry.transporter?.name || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Vozač:</span>
+            <span class="info-value">${entry.driverName || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Lokacija preuzimanja:</span>
+            <span class="info-value">${entry.pickupLocation || '-'}</span>
+          </div>
+        </div>
       </div>
-      <div class="info-item">
-        <span class="info-label">Prevoznik</span>
-        <span class="info-value">${entry.transporter ? `${entry.transporter.code} - ${entry.transporter.name}` : '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Vozač</span>
-        <span class="info-value">${entry.driverName || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Lokacija preuzimanja</span>
-        <span class="info-value">${entry.pickupLocation || '-'}</span>
-      </div>
-    </div>
-  </div>
 
-  <div class="section">
-    <div class="section-title">Evidencija</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Operator</span>
-        <span class="info-value">${entry.operator.name}</span>
+      <!-- Evidencija - full width -->
+      <div class="section">
+        <div class="section-title">Evidencija</div>
+        <div style="display: flex; gap: 8mm;">
+          <div style="flex: 1;">
+            <div class="info-row">
+              <span class="info-label">Operator:</span>
+              <span class="info-value">${entry.operator.name}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Narudžbu otvorio:</span>
+              <span class="info-value">${entry.orderOpenedBy || '-'}</span>
+            </div>
+          </div>
+          <div style="flex: 1;">
+            <div class="info-row">
+              <span class="info-label">Datum kreiranja:</span>
+              <span class="info-value">${formatDateTime(entry.createdAt)}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Certifikat:</span>
+              <span class="info-value">${entry.certificatePath ? '<span class="badge badge-success">Priložen</span>' : '<span class="badge badge-info">Nije priložen</span>'}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="info-item">
-        <span class="info-label">Narudžbu otvorio</span>
-        <span class="info-value">${entry.orderOpenedBy || '-'}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Datum kreiranja</span>
-        <span class="info-value">${formatDateTime(entry.createdAt)}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Certifikat</span>
-        <span class="info-value">
-          ${entry.certificatePath 
-            ? '<span class="badge badge-success">Priložen</span>' 
-            : '<span class="badge badge-info">Nije priložen</span>'}
-        </span>
-      </div>
-    </div>
-  </div>
 
-  <div class="footer">
-    <div class="qr-section">
-      ${qrCodeDataUrl ? `
-        <img src="${qrCodeDataUrl}" alt="QR Code" />
-        <div class="qr-label">Skeniraj za verifikaciju</div>
-      ` : ''}
-    </div>
-    <div class="signature-section">
-      <div class="signature-line">
-        <div class="signature-label">Potpis odgovorne osobe</div>
+      <!-- Declaration -->
+      <div class="declaration">
+        <p class="declaration-text">
+          Pod punom materijalnom i krivičnom odgovornošću izjavljujem da tečno naftno gorivo, 
+          na koje se odnosi ova izjava, odgovara kvalitetu i graničnim vrijednostima definiranim 
+          Odlukom o kvalitetu tečnih naftnih goriva ("Službeni glasnik BiH", broj: 10/24).
+        </p>
+      </div>
+
+      <!-- Signature Area -->
+      <div class="signature-area">
+        <div class="date-section">
+          <div class="date-label">U Sarajevu,</div>
+          <div class="date-value">${currentDate}</div>
+        </div>
+        
+        <div class="stamp-section">
+          <img src="${stampBase64}" alt="Pečat i potpis" />
+          <div class="stamp-label">Potpis odgovorne osobe</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="watermark">
-    Generirano: ${currentDate} | FIMS - Fuel Inventory Management System
+    <!-- Bottom Section - QR and Logo side by side -->
+    <div class="bottom-section">
+      <div class="qr-box">
+        ${qrCodeDataUrl ? `<img src="${qrCodeDataUrl}" alt="QR Code" /><div class="qr-label">Skeniraj za verifikaciju</div>` : ''}
+      </div>
+      <div class="logo-box">
+        <img src="${footerBase64}" alt="HIFA PETROL" />
+      </div>
+    </div>
   </div>
 </body>
 </html>
   `
 }
 
+async function loadImageAsBase64(imagePath: string): Promise<string> {
+  try {
+    const fullPath = path.join(process.cwd(), 'public', imagePath)
+    const imageBuffer = await fs.readFile(fullPath)
+    const ext = path.extname(imagePath).toLowerCase().replace('.', '')
+    const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png'
+    return `data:${mimeType};base64,${imageBuffer.toString('base64')}`
+  } catch (error) {
+    console.error(`Error loading image ${imagePath}:`, error)
+    return ''
+  }
+}
+
 export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
   const verificationUrl = `${baseUrl}/verify/${entry.id}`
   
-  const qrCodeDataUrl = await generateQRCode(verificationUrl)
-  const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl)
+  // Load images as base64
+  const [qrCodeDataUrl, headerBase64, stampBase64, footerBase64] = await Promise.all([
+    generateQRCode(verificationUrl),
+    loadImageAsBase64('hifa-header.png'),
+    loadImageAsBase64('pecat.png'),
+    loadImageAsBase64('Screenshot_8.png')
+  ])
+  
+  const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64, footerBase64)
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -465,10 +537,10 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '20px',
-        right: '20px',
-        bottom: '20px',
-        left: '20px'
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0'
       }
     })
 

@@ -1,4 +1,29 @@
-export { auth as middleware } from "./auth"
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  })
+
+  const isAuthPage = request.nextUrl.pathname === '/login'
+  
+  // Ako nema tokena i nije auth stranica, redirectaj na login
+  if (!token && !isAuthPage) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Ako ima token i pokušava pristupiti login stranici, redirectaj na dashboard
+  if (token && isAuthPage) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [
@@ -9,5 +34,9 @@ export const config = {
     '/api/warehouses/:path*',
     '/api/fuel-entries/:path*',
     '/api/users/:path*',
+    '/api/audit-logs/:path*',
+    '/api/dashboard/:path*',
+    '/api/exports/:path*',
+    '/login',
   ]
 }
