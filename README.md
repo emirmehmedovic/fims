@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FIMS - Fuel Inventory Management System
 
-## Getting Started
+Sistem za evidenciju goriva za Tuzla International Airport.
 
-First, run the development server:
+## 🚀 Tehnologije
+
+- **Frontend:** Next.js 16, React 19, Tailwind CSS 4
+- **Backend:** Next.js API Routes
+- **Database:** PostgreSQL 16 (Neon)
+- **ORM:** Prisma
+- **Authentication:** NextAuth.js v5
+- **Styling:** Tailwind CSS (Apple-like dizajn)
+
+## 📦 Setup
+
+### 1. Instaliraj dependencies
+
+```bash
+npm install
+```
+
+### 2. Generiši Prisma Client
+
+```bash
+npm run prisma:generate
+```
+
+### 3. Pokreni migracije
+
+```bash
+npm run prisma:migrate
+```
+
+### 4. Seeduj bazu (kreira admin korisnika)
+
+```bash
+npm run prisma:seed
+```
+
+## 🏃 Pokretanje
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikacija će biti dostupna na: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 🔐 Default Kredencijali
 
-To learn more about Next.js, take a look at the following resources:
+**Email:** `admin@fims.local`
+**Password:** `Admin123!`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📚 Korisne Komande
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Prisma Studio (GUI za bazu)
+npm run prisma:studio
 
-## Deploy on Vercel
+# Generiši novi migration
+npm run prisma:migrate
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Seed bazu
+npm run prisma:seed
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Build projekat
+npm run build
+
+# Lint
+npm run lint
+```
+
+## 🗂️ Struktura Projekta
+
+```
+fims/
+├── app/
+│   ├── api/
+│   │   └── auth/[...nextauth]/  # NextAuth API route
+│   ├── dashboard/               # Dashboard stranica
+│   ├── login/                   # Login stranica
+│   └── globals.css             # Global stilovi
+├── lib/
+│   ├── prisma.ts               # Prisma singleton
+│   └── utils/                  # Helper funkcije
+├── prisma/
+│   ├── schema.prisma           # Database schema
+│   ├── seed.ts                 # Seed script
+│   └── migrations/             # Database migrations
+├── types/
+│   └── next-auth.d.ts         # TypeScript type definitions
+└── .env                        # Environment variables
+```
+
+## 📝 Database Schema
+
+### Glavni Modeli:
+- **User** - Korisnici sistema
+- **Warehouse** - Skladišta
+- **FuelEntry** - Ulazi goriva
+- **Supplier** - Dobavljači
+- **Transporter** - Prijevoznici
+- **AuditLog** - Audit logovi
+
+## 🔄 Next Steps (Sprint 1)
+
+1. ✅ Setup projekta i infrastrukture
+2. User Management CRUD
+3. Warehouse Management
+4. Fuel Entry forma
+5. PDF generisanje
+6. Dashboard statistike
+
+## 📄 Dokumentacija
+
+Kompletna dokumentacija projekta se nalazi u `/docs` folderu:
+- `FUEL_INVENTORY_SPEC.md` - Tehnička specifikacija
+- `API_EXAMPLES.md` - API primjeri
+- `UTILITIES.md` - Helper funkcije i snippeti
+- `QUICK_START.md` - Vodič za brzi početak
+
+## 🐛 Troubleshooting
+
+### Prisma Client nije generisan
+```bash
+npm run prisma:generate
+```
+
+### Database connection greška
+Provjeri `DATABASE_URL` u `.env` fajlu.
+
+### NextAuth redirect loop
+Provjeri da je `NEXTAUTH_URL` postavljen na `http://localhost:3000`
+
+---
+
+**Version:** 1.0.0
+**Last Updated:** November 28, 2024

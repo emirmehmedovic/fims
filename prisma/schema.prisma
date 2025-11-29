@@ -1,0 +1,231 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  name              String
+  role              Role      @default(OPERATOR)
+  isActive          Boolean   @default(true) @map("is_active")
+  lastLogin         DateTime? @map("last_login")
+  passwordChangedAt DateTime? @map("password_changed_at")
+
+  // Relations
+  warehouses        UserWarehouse[]
+  fuelEntriesCreated FuelEntry[] @relation("CreatedBy")
+  fuelEntriesUpdated FuelEntry[] @relation("UpdatedBy")
+  auditLogs         AuditLog[]
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// ============================================
+// WAREHOUSES (SKLADIŠTA)
+// ============================================
+
+model Warehouse {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  location    String
+  capacity    Int
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Relations
+  users       UserWarehouse[]
+  fuelEntries FuelEntry[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("warehouses")
+}
+
+// Many-to-Many: Users <-> Warehouses
+model UserWarehouse {
+  userId      String
+  warehouseId String
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  assignedAt  DateTime  @default(now()) @map("assigned_at")
+
+  @@id([userId, warehouseId])
+  @@map("user_warehouses")
+}
+
+// ============================================
+// FUEL ENTRIES (ULAZI GORIVA)
+// ============================================
+
+model FuelEntry {
+  id                       String    @id @default(cuid())
+  registrationNumber       Int       @unique @map("registration_number")
+
+  // Basic Info
+  entryDate                DateTime  @map("entry_date")
+  warehouseId              String    @map("warehouse_id")
+  productName              String    @map("product_name")
+  quantity                 Int
+
+  // Document Info
+  deliveryNoteNumber       String?   @map("delivery_note_number")
+  deliveryNoteDate         DateTime? @map("delivery_note_date")
+  customsDeclarationNumber String?   @map("customs_declaration_number")
+  customsDeclarationDate   DateTime? @map("customs_declaration_date")
+
+  // Quality Info
+  isHigherQuality          Boolean   @default(false) @map("is_higher_quality")
+  improvedCharacteristics  String[]  @map("improved_characteristics")
+  countryOfOrigin          String?   @map("country_of_origin")
+
+  // Laboratory Info
+  laboratoryName           String?   @map("laboratory_name")
+  labAccreditationNumber   String?   @map("lab_accreditation_number")
+  testReportNumber         String?   @map("test_report_number")
+  testReportDate           DateTime? @map("test_report_date")
+
+  // Personnel
+  operatorId               String    @map("operator_id")
+  orderOpenedBy            String?   @map("order_opened_by")
+
+  // Logistics
+  pickupLocation           String?   @map("pickup_location")
+  supplierId               String?   @map("supplier_id")
+  transporterId            String?   @map("transporter_id")
+  driverName               String?   @map("driver_name")
+
+  // Certificate Upload
+  certificatePath          String?   @map("certificate_path")
+  certificateFileName      String?   @map("certificate_file_name")
+  certificateUploadedAt    DateTime? @map("certificate_uploaded_at")
+
+  // Relations
+  warehouse                Warehouse   @relation(fields: [warehouseId], references: [id])
+  operator                 User        @relation("CreatedBy", fields: [operatorId], references: [id])
+  supplier                 Supplier?   @relation(fields: [supplierId], references: [id])
+  transporter              Transporter? @relation(fields: [transporterId], references: [id])
+
+  // Status
+  isActive                 Boolean   @default(true) @map("is_active")
+
+  // Audit Fields
+  createdBy                String    @map("created_by")
+  updatedBy                String?   @map("updated_by")
+  lastEditedBy             User?     @relation("UpdatedBy", fields: [updatedBy], references: [id])
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  // Audit Log Relation
+  auditLogs                AuditLog[]
+
+  @@index([registrationNumber])
+  @@index([warehouseId])
+  @@index([entryDate])
+  @@index([productName])
+  @@map("fuel_entries")
+}
+
+// ============================================
+// SUPPLIERS & TRANSPORTERS
+// ============================================
+
+model Supplier {
+  id           String   @id @default(cuid())
+  name         String
+  code         String   @unique
+  address      String?
+  contactPerson String? @map("contact_person")
+  phone        String?
+  email        String?
+  isActive     Boolean  @default(true) @map("is_active")
+
+  // Relations
+  fuelEntries  FuelEntry[]
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("suppliers")
+}
+
+model Transporter {
+  id           String   @id @default(cuid())
+  name         String
+  code         String   @unique
+  address      String?
+  contactPerson String? @map("contact_person")
+  phone        String?
+  email        String?
+  isActive     Boolean  @default(true) @map("is_active")
+
+  // Relations
+  fuelEntries  FuelEntry[]
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("transporters")
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT_PDF
+  BULK_EXPORT
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String      @map("user_id")
+  action       AuditAction
+  entityType   String      @map("entity_type")
+  entityId     String?     @map("entity_id")
+  changes      Json?
+  ipAddress    String?     @map("ip_address")
+  userAgent    String?     @map("user_agent")
+
+  // Relations
+  user         User        @relation(fields: [userId], references: [id])
+  fuelEntry    FuelEntry?  @relation(fields: [entityId], references: [id])
+
+  timestamp    DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
+}

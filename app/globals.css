@@ -1,26 +1,197 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark/Neutral Scale - from stats project */
+  --dark-50: #f8fafc;
+  --dark-100: #f1f5f9;
+  --dark-200: #e2e8f0;
+  --dark-300: #cbd5e1;
+  --dark-400: #94a3b8;
+  --dark-500: #64748b;
+  --dark-600: #475569;
+  --dark-700: #334155;
+  --dark-800: #1e293b;
+  --dark-900: #0f172a;
+
+  /* Primary Blue Scale */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+
+  /* Status Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+
+  --radius: 0.5rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Dark scale */
+  --color-dark-50: var(--dark-50);
+  --color-dark-100: var(--dark-100);
+  --color-dark-200: var(--dark-200);
+  --color-dark-300: var(--dark-300);
+  --color-dark-400: var(--dark-400);
+  --color-dark-500: var(--dark-500);
+  --color-dark-600: var(--dark-600);
+  --color-dark-700: var(--dark-700);
+  --color-dark-800: var(--dark-800);
+  --color-dark-900: var(--dark-900);
+
+  /* Primary scale */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  /* Shadows */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.03);
+  --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.04);
+  --shadow-soft-xl: 0 20px 40px rgba(0, 0, 0, 0.05);
+  --shadow-primary: 0 4px 14px rgba(37, 99, 235, 0.2);
+  --shadow-primary-lg: 0 8px 25px rgba(37, 99, 235, 0.3);
+
+  /* Font family */
+  --font-sans: 'Inter', 'SF Pro Display', system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--dark-200);
+  }
+  body {
+    background-color: var(--dark-50);
+    color: var(--dark-900);
+    font-family: var(--font-sans);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply bg-dark-900 text-white px-6 py-3 rounded-2xl font-semibold
+           transition-all duration-200 hover:bg-dark-800
+           shadow-[var(--shadow-soft-xl)];
+  }
+
+  .btn-secondary {
+    @apply bg-dark-50 text-dark-600 px-6 py-3 rounded-2xl font-medium
+           transition-all duration-200 hover:bg-dark-100 hover:text-dark-900;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl p-6 shadow-[var(--shadow-soft)] 
+           border border-dark-100 relative overflow-hidden;
+  }
+
+  .card-gradient {
+    @apply bg-white rounded-3xl p-6 shadow-[var(--shadow-soft)] 
+           border-[6px] border-white relative overflow-hidden;
+  }
+
+  .card-gradient::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-primary-50/60 via-white/70 to-primary-100/50 opacity-70;
+  }
+
+  .card-dark {
+    @apply bg-gradient-to-br from-dark-900 to-dark-800 rounded-3xl p-8 text-white 
+           shadow-[var(--shadow-soft-xl)] relative overflow-hidden;
+  }
+
+  .input {
+    @apply w-full bg-white border border-dark-200 rounded-2xl px-5 py-4
+           transition-shadow duration-200 
+           focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent
+           text-dark-900 placeholder:text-dark-400 shadow-[var(--shadow-soft)];
+  }
+
+  .input-icon {
+    @apply pl-14;
+  }
+
+  .label {
+    @apply block text-base font-semibold text-dark-700 mb-3;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium 
+           transition-all duration-200 text-dark-500 hover:bg-dark-50 hover:text-dark-900;
+  }
+
+  .nav-item-active {
+    @apply bg-dark-900 text-white shadow-[var(--shadow-soft-lg)];
+  }
+
+  .badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply bg-primary-50 text-primary-600;
+  }
+
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-600;
+  }
+
+  .badge-warning {
+    @apply bg-amber-50 text-amber-600;
+  }
+
+  .badge-error {
+    @apply bg-red-50 text-red-600;
+  }
+
+  .section-title {
+    @apply text-[10px] font-bold text-dark-400 uppercase tracking-widest px-4 mb-2;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-3xl p-6 shadow-[var(--shadow-soft)] 
+           hover:shadow-[var(--shadow-soft-lg)] transition-all 
+           cursor-pointer relative overflow-hidden border-[6px] border-white;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-primary-50/60 via-white/70 to-primary-100/50 opacity-70
+           transition-opacity;
+  }
+
+  .stat-card:hover::before {
+    @apply opacity-90;
+  }
+
+  .table-header {
+    @apply text-left py-3 px-4 text-sm font-semibold text-dark-500 uppercase tracking-wide;
+  }
+
+  .table-cell {
+    @apply py-4 px-4 text-sm text-dark-900;
+  }
+
+  .table-row {
+    @apply border-b border-dark-100 hover:bg-dark-50 transition-colors;
+  }
 }
