@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import chromium from '@sparticuz/chromium-min'
 import QRCode from 'qrcode'
 import { PDFDocument } from 'pdf-lib'
 import fs from 'fs/promises'
@@ -532,13 +532,12 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
   let browser
   
   if (isServerless) {
-    // Vercel/Serverless: use puppeteer-core with @sparticuz/chromium
-    // Use external chromium from CDN for Vercel
+    // Vercel/Serverless: use puppeteer-core with @sparticuz/chromium-min
     const executablePath = await chromium.executablePath(
-      'https://github.com/nicholasgriffintn/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
+      'https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
     )
     browser = await puppeteerCore.launch({
-      args: [...chromium.args, '--disable-gpu', '--disable-dev-shm-usage'],
+      args: chromium.args,
       defaultViewport: { width: 1920, height: 1080 },
       executablePath,
       headless: true,
