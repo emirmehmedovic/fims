@@ -533,10 +533,14 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
   
   if (isServerless) {
     // Vercel/Serverless: use puppeteer-core with @sparticuz/chromium
+    // Use external chromium from CDN for Vercel
+    const executablePath = await chromium.executablePath(
+      'https://github.com/nicholasgriffintn/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
+    )
     browser = await puppeteerCore.launch({
-      args: chromium.args,
+      args: [...chromium.args, '--disable-gpu', '--disable-dev-shm-usage'],
       defaultViewport: { width: 1920, height: 1080 },
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: true,
     })
   } else {
