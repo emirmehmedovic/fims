@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { compare } from "bcryptjs"
 
 export const authOptions = {
+  trustHost: true,
   session: {
     strategy: "jwt" as const,
     maxAge: 8 * 60 * 60, // 8 hours

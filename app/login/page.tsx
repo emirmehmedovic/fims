@@ -26,14 +26,24 @@ export default function LoginPage() {
         redirect: false,
       })
 
+      console.log('SignIn result:', result)
+
       if (result?.error) {
-        setError('Pogrešan email ili lozinka')
-      } else {
+        // Show more specific error in development
+        if (process.env.NODE_ENV === 'development') {
+          setError(`Greška: ${result.error}`)
+        } else {
+          setError('Pogrešan email ili lozinka')
+        }
+      } else if (result?.ok) {
         router.push('/dashboard')
         router.refresh()
+      } else {
+        setError('Neočekivana greška pri prijavi')
       }
     } catch (error) {
-      setError('Došlo je do greške')
+      console.error('Login error:', error)
+      setError('Došlo je do greške pri povezivanju')
     } finally {
       setLoading(false)
     }
