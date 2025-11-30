@@ -7,12 +7,15 @@ export async function middleware(request: NextRequest) {
 
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production'
   })
 
   console.log('[MIDDLEWARE] Token exists:', !!token)
   if (token) {
     console.log('[MIDDLEWARE] User:', token.email)
+  } else {
+    console.log('[MIDDLEWARE] Could not retrieve token')
   }
 
   const isAuthPage = request.nextUrl.pathname === '/login'
