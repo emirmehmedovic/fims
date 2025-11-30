@@ -36,9 +36,9 @@ const roleBadgeColors: Record<string, string> = {
 export default function UserTable({ users, loading, onEdit, onDelete }: UserTableProps) {
   if (loading) {
     return (
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 p-8">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
       </div>
     )
@@ -46,47 +46,47 @@ export default function UserTable({ users, loading, onEdit, onDelete }: UserTabl
 
   if (users.length === 0) {
     return (
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 p-8">
         <div className="text-center py-12">
-          <p className="text-primary-gray">Nema korisnika za prikaz</p>
+          <p className="text-dark-500">Nema korisnika za prikaz</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="card overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-bg-secondary border-b border-bg-tertiary">
+          <thead className="bg-dark-50 border-b border-dark-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Korisnik
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Uloga
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Skladišta
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Posljednji Login
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-primary-gray uppercase tracking-wider">
+              <th className="px-6 py-4 text-right text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Akcije
               </th>
             </tr>
           </thead>
-          <tbody className="bg-bg-primary divide-y divide-bg-tertiary">
+          <tbody className="bg-white divide-y divide-dark-100">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-bg-secondary transition-colors">
+              <tr key={user.id} className="hover:bg-dark-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-primary-dark">{user.name}</div>
-                    <div className="text-sm text-primary-gray">{user.email}</div>
+                    <div className="text-sm font-semibold text-dark-900">{user.name}</div>
+                    <div className="text-sm text-dark-500">{user.email}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -95,21 +95,21 @@ export default function UserTable({ users, loading, onEdit, onDelete }: UserTabl
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-primary-dark">
+                  <div className="text-sm text-dark-900">
                     {user.warehouses.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {user.warehouses.map(wh => (
-                          <span key={wh.id} className="px-2 py-1 bg-bg-secondary rounded text-xs">
+                          <span key={wh.id} className="px-2 py-1 bg-dark-50 border border-dark-100 rounded text-xs font-medium text-dark-700">
                             {wh.code}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-primary-gray">Nije dodijeljeno</span>
+                      <span className="text-dark-400">Nije dodijeljeno</span>
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-gray">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-500">
                   {user.lastLogin ? (
                     formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true, locale: bs })
                   ) : (
@@ -118,12 +118,12 @@ export default function UserTable({ users, loading, onEdit, onDelete }: UserTabl
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {user.isActive ? (
-                    <span className="flex items-center gap-1 text-status-success text-sm">
+                    <span className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
                       <CheckCircle size={16} />
                       Aktivan
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-status-danger text-sm">
+                    <span className="flex items-center gap-1 text-red-600 text-sm font-medium">
                       <XCircle size={16} />
                       Neaktivan
                     </span>
@@ -132,13 +132,13 @@ export default function UserTable({ users, loading, onEdit, onDelete }: UserTabl
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => onEdit(user)}
-                    className="text-primary-blue hover:text-primary-blue-hover mr-4"
+                    className="text-blue-600 hover:text-blue-700 mr-4 transition-colors"
                   >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => onDelete(user.id)}
-                    className="text-status-danger hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 transition-colors"
                   >
                     <Trash2 size={18} />
                   </button>

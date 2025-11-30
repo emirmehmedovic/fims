@@ -39,6 +39,15 @@ interface Transporter {
   isActive: boolean
 }
 
+interface LookupItem {
+  id: string
+  name: string
+  description?: string
+  code?: string
+  address?: string
+  isActive: boolean
+}
+
 interface Props {
   warehouses: Warehouse[]
   onClose: () => void
@@ -49,6 +58,12 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
+  
+  // Lookup data
+  const [products, setProducts] = useState<LookupItem[]>([])
+  const [countries, setCountries] = useState<LookupItem[]>([])
+  const [pickupLocations, setPickupLocations] = useState<LookupItem[]>([])
+  const [fuelCharacteristics, setFuelCharacteristics] = useState<LookupItem[]>([])
 
   // Form state - Basic
   const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0])
@@ -83,19 +98,36 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   // Form state - Certificate
   const [certificate, setCertificate] = useState<File | null>(null)
 
-  const characteristicOptions = [
-    'Niža gustina',
-    'Niža viskoznost',
-    'Niži sadržaj sumpora',
-    'Viša cetanska vrijednost',
-    'Bolji indeks viskoznosti',
-    'Niža tačka tečenja'
-  ]
-
   useEffect(() => {
     fetchSuppliers()
     fetchTransporters()
+    fetchLookupData()
   }, [])
+
+  const fetchLookupData = async () => {
+    try {
+      const [productsRes, countriesRes, locationsRes, characteristicsRes] = await Promise.all([
+        fetch('/api/lookups?type=products'),
+        fetch('/api/lookups?type=countries'),
+        fetch('/api/lookups?type=pickupLocations'),
+        fetch('/api/lookups?type=fuelCharacteristics')
+      ])
+      
+      const [productsData, countriesData, locationsData, characteristicsData] = await Promise.all([
+        productsRes.json(),
+        countriesRes.json(),
+        locationsRes.json(),
+        characteristicsRes.json()
+      ])
+      
+      if (productsData.success) setProducts(productsData.data)
+      if (countriesData.success) setCountries(countriesData.data)
+      if (locationsData.success) setPickupLocations(locationsData.data)
+      if (characteristicsData.success) setFuelCharacteristics(characteristicsData.data)
+    } catch (error) {
+      console.error('Error fetching lookup data:', error)
+    }
+  }
 
   const fetchSuppliers = async () => {
     try {
@@ -248,14 +280,17 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                 </select>
               </FormField>
               <FormField label="Naziv proizvoda" required icon={FileText}>
-                <input
-                  type="text"
+                <select
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   className="input w-full"
-                  placeholder="npr. Diesel D2, JET A-1..."
                   required
-                />
+                >
+                  <option value="">Odaberite proizvod</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
               </FormField>
               <FormField label="Količina (litara)" required icon={Droplets}>
                 <input
@@ -307,21 +342,28 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                 />
               </FormField>
               <FormField label="Zemlja porijekla" icon={Globe}>
-                <input
-                  type="text"
+                <select
                   value={countryOfOrigin}
                   onChange={(e) => setCountryOfOrigin(e.target.value)}
                   className="input w-full"
-                  placeholder="npr. Saudijska Arabija"
-                />
+                >
+                  <option value="">Odaberite zemlju</option>
+                  {countries.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}{c.code ? ` (${c.code})` : ''}</option>
+                  ))}
+                </select>
               </FormField>
               <FormField label="Lokacija preuzimanja" icon={MapPin}>
-                <input
-                  type="text"
+                <select
                   value={pickupLocation}
                   onChange={(e) => setPickupLocation(e.target.value)}
                   className="input w-full"
-                />
+                >
+                  <option value="">Odaberite lokaciju</option>
+                  {pickupLocations.map(l => (
+                    <option key={l.id} value={l.name}>{l.name}</option>
+                  ))}
+                </select>
               </FormField>
             </div>
           </FormSection>
@@ -342,26 +384,30 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
             {isHigherQuality && (
               <div>
                 <p className="text-xs font-semibold text-dark-400 uppercase tracking-wide mb-3">Poboljšane karakteristike</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {characteristicOptions.map(char => (
-                    <label 
-                      key={char} 
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                        improvedCharacteristics.includes(char)
-                          ? 'bg-primary-50 border-primary-200 text-primary-700'
-                          : 'bg-dark-50 border-dark-100 text-dark-700 hover:border-primary-200'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={improvedCharacteristics.includes(char)}
-                        onChange={() => handleCharacteristicToggle(char)}
-                        className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <span className="text-sm font-medium">{char}</span>
-                    </label>
-                  ))}
-                </div>
+                {fuelCharacteristics.length === 0 ? (
+                  <p className="text-sm text-dark-500">Nema definiranih karakteristika. Dodajte ih u Master Podacima.</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {fuelCharacteristics.map(char => (
+                      <label 
+                        key={char.id} 
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                          improvedCharacteristics.includes(char.name)
+                            ? 'bg-primary-50 border-primary-200 text-primary-700'
+                            : 'bg-dark-50 border-dark-100 text-dark-700 hover:border-primary-200'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={improvedCharacteristics.includes(char.name)}
+                          onChange={() => handleCharacteristicToggle(char.name)}
+                          className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium">{char.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </FormSection>

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Warehouse as WarehouseIcon, Plus, BarChart3 } from 'lucide-react'
 import WarehouseTable from '@/components/warehouses/WarehouseTable'
 import CreateWarehouseModal from '@/components/warehouses/CreateWarehouseModal'
 import EditWarehouseModal from '@/components/warehouses/EditWarehouseModal'
 
 export default function WarehousesPage() {
+  const { data: session } = useSession()
   const [warehouses, setWarehouses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -14,6 +16,9 @@ export default function WarehousesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null)
+
+  // Check if user can manage warehouses (create/edit/delete)
+  const canManageWarehouses = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'ADMIN'
 
   const fetchWarehouses = async () => {
     try {
@@ -66,78 +71,109 @@ export default function WarehousesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-secondary p-8">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <div className="p-8 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <WarehouseIcon size={32} className="text-primary-blue" />
-            <div>
-              <h1 className="text-3xl font-bold">Warehouse Management</h1>
-              <p className="text-primary-gray">Upravljanje skladištima</p>
-            </div>
-          </div>
+        <div className="bg-gradient-to-br from-dark-900 to-dark-800 rounded-3xl p-8 text-white shadow-[var(--shadow-soft-xl)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-500 opacity-10 rounded-full blur-3xl -ml-12 -mb-12"></div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Novo Skladište
-          </button>
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-md">
+                <WarehouseIcon className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight mb-2">Warehouse Management</h1>
+                <p className="text-dark-300 text-sm">
+                  Upravljanje skladištima
+                </p>
+              </div>
+            </div>
+
+            {canManageWarehouses && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-white text-dark-900 rounded-2xl font-semibold hover:bg-dark-50 transition-all shadow-[var(--shadow-soft)] flex items-center gap-2"
+              >
+                <Plus size={20} />
+                Novo Skladište
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-          <div className="card">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary-blue/10 rounded-xl">
-                <WarehouseIcon size={24} className="text-primary-blue" />
+        {/* Stats Cards */}
+        <div className="flex flex-wrap gap-6">
+          {[
+            {
+              title: 'Ukupno skladišta',
+              value: stats.total,
+              icon: WarehouseIcon,
+              trend: 'Sva',
+              color: 'text-blue-600',
+              bgColor: 'bg-blue-50',
+              badge: 'Total',
+            },
+            {
+              title: 'Aktivna skladišta',
+              value: stats.active,
+              icon: WarehouseIcon,
+              trend: 'Operativno',
+              color: 'text-emerald-600',
+              bgColor: 'bg-emerald-50',
+              badge: 'Aktivno',
+            },
+            {
+              title: 'Ukupan kapacitet',
+              value: `${(stats.totalCapacity / 1000).toFixed(0)}k L`,
+              icon: BarChart3,
+              trend: 'Litara',
+              color: 'text-amber-600',
+              bgColor: 'bg-amber-50',
+              badge: 'Kapacitet',
+            },
+            {
+              title: 'Korisnika',
+              value: stats.totalUsers,
+              icon: WarehouseIcon,
+              trend: 'Dodijeljeni',
+              color: 'text-purple-600',
+              bgColor: 'bg-purple-50',
+              badge: 'Users',
+            },
+            {
+              title: 'Ulaza goriva',
+              value: stats.totalEntries,
+              icon: BarChart3,
+              trend: 'Prijave',
+              color: 'text-indigo-600',
+              bgColor: 'bg-indigo-50',
+              badge: 'Entries',
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="stat-card flex flex-col justify-between h-[160px] basis-full md:basis-[calc(33.333%-16px)] lg:basis-[calc(20%-19.2px)] flex-grow"
+              style={{ minWidth: '200px' }}
+            >
+              <div className="flex justify-between items-start relative z-10">
+                <div className={`p-3.5 rounded-2xl ${item.bgColor} group-hover:scale-110 transition-transform`}>
+                  <item.icon className={`w-6 h-6 ${item.color}`} />
+                </div>
+                <span className="px-3 py-1 bg-dark-50 rounded-full text-[10px] font-bold text-dark-500 uppercase tracking-wide">
+                  {item.badge}
+                </span>
               </div>
-              <div>
-                <p className="text-sm text-primary-gray">Ukupno Skladišta</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+              <div className="relative z-10">
+                <h4 className="text-3xl font-bold text-dark-900 mb-1">{item.value}</h4>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-dark-500">{item.title}</span>
+                  <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full ml-auto">{item.trend}</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="card">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-status-success/10 rounded-xl">
-                <WarehouseIcon size={24} className="text-status-success" />
-              </div>
-              <div>
-                <p className="text-sm text-primary-gray">Aktivna</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-status-info/10 rounded-xl">
-                <BarChart3 size={24} className="text-status-info" />
-              </div>
-              <div>
-                <p className="text-sm text-primary-gray">Ukupan Kapacitet</p>
-                <p className="text-2xl font-bold">{stats.totalCapacity.toLocaleString()} L</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div>
-              <p className="text-sm text-primary-gray">Korisnika</p>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
-            </div>
-          </div>
-
-          <div className="card">
-            <div>
-              <p className="text-sm text-primary-gray">Ulaza Goriva</p>
-              <p className="text-2xl font-bold">{stats.totalEntries}</p>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Table */}
@@ -146,6 +182,7 @@ export default function WarehousesPage() {
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          canManage={canManageWarehouses}
         />
       </div>
 
@@ -174,6 +211,6 @@ export default function WarehousesPage() {
           }}
         />
       )}
-    </div>
+    </>
   )
 }

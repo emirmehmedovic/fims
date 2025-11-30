@@ -6,8 +6,11 @@ import { successResponse, errorResponse } from "@/lib/api/response"
 // GET /api/suppliers - List all suppliers
 export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
+    const { searchParams } = new URL(req.url)
+    const includeInactive = searchParams.get('includeInactive') === 'true'
+
     const suppliers = await prisma.supplier.findMany({
-      where: { isActive: true },
+      where: includeInactive ? {} : { isActive: true },
       orderBy: { name: 'asc' }
     })
 

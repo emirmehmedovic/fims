@@ -57,6 +57,17 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Fuel entry not found', 404)
     }
 
+    // Check warehouse access for OPERATOR/VIEWER
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const hasAccess = userWarehouses.some((w: any) => w.id === fuelEntry.warehouseId)
+      if (!hasAccess) {
+        return errorResponse('Access denied to this fuel entry', 403)
+      }
+    }
+
     return successResponse(fuelEntry)
   } catch (error) {
     console.error('Error fetching fuel entry:', error)
@@ -77,6 +88,17 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
 
     if (!existingEntry) {
       return errorResponse('Fuel entry not found', 404)
+    }
+
+    // Check warehouse access for OPERATOR/VIEWER
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const hasAccess = userWarehouses.some((w: any) => w.id === existingEntry.warehouseId)
+      if (!hasAccess) {
+        return errorResponse('Access denied to this fuel entry', 403)
+      }
     }
 
     const formData = await req.formData()
@@ -217,12 +239,24 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
         id: true,
         registrationNumber: true,
         productName: true,
-        isActive: true
+        isActive: true,
+        warehouseId: true
       }
     })
 
     if (!existingEntry) {
       return errorResponse('Fuel entry not found', 404)
+    }
+
+    // Check warehouse access for OPERATOR
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR') {
+      const hasAccess = userWarehouses.some((w: any) => w.id === existingEntry.warehouseId)
+      if (!hasAccess) {
+        return errorResponse('Access denied to this fuel entry', 403)
+      }
     }
 
     if (!existingEntry.isActive) {

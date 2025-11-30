@@ -13,7 +13,8 @@ import {
   ClipboardList,
   LogOut,
   Fuel,
-  HelpCircle
+  HelpCircle,
+  Database
 } from 'lucide-react'
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       title: 'ADMIN',
       items: [
         { href: '/dashboard/users', label: 'Korisnici', icon: Users },
+        { href: '/dashboard/master-data', label: 'Master Podaci', icon: Database },
         { href: '/dashboard/audit-logs', label: 'Audit Logovi', icon: ClipboardList },
       ]
     }] : [])

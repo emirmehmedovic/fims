@@ -14,6 +14,18 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       where.isActive = true
     }
 
+    // For OPERATOR/VIEWER, filter by assigned warehouses only
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
+      if (assignedWarehouseIds.length === 0) {
+        return successResponse([])
+      }
+      where.id = { in: assignedWarehouseIds }
+    }
+
     const warehouses = await prisma.warehouse.findMany({
       where,
       select: {

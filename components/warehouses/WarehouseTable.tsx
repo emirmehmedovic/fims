@@ -19,14 +19,15 @@ interface WarehouseTableProps {
   loading: boolean
   onEdit: (warehouse: Warehouse) => void
   onDelete: (warehouseId: string) => void
+  canManage?: boolean
 }
 
-export default function WarehouseTable({ warehouses, loading, onEdit, onDelete }: WarehouseTableProps) {
+export default function WarehouseTable({ warehouses, loading, onEdit, onDelete, canManage = true }: WarehouseTableProps) {
   if (loading) {
     return (
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 p-8">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
       </div>
     )
@@ -34,105 +35,98 @@ export default function WarehouseTable({ warehouses, loading, onEdit, onDelete }
 
   if (warehouses.length === 0) {
     return (
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 p-8">
         <div className="text-center py-12">
-          <p className="text-primary-gray">Nema skladišta za prikaz</p>
+          <p className="text-dark-500">Nema skladišta za prikaz</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-bg-secondary border-b border-bg-tertiary">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Skladište
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Lokacija
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Kapacitet
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Statistika
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-primary-gray uppercase tracking-wider">
-                Akcije
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-bg-primary divide-y divide-bg-tertiary">
-            {warehouses.map((warehouse) => (
-              <tr key={warehouse.id} className="hover:bg-bg-secondary transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-primary-dark">{warehouse.name}</div>
-                    <div className="text-sm text-primary-gray">{warehouse.code}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-sm text-primary-dark">
-                    <MapPin size={16} className="text-primary-gray" />
-                    {warehouse.location}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-primary-dark font-medium">
-                    {warehouse.capacity.toLocaleString()} L
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Users size={14} className="text-primary-gray" />
-                      <span>{warehouse._count?.users || 0} korisnika</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Package size={14} className="text-primary-gray" />
-                      <span>{warehouse._count?.fuelEntries || 0} ulaza</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {warehouse.isActive ? (
-                    <span className="flex items-center gap-1 text-status-success text-sm">
-                      <CheckCircle size={16} />
-                      Aktivno
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-status-danger text-sm">
-                      <XCircle size={16} />
-                      Neaktivno
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onEdit(warehouse)}
-                    className="text-primary-blue hover:text-primary-blue-hover mr-4"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(warehouse.id)}
-                    className="text-status-danger hover:text-red-700"
-                    disabled={!warehouse.isActive}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {warehouses.map((warehouse) => (
+        <div
+          key={warehouse.id}
+          className={`bg-white rounded-2xl p-6 shadow-[var(--shadow-soft)] border transition-all hover:shadow-[var(--shadow-soft-xl)] ${
+            warehouse.isActive ? 'border-dark-100' : 'border-dark-200 opacity-75'
+          }`}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-dark-900 mb-1">{warehouse.name}</h3>
+              <p className="text-sm text-dark-500 font-mono">{warehouse.code}</p>
+            </div>
+            {warehouse.isActive ? (
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                <CheckCircle size={14} />
+                Aktivno
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                <XCircle size={14} />
+                Neaktivno
+              </span>
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="flex items-center gap-2 mb-4 text-dark-600">
+            <MapPin size={16} className="text-dark-400" />
+            <span className="text-sm">{warehouse.location}</span>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-dark-50 rounded-xl p-3 border border-dark-100">
+              <div className="text-xs text-dark-500 font-medium mb-1">Kapacitet</div>
+              <div className="text-lg font-bold text-dark-900">{(warehouse.capacity / 1000).toFixed(0)}k</div>
+              <div className="text-[10px] text-dark-400">litara</div>
+            </div>
+            <div className="bg-dark-50 rounded-xl p-3 border border-dark-100">
+              <div className="text-xs text-dark-500 font-medium mb-1 flex items-center gap-1">
+                <Users size={12} />
+                Korisnici
+              </div>
+              <div className="text-lg font-bold text-dark-900">{warehouse._count?.users || 0}</div>
+            </div>
+            <div className="bg-dark-50 rounded-xl p-3 border border-dark-100">
+              <div className="text-xs text-dark-500 font-medium mb-1 flex items-center gap-1">
+                <Package size={12} />
+                Ulazi
+              </div>
+              <div className="text-lg font-bold text-dark-900">{warehouse._count?.fuelEntries || 0}</div>
+            </div>
+          </div>
+
+          {/* Description */}
+          {warehouse.description && (
+            <p className="text-xs text-dark-500 mb-4 line-clamp-2">{warehouse.description}</p>
+          )}
+
+          {/* Actions */}
+          {canManage && (
+            <div className="flex gap-2 pt-4 border-t border-dark-100">
+              <button
+                onClick={() => onEdit(warehouse)}
+                className="flex-1 px-4 py-2 bg-dark-900 text-white rounded-xl font-medium text-sm hover:bg-dark-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <Edit2 size={16} />
+                Uredi
+              </button>
+              <button
+                onClick={() => onDelete(warehouse.id)}
+                disabled={!warehouse.isActive}
+                className="flex-1 px-4 py-2 bg-dark-100 text-dark-600 rounded-xl font-medium text-sm hover:bg-dark-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                Deaktiviraj
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

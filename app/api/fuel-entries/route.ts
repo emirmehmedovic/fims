@@ -26,7 +26,28 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Build where clause
     const where: any = {}
 
+    // For OPERATOR role, filter by assigned warehouses only
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
+      if (assignedWarehouseIds.length === 0) {
+        // User has no warehouses assigned, return empty result
+        return paginatedResponse([], { total: 0, page, limit })
+      }
+      where.warehouseId = { in: assignedWarehouseIds }
+    }
+
+    // Additional warehouse filter (for admins or within operator's warehouses)
     if (warehouseId) {
+      // If operator, verify they have access to this warehouse
+      if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+        const hasAccess = userWarehouses.some((w: any) => w.id === warehouseId)
+        if (!hasAccess) {
+          return errorResponse('Access denied to this warehouse', 403)
+        }
+      }
       where.warehouseId = warehouseId
     }
 

@@ -37,6 +37,17 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Warehouse not found', 404)
     }
 
+    // Check warehouse access for OPERATOR/VIEWER
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const hasAccess = userWarehouses.some((w: any) => w.id === id)
+      if (!hasAccess) {
+        return errorResponse('Access denied to this warehouse', 403)
+      }
+    }
+
     // Transform data
     const response = {
       ...warehouse,

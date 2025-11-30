@@ -98,112 +98,112 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
     <>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+          <thead className="bg-dark-50 border-b border-dark-100">
+            <tr>
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Reg. broj
               </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Datum ulaza
               </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Skladište
               </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Proizvod
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-right px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Količina
               </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Otpremnica
               </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-left px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Operator
               </th>
-              <th className="text-center py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-center px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Status
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">
+              <th className="text-right px-6 py-4 text-xs font-semibold text-dark-600 uppercase tracking-wide">
                 Akcije
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-dark-100">
             {entries.map((entry) => (
               <tr
                 key={entry.id}
-                className="border-b border-border hover:bg-bg-secondary transition-colors"
+                className="hover:bg-dark-50 transition-colors"
               >
-                <td className="py-3 px-4">
-                  <div className="font-mono font-semibold text-primary-blue">
+                <td className="px-6 py-4">
+                  <div className="font-mono font-bold text-primary-600">
                     {entry.registrationNumber}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-sm text-text-primary">
+                <td className="px-6 py-4 text-sm text-dark-900">
                   {formatDate(entry.entryDate)}
                 </td>
-                <td className="py-3 px-4">
-                  <div className="text-sm text-text-primary font-medium">
+                <td className="px-6 py-4">
+                  <div className="text-sm text-dark-900 font-semibold">
                     {entry.warehouse.code}
                   </div>
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-xs text-dark-500">
                     {entry.warehouse.name}
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="text-sm text-text-primary">
+                <td className="px-6 py-4">
+                  <div className="text-sm text-dark-900">
                     {entry.productName}
                   </div>
                   {entry.isHigherQuality && (
-                    <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded text-xs font-medium bg-primary-blue/10 text-primary-blue">
+                    <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-600">
                       Viša kvaliteta
                     </span>
                   )}
                 </td>
-                <td className="py-3 px-4 text-right">
-                  <div className="text-sm font-semibold text-text-primary">
+                <td className="px-6 py-4 text-right">
+                  <div className="text-sm font-bold text-dark-900">
                     {entry.quantity.toLocaleString()} L
                   </div>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-6 py-4">
                   {entry.deliveryNoteNumber ? (
                     <>
-                      <div className="text-sm text-text-primary">
+                      <div className="text-sm text-dark-900">
                         {entry.deliveryNoteNumber}
                       </div>
                       {entry.deliveryNoteDate && (
-                        <div className="text-xs text-text-secondary">
+                        <div className="text-xs text-dark-500">
                           {formatDate(entry.deliveryNoteDate)}
                         </div>
                       )}
                     </>
                   ) : (
-                    <span className="text-sm text-text-tertiary">-</span>
+                    <span className="text-sm text-dark-400">-</span>
                   )}
                 </td>
-                <td className="py-3 px-4">
-                  <div className="text-sm text-text-primary">
+                <td className="px-6 py-4">
+                  <div className="text-sm text-dark-900">
                     {entry.operator.name}
                   </div>
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-xs text-dark-500">
                     {formatDateTime(entry.createdAt)}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-center">
+                <td className="px-6 py-4 text-center">
                   <div className="flex items-center justify-center gap-2">
                     {entry.isActive ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600">
                         Aktivna
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-danger/10 text-status-danger">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600">
                         Obrisana
                       </span>
                     )}
                     {entry.certificatePath && (
                       <span
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-bg-tertiary text-text-secondary"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-dark-100 text-dark-600"
                         title="Ima certifikat"
                       >
                         📄
@@ -211,18 +211,18 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="flex justify-end gap-2">
+                <td className="px-6 py-4">
+                  <div className="flex justify-end gap-3">
                     <button
                       onClick={() => setViewingEntry(entry)}
-                      className="text-sm text-primary-blue hover:text-primary-blue-hover font-medium"
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                     >
                       Pregled
                     </button>
                     {canEdit && entry.isActive && (
                       <button
                         onClick={() => setEditingEntry(entry)}
-                        className="text-sm text-primary-blue hover:text-primary-blue-hover font-medium"
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                       >
                         Uredi
                       </button>
@@ -231,7 +231,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                       <button
                         onClick={() => handleDelete(entry.id)}
                         disabled={deletingId === entry.id}
-                        className="text-sm text-status-danger hover:text-red-700 font-medium disabled:opacity-50"
+                        className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 transition-colors"
                       >
                         {deletingId === entry.id ? 'Brisanje...' : 'Obriši'}
                       </button>
