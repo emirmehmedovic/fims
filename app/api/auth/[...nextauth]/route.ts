@@ -24,65 +24,90 @@ export const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('[AUTH] Missing credentials')
+            return null
+          }
 
-        const email = credentials.email as string
-        const password = credentials.password as string
+          const email = credentials.email as string
+          const password = credentials.password as string
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: {
-            warehouses: {
-              include: {
-                warehouse: true
+          console.log('[AUTH] Attempting login for:', email)
+
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: {
+              warehouses: {
+                include: {
+                  warehouse: true
+                }
               }
             }
+          })
+
+          if (!user || !user.isActive) {
+            console.log('[AUTH] User not found or inactive:', email)
+            throw new Error("Invalid credentials")
           }
-        })
 
-        if (!user || !user.isActive) {
-          throw new Error("Invalid credentials")
-        }
+          const isPasswordValid = await compare(
+            password,
+            user.passwordHash
+          )
 
-        const isPasswordValid = await compare(
-          password,
-          user.passwordHash
-        )
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid credentials")
-        }
-
-        // Update last login
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLogin: new Date() }
-        })
-
-        // Log login attempt
-        await prisma.auditLog.create({
-          data: {
-            userId: user.id,
-            action: "LOGIN",
-            entityType: "User",
-            // entityId is FK to FuelEntry, so we don't set it for User login
-            ipAddress: null,
-            userAgent: null,
+          if (!isPasswordValid) {
+            console.log('[AUTH] Invalid password for:', email)
+            throw new Error("Invalid credentials")
           }
-        })
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          warehouses: user.warehouses.map(uw => ({
-            id: uw.warehouse.id,
-            name: uw.warehouse.name,
-            code: uw.warehouse.code
-          }))
+          console.log('[AUTH] Password valid for:', email)
+
+          // Update last login
+          try {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { lastLogin: new Date() }
+            })
+            console.log('[AUTH] Updated last login for:', email)
+          } catch (error) {
+            console.error('[AUTH] Failed to update last login:', error)
+            // Don't fail auth if this fails
+          }
+
+          // Log login attempt - skip if it fails
+          try {
+            await prisma.auditLog.create({
+              data: {
+                userId: user.id,
+                action: "LOGIN",
+                entityType: "User",
+                ipAddress: null,
+                userAgent: null,
+              }
+            })
+            console.log('[AUTH] Created audit log for:', email)
+          } catch (error) {
+            console.error('[AUTH] Failed to create audit log:', error)
+            // Don't fail auth if audit log fails
+          }
+
+          console.log('[AUTH] Login successful for:', email)
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            warehouses: user.warehouses.map(uw => ({
+              id: uw.warehouse.id,
+              name: uw.warehouse.name,
+              code: uw.warehouse.code
+            }))
+          }
+        } catch (error) {
+          console.error('[AUTH] Login error:', error)
+          throw error
         }
       }
     })
