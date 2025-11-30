@@ -3,25 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcryptjs"
 
-const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith('https://')
-const cookiePrefix = useSecureCookies ? '__Secure-' : ''
-
 export const authOptions = {
   trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt" as const,
     maxAge: 8 * 60 * 60, // 8 hours
-  },
-  cookies: {
-    sessionToken: {
-      name: `${cookiePrefix}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax' as const,
-        path: '/',
-        secure: useSecureCookies,
-      },
-    },
   },
   pages: {
     signIn: "/login",
