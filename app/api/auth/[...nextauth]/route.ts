@@ -6,6 +6,8 @@ import { compare } from "bcryptjs"
 export const authOptions = {
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
+  useSecureCookies: true,
   session: {
     strategy: "jwt" as const,
     maxAge: 8 * 60 * 60, // 8 hours
