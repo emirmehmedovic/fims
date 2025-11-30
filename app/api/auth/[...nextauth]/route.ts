@@ -7,7 +7,7 @@ export const authOptions = {
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
   debug: true,
-  useSecureCookies: true,
+  useSecureCookies: process.env.NODE_ENV === 'production',
   session: {
     strategy: "jwt" as const,
     maxAge: 8 * 60 * 60, // 8 hours
