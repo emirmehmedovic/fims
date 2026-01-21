@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
 import EditFuelEntryModal from './EditFuelEntryModal'
 import ViewFuelEntryModal from './ViewFuelEntryModal'
 
@@ -74,25 +75,8 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  const formatDate = (dateString: string) => formatDateSarajevo(dateString)
+  const formatDateTime = (dateString: string) => formatDateTimeSarajevo(dateString)
 
   return (
     <>

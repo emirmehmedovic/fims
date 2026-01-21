@@ -7,11 +7,17 @@ export function successResponse<T>(data: T, status: number = 200) {
   }, { status })
 }
 
-export function errorResponse(error: string, status: number = 400) {
-  return NextResponse.json({
+export function errorResponse(error: string, status: number = 400, details?: any) {
+  const response: any = {
     success: false,
     error
-  }, { status })
+  }
+
+  if (details) {
+    response.details = details
+  }
+
+  return NextResponse.json(response, { status })
 }
 
 export function paginatedResponse<T>(

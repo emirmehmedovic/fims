@@ -1,0 +1,153 @@
+// FIXED VERSION - fuel-entries/route.ts
+// This version uses database-generated registration number (SEQUENCE)
+// to prevent race conditions
+
+import { NextRequest } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { withAuth } from "@/lib/api/withAuth"
+import { paginatedResponse, successResponse, errorResponse } from "@/lib/api/response"
+// REMOVED: import { generateRegistrationNumber } from "@/lib/utils/registration-number"
+import { saveFile, validateFile } from "@/lib/utils/file-upload"
+import { logger } from "@/lib/utils/logger"
+
+// ... GET endpoint stays the same ...
+
+// POST /api/fuel-entries - Create new fuel entry (FIXED)
+export const POST = withAuth(async (req: NextRequest, context, session) => {
+  try {
+    const formData = await req.formData()
+
+    // Extract fields (same as before)
+    const entryDate = formData.get('entryDate') as string
+    const warehouseId = formData.get('warehouseId') as string
+    const productName = formData.get('productName') as string
+    const quantity = formData.get('quantity') as string
+    // ... all other fields ...
+    const certificate = formData.get('certificate') as File | null
+
+    // Validation (same as before)
+    if (!entryDate || !warehouseId || !productName || !quantity) {
+      return errorResponse('Missing required fields', 400)
+    }
+
+    const parsedQuantity = parseInt(quantity)
+    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+      return errorResponse('Invalid quantity', 400)
+    }
+
+    // ❌ REMOVED: Generate registration number manually
+    // const registrationNumber = await generateRegistrationNumber()
+
+    // OPTION 1: Create entry first (let DB generate number), then handle file
+    // This is safer because if file upload fails, we can update the entry
+
+    // Create fuel entry WITHOUT specifying registrationNumber
+    // Database will automatically assign next value from sequence
+    const fuelEntry = await prisma.fuelEntry.create({
+      data: {
+        // registrationNumber: NOT SPECIFIED - DB will generate it!
+        entryDate: new Date(entryDate),
+        warehouseId,
+        productName,
+        quantity: parsedQuantity,
+        deliveryNoteNumber: deliveryNoteNumber || null,
+        deliveryNoteDate: deliveryNoteDate ? new Date(deliveryNoteDate) : null,
+        customsDeclarationNumber: customsDeclarationNumber || null,
+        customsDeclarationDate: customsDeclarationDate ? new Date(customsDeclarationDate) : null,
+        isHigherQuality,
+        improvedCharacteristics: improvedCharacteristics.filter(Boolean),
+        countryOfOrigin: countryOfOrigin || null,
+        laboratoryName: laboratoryName || null,
+        labAccreditationNumber: labAccreditationNumber || null,
+        testReportNumber: testReportNumber || null,
+        testReportDate: testReportDate ? new Date(testReportDate) : null,
+        operatorId: session.user.id,
+        orderOpenedBy: orderOpenedBy || null,
+        pickupLocation: pickupLocation || null,
+        supplierId: supplierId || null,
+        transporterId: transporterId || null,
+        driverName: driverName || null,
+        // Certificate fields will be updated later if upload succeeds
+        certificatePath: null,
+        certificateFileName: null,
+        certificateUploadedAt: null,
+        createdBy: session.user.id
+      },
+      include: {
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        operator: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    // NOW we have the registration number assigned by database
+    const registrationNumber = fuelEntry.registrationNumber
+
+    // Handle certificate upload AFTER entry is created
+    if (certificate && certificate.size > 0) {
+      try {
+        const validation = await validateFile(certificate)
+        if (!validation.valid) {
+          logger.warn('[FUEL_ENTRY] Invalid certificate file:', validation.error)
+          // Entry is already created, just skip file upload
+        } else {
+          const certificatePath = await saveFile(certificate, registrationNumber)
+          const certificateFileName = certificate.name
+
+          // Update entry with certificate info
+          await prisma.fuelEntry.update({
+            where: { id: fuelEntry.id },
+            data: {
+              certificatePath,
+              certificateFileName,
+              certificateUploadedAt: new Date()
+            }
+          })
+
+          // Update local object for response
+          fuelEntry.certificatePath = certificatePath
+          fuelEntry.certificateFileName = certificateFileName
+          fuelEntry.certificateUploadedAt = new Date()
+        }
+      } catch (uploadError) {
+        logger.error('[FUEL_ENTRY] Certificate upload failed:', uploadError)
+        // Entry is created, file upload failed - this is OK
+        // User can re-upload certificate later via update endpoint
+      }
+    }
+
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'CREATE',
+        entityType: 'FuelEntry',
+        entityId: fuelEntry.id,
+        changes: {
+          created: {
+            registrationNumber: fuelEntry.registrationNumber,
+            productName: fuelEntry.productName,
+            quantity: fuelEntry.quantity,
+            warehouseCode: fuelEntry.warehouse.code
+          }
+        }
+      }
+    })
+
+    return successResponse(fuelEntry, 201)
+  } catch (error) {
+    logger.error('Error creating fuel entry:', error)
+    return errorResponse('Failed to create fuel entry', 500)
+  }
+}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'])

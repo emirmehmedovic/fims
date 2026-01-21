@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
 import { 
   CheckCircle, XCircle, AlertTriangle, Shield, Fuel, Calendar, Package, MapPin, 
   Loader2, FileText, Building2, Truck, User, FlaskConical, Globe, Sparkles, FileCheck
@@ -85,22 +86,10 @@ export default function VerifyPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-'
-    const date = new Date(dateString)
-    const day = date.getDate().toString().padStart(2, '0')
-    const month = (date.getMonth() + 1).toString().padStart(2, '0')
-    const year = date.getFullYear()
-    return `${day}.${month}.${year}`
+    return formatDateSarajevo(dateString)
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const day = date.getDate().toString().padStart(2, '0')
-    const month = (date.getMonth() + 1).toString().padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = date.getHours().toString().padStart(2, '0')
-    const minutes = date.getMinutes().toString().padStart(2, '0')
-    return `${day}.${month}.${year} ${hours}:${minutes}`
-  }
+  const formatDateTime = (dateString: string) => formatDateTimeSarajevo(dateString)
 
   const d = result?.data
 

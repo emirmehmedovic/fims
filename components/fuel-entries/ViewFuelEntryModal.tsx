@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
 import { 
   X, 
   FileText, 
@@ -102,24 +103,12 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
+    return formatDateSarajevo(dateString)
   }
 
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    return formatDateTimeSarajevo(dateString)
   }
 
   const handleExportPdf = async () => {

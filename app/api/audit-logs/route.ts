@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
 import { successResponse, errorResponse } from "@/lib/api/response"
+import { startOfDaySarajevo, startOfNextDaySarajevo } from "@/lib/utils/date"
 
 // GET /api/audit-logs - Get audit logs with filters
 export const GET = withAuth(async (req: NextRequest, context, session) => {
@@ -36,12 +37,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 
     if (dateFrom || dateTo) {
       where.timestamp = {}
-      if (dateFrom) where.timestamp.gte = new Date(dateFrom)
-      if (dateTo) {
-        const endDate = new Date(dateTo)
-        endDate.setHours(23, 59, 59, 999)
-        where.timestamp.lte = endDate
-      }
+      if (dateFrom) where.timestamp.gte = startOfDaySarajevo(dateFrom)
+      if (dateTo) where.timestamp.lt = startOfNextDaySarajevo(dateTo)
     }
 
     // Fetch logs with pagination

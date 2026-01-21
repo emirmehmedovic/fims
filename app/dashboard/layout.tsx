@@ -15,7 +15,8 @@ import {
   Fuel,
   HelpCircle,
   Database,
-  BarChart3
+  BarChart3,
+  Mail
 } from 'lucide-react'
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -62,6 +63,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         { href: '/dashboard/users', label: 'Korisnici', icon: Users },
         { href: '/dashboard/master-data', label: 'Master Podaci', icon: Database },
         { href: '/dashboard/audit-logs', label: 'Audit Logovi', icon: ClipboardList },
+        { href: '/dashboard/auto-send', label: 'Auto slanje', icon: Mail },
       ]
     }] : [])
   ]

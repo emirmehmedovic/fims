@@ -86,7 +86,7 @@ model UserWarehouse {
 
 model FuelEntry {
   id                       String    @id @default(cuid())
-  registrationNumber       Int       @unique @map("registration_number")
+  registrationNumber       Int       @unique @default(autoincrement()) @map("registration_number")
 
   // Basic Info
   entryDate                DateTime  @map("entry_date")
@@ -254,6 +254,7 @@ enum AuditAction {
   LOGOUT
   EXPORT_PDF
   BULK_EXPORT
+  AUTO_SEND
 }
 
 model AuditLog {
@@ -276,4 +277,70 @@ model AuditLog {
   @@index([action])
   @@index([timestamp])
   @@map("audit_logs")
+}
+
+// ============================================
+// AUTO EMAIL RECIPIENTS
+// ============================================
+
+model AutoEmailRecipient {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("auto_email_recipients")
+}
+
+model AutoSendSettings {
+  id        String   @id
+  isEnabled Boolean  @default(true) @map("is_enabled")
+  selectedRecipientIds String[] @default([]) @map("selected_recipient_ids")
+  updatedBy String?  @map("updated_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("auto_send_settings")
+}
+
+model AutoSendBatch {
+  id              String   @id @default(cuid())
+  dateFrom        DateTime @map("date_from")
+  dateTo          DateTime @map("date_to")
+  totalEntries    Int      @map("total_entries")
+  batchSize       Int      @map("batch_size")
+  totalBatches    Int      @map("total_batches")
+  recipientsCount Int      @map("recipients_count")
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  items           AutoSendBatchItem[]
+
+  @@map("auto_send_batches")
+}
+
+model AutoSendBatchItem {
+  id                 String   @id @default(cuid())
+  batchId            String   @map("batch_id")
+  sequence           Int
+  entryIds           String[] @map("entry_ids")
+  recipientEmails    String[] @map("recipient_emails")
+  entriesCount       Int      @map("entries_count")
+  includeCertificates Boolean @default(true) @map("include_certificates")
+  status             String   @default("PENDING")
+  errorMessage       String?  @map("error_message")
+  sentAt             DateTime? @map("sent_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  batch              AutoSendBatch @relation(fields: [batchId], references: [id])
+
+  @@index([batchId])
+  @@index([sequence])
+  @@map("auto_send_batch_items")
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { FileText, Droplets, Building2, Calendar, TrendingUp, Users } from 'lucide-react'
+import { formatDateSarajevo } from '@/lib/utils/date'
 
 interface DashboardStats {
   totalWarehouses: number
@@ -58,20 +59,9 @@ export default function DashboardPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
+  const formatDate = (dateString: string) => formatDateSarajevo(dateString)
 
-  const todayLabel = new Date().toLocaleDateString('bs-BA', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const todayLabel = formatDateSarajevo(new Date())
 
   if (loading) {
     return (
@@ -99,7 +89,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-dark-300 text-sm font-medium mb-1">Ukupna količina goriva</p>
-                <h3 className="text-4xl font-bold tracking-tight">{((stats?.totalVolume || 0) / 1000).toFixed(0)}k L</h3>
+                <h3 className="text-4xl font-bold tracking-tight">{(stats?.totalVolume || 0).toLocaleString()} L</h3>
                 <p className="text-xs text-dark-300 mt-1">{stats?.totalVolume?.toLocaleString() || 0} litara ukupno</p>
               </div>
               <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md">
@@ -150,7 +140,7 @@ export default function DashboardPage() {
               },
               {
                 title: 'Ukupna količina',
-                value: `${((stats?.totalVolume || 0) / 1000).toFixed(0)}k L`,
+                value: `${(stats?.totalVolume || 0).toLocaleString()} L`,
                 icon: Droplets,
                 trend: 'Litara',
                 color: 'text-emerald-600',

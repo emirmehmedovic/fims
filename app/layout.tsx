@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "FIMS - Fuel Inventory Management System",
@@ -19,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bs" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
+      <body className="antialiased">
         {children}
       </body>
     </html>

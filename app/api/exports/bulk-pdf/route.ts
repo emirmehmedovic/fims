@@ -4,6 +4,7 @@ import { withAuth } from "@/lib/api/withAuth"
 import { errorResponse, successResponse } from "@/lib/api/response"
 import { generateFuelEntryPDF } from "@/lib/utils/pdf-generator"
 import { PDFDocument } from "pdf-lib"
+import { startOfDaySarajevo, startOfNextDaySarajevo } from "@/lib/utils/date"
 
 // POST /api/exports/bulk-pdf - Generate bulk PDF for multiple fuel entries
 export const POST = withAuth(async (req: NextRequest, context, session) => {
@@ -32,8 +33,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       if (productName) where.productName = { contains: productName, mode: 'insensitive' }
       if (dateFrom || dateTo) {
         where.entryDate = {}
-        if (dateFrom) where.entryDate.gte = new Date(dateFrom)
-        if (dateTo) where.entryDate.lte = new Date(dateTo)
+        if (dateFrom) where.entryDate.gte = startOfDaySarajevo(dateFrom)
+        if (dateTo) where.entryDate.lt = startOfNextDaySarajevo(dateTo)
       }
     }
 
@@ -157,8 +158,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     if (productName) where.productName = { contains: productName, mode: 'insensitive' }
     if (dateFrom || dateTo) {
       where.entryDate = {}
-      if (dateFrom) where.entryDate.gte = new Date(dateFrom)
-      if (dateTo) where.entryDate.lte = new Date(dateTo)
+      if (dateFrom) where.entryDate.gte = startOfDaySarajevo(dateFrom)
+      if (dateTo) where.entryDate.lt = startOfNextDaySarajevo(dateTo)
     }
 
     // Check warehouse access for non-admin users

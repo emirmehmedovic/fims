@@ -116,12 +116,13 @@ export default function CreateWarehouseModal({ onClose, onSuccess }: CreateWareh
               Kapacitet (litara) <span className="text-status-danger">*</span>
             </label>
             <input
-              type="number"
+              type="text"
               value={formData.capacity}
-              onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, capacity: e.target.value.replace(/[^0-9]/g, '') })}
               className="input w-full"
               placeholder="npr. 50000"
-              min="1"
+              inputMode="numeric"
+              pattern="[0-9]*"
               required
             />
           </div>

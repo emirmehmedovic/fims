@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import { 
   X, 
   Pencil,
@@ -159,21 +160,21 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
         setFullEntry(e)
         
         // Populate form fields
-        setEntryDate(e.entryDate ? e.entryDate.split('T')[0] : '')
+        setEntryDate(e.entryDate ? formatDateInputValueSarajevo(e.entryDate) : '')
         setWarehouseId(e.warehouse?.id || '')
         setProductName(e.productName || '')
         setQuantity(e.quantity?.toString() || '')
         setDeliveryNoteNumber(e.deliveryNoteNumber || '')
-        setDeliveryNoteDate(e.deliveryNoteDate ? e.deliveryNoteDate.split('T')[0] : '')
+        setDeliveryNoteDate(e.deliveryNoteDate ? formatDateInputValueSarajevo(e.deliveryNoteDate) : '')
         setCustomsDeclarationNumber(e.customsDeclarationNumber || '')
-        setCustomsDeclarationDate(e.customsDeclarationDate ? e.customsDeclarationDate.split('T')[0] : '')
+        setCustomsDeclarationDate(e.customsDeclarationDate ? formatDateInputValueSarajevo(e.customsDeclarationDate) : '')
         setIsHigherQuality(e.isHigherQuality || false)
         setImprovedCharacteristics(e.improvedCharacteristics || [])
         setCountryOfOrigin(e.countryOfOrigin || '')
         setLaboratoryName(e.laboratoryName || '')
         setLabAccreditationNumber(e.labAccreditationNumber || '')
         setTestReportNumber(e.testReportNumber || '')
-        setTestReportDate(e.testReportDate ? e.testReportDate.split('T')[0] : '')
+        setTestReportDate(e.testReportDate ? formatDateInputValueSarajevo(e.testReportDate) : '')
         setOrderOpenedBy(e.orderOpenedBy || '')
         setPickupLocation(e.pickupLocation || '')
         setSupplierId(e.supplier?.id || '')
@@ -342,12 +343,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
               </FormField>
               <FormField label="Količina (litara)" required icon={Droplets}>
                 <input
-                  type="number"
+                  type="text"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
                   className="input w-full"
                   placeholder="npr. 50000"
-                  min="1"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                 />
               </FormField>

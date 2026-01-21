@@ -126,7 +126,7 @@ export default function WarehousesPage() {
             },
             {
               title: 'Ukupan kapacitet',
-              value: `${(stats.totalCapacity / 1000).toFixed(0)}k L`,
+              value: `${stats.totalCapacity.toLocaleString()} L`,
               icon: BarChart3,
               trend: 'Litara',
               color: 'text-amber-600',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import { 
   X, 
   Plus,
@@ -66,7 +67,7 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [fuelCharacteristics, setFuelCharacteristics] = useState<LookupItem[]>([])
 
   // Form state - Basic
-  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0])
+  const [entryDate, setEntryDate] = useState(formatDateInputValueSarajevo(new Date()))
   const [warehouseId, setWarehouseId] = useState('')
   const [productName, setProductName] = useState('')
   const [quantity, setQuantity] = useState('')
@@ -294,12 +295,13 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
               </FormField>
               <FormField label="Količina (litara)" required icon={Droplets}>
                 <input
-                  type="number"
+                  type="text"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
                   className="input w-full"
                   placeholder="npr. 50000"
-                  min="1"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                 />
               </FormField>

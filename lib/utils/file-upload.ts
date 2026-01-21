@@ -28,9 +28,18 @@ export async function saveFile(file: File, registrationNumber: number): Promise<
     await mkdir(UPLOAD_DIR, { recursive: true })
   }
 
+  // Sanitize filename to prevent path traversal
+  const originalName = path.basename(file.name) // Remove any path components
+  const extension = path.extname(originalName).slice(1).toLowerCase()
+
+  // Additional validation - ensure extension is in allowed list
+  const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png']
+  if (!extension || !allowedExtensions.includes(extension)) {
+    throw new Error('Invalid file extension')
+  }
+
   // Generate unique filename
   const timestamp = Date.now()
-  const extension = file.name.split('.').pop()
   const filename = `cert_${registrationNumber}_${timestamp}.${extension}`
   const filepath = path.join(UPLOAD_DIR, filename)
 

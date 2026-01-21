@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatDateTimeSecondsSarajevo } from '@/lib/utils/date'
 import { useSession } from 'next-auth/react'
 
 interface AuditLog {
@@ -55,7 +56,8 @@ export default function AuditLogsPage() {
     'LOGIN': 'Prijava',
     'LOGOUT': 'Odjava',
     'EXPORT_PDF': 'PDF Export',
-    'BULK_EXPORT': 'Bulk Export'
+    'BULK_EXPORT': 'Bulk Export',
+    'AUTO_SEND': 'Automatsko slanje'
   }
 
   const entityTypeLabels: Record<string, string> = {
@@ -122,17 +124,7 @@ export default function AuditLogsPage() {
     setPage(1)
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString('bs-BA', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  }
+  const formatDateTime = (dateString: string) => formatDateTimeSecondsSarajevo(dateString)
 
   const getActionColor = (action: string) => {
     switch (action) {
@@ -143,6 +135,7 @@ export default function AuditLogsPage() {
       case 'LOGOUT': return 'bg-gray-100 text-gray-600'
       case 'EXPORT_PDF': return 'bg-purple-100 text-purple-600'
       case 'BULK_EXPORT': return 'bg-purple-100 text-purple-600'
+      case 'AUTO_SEND': return 'bg-emerald-100 text-emerald-600'
       default: return 'bg-gray-100 text-gray-600'
     }
   }

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
 import { paginatedResponse, errorResponse, successResponse } from "@/lib/api/response"
 import { hash } from "bcryptjs"
+import { logger } from "@/lib/utils/logger"
+import { createUserSchema } from "@/lib/validations/api-schemas"
 
 // GET /api/users - List users with pagination and filters
 export const GET = withAuth(async (req: NextRequest, context, session) => {
@@ -77,7 +79,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 
     return paginatedResponse(transformedUsers, { total, page, limit })
   } catch (error) {
-    console.error('Error fetching users:', error)
+    logger.error('Error fetching users:', error)
     return errorResponse('Failed to fetch users', 500)
   }
 }, ['SUPER_ADMIN', 'ADMIN'])
@@ -86,16 +88,15 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 export const POST = withAuth(async (req: NextRequest, context, session) => {
   try {
     const body = await req.json()
-    const { name, email, password, role, warehouseIds } = body
 
-    // Validation
-    if (!name || !email || !password || !role) {
-      return errorResponse('Missing required fields', 400)
+    // Zod validation
+    const validation = createUserSchema.safeParse(body)
+    if (!validation.success) {
+      const errors = validation.error.format()
+      return errorResponse('Validation failed', 400, errors)
     }
 
-    if (!warehouseIds || warehouseIds.length === 0) {
-      return errorResponse('At least one warehouse must be assigned', 400)
-    }
+    const { name, email, password, role, warehouseIds } = validation.data
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
@@ -163,7 +164,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
     return successResponse(response, 201)
   } catch (error) {
-    console.error('Error creating user:', error)
+    logger.error('Error creating user:', error)
     return errorResponse('Failed to create user', 500)
   }
 }, ['SUPER_ADMIN', 'ADMIN'])

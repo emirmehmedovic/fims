@@ -5,6 +5,7 @@ import QRCode from 'qrcode'
 import { PDFDocument } from 'pdf-lib'
 import fs from 'fs/promises'
 import path from 'path'
+import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
 
 // Detect if running on Vercel/serverless
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
@@ -52,22 +53,12 @@ interface FuelEntryData {
 
 const formatDate = (date: Date | null): string => {
   if (!date) return '-'
-  return new Date(date).toLocaleDateString('bs-BA', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
+  return formatDateSarajevo(date)
 }
 
 const formatDateTime = (date: Date | null): string => {
   if (!date) return '-'
-  return new Date(date).toLocaleString('bs-BA', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return formatDateTimeSarajevo(date)
 }
 
 export async function generateQRCode(data: string): Promise<string> {
@@ -88,11 +79,7 @@ export async function generateQRCode(data: string): Promise<string> {
 }
 
 export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string, footerBase64: string): string {
-  const currentDate = new Date().toLocaleDateString('bs-BA', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
+  const currentDate = formatDateSarajevo(new Date())
 
   return `
 <!DOCTYPE html>
