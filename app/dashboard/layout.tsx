@@ -84,13 +84,11 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         {/* Logo Section */}
         <div className="px-6 pt-8 pb-6 flex-shrink-0">
           <Link href="/dashboard" className="flex items-center gap-3 group mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-primary-600 flex items-center justify-center shadow-[var(--shadow-primary)] group-hover:shadow-[var(--shadow-primary-lg)] transition-all">
-              <Fuel className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-dark-900 font-bold text-xl tracking-tight">FIMS</h1>
-              <p className="text-[10px] font-semibold text-dark-400 uppercase tracking-wider">Fuel Inventory</p>
-            </div>
+            <img
+              src="/Screenshot_8.png"
+              alt="H Plus HIFA Petrol"
+              className="w-full max-w-[200px] h-auto object-contain rounded-2xl"
+            />
           </Link>
 
           {/* Help Section */}

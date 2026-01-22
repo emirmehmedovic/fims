@@ -143,9 +143,11 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                     {entry.productName}
                   </div>
                   {entry.isHigherQuality && (
-                    <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase tracking-wide">
-                      Premium
-                    </span>
+                    <img
+                      src="/Screenshot_8.png"
+                      alt="Premium"
+                      className="h-6 w-auto rounded-md mt-1.5 shadow-sm object-contain opacity-90 hover:opacity-100 transition-opacity"
+                    />
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">

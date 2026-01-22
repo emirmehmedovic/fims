@@ -185,9 +185,14 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                     </span>
                   )}
                 </div>
-                <p className="text-dark-500 mt-1">
-                  {formatDate(details.entryDate)} • {details.warehouse.code}
-                </p>
+                <div className="flex items-center gap-3 text-dark-500 mt-1">
+                  <span>{formatDate(details.entryDate)} • {details.warehouse.code}</span>
+                  <img
+                    src="/Screenshot_8.png"
+                    alt="H Plus HIFA Petrol"
+                    className="h-6 w-auto rounded-lg border border-dark-100 bg-white"
+                  />
+                </div>
               </div>
             </div>
             <button
