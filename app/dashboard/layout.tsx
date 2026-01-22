@@ -16,7 +16,8 @@ import {
   HelpCircle,
   Database,
   BarChart3,
-  Mail
+  Mail,
+  UserCircle
 } from 'lucide-react'
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         { href: '/dashboard/fuel-entries', label: 'Evidencija goriva', icon: FileText },
         { href: '/dashboard/warehouses', label: 'Skladišta', icon: Building2 },
         { href: '/dashboard/statistics', label: 'Statistika', icon: BarChart3 },
+        { href: '/dashboard/account', label: 'Moj nalog', icon: UserCircle },
       ]
     },
     ...(isAdmin ? [{

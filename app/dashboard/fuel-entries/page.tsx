@@ -327,129 +327,171 @@ export default function FuelEntriesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl p-6 shadow-[var(--shadow-soft)] border border-dark-100">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold text-dark-900">Filteri</h2>
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-slate-800">Filtriranje</h2>
+          </div>
           <button
             onClick={clearFilters}
-            className="text-sm font-medium text-dark-600 hover:text-dark-900 transition-colors"
+            className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-50"
           >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
             Očisti filtere
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Skladište
             </label>
-            <select
-              value={warehouseFilter}
-              onChange={(e) => {
-                setWarehouseFilter(e.target.value)
-                setPage(1)
-              }}
-              className="input w-full"
-            >
-              <option value="">Sva skladišta</option>
-              {warehouses.map(w => (
-                <option key={w.id} value={w.id}>
-                  {w.code} - {w.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={warehouseFilter}
+                onChange={(e) => {
+                  setWarehouseFilter(e.target.value)
+                  setPage(1)
+                }}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block p-2.5 transition-all outline-none appearance-none cursor-pointer hover:bg-slate-100/50"
+              >
+                <option value="">Sva skladišta</option>
+                {warehouses.map(w => (
+                  <option key={w.id} value={w.id}>
+                    {w.code} - {w.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Proizvod
             </label>
-            <input
-              type="text"
-              value={productNameFilter}
-              onChange={(e) => {
-                setProductNameFilter(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Pretraži proizvod..."
-              className="input w-full"
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={productNameFilter}
+                onChange={(e) => {
+                  setProductNameFilter(e.target.value)
+                  setPage(1)
+                }}
+                placeholder="Pretraži proizvod..."
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block pl-10 p-2.5 transition-all outline-none hover:bg-slate-100/50 placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Broj otpremnice
             </label>
-            <input
-              type="text"
-              value={deliveryNoteFilter}
-              onChange={(e) => {
-                setDeliveryNoteFilter(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Broj otpremnice..."
-              className="input w-full"
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={deliveryNoteFilter}
+                onChange={(e) => {
+                  setDeliveryNoteFilter(e.target.value)
+                  setPage(1)
+                }}
+                placeholder="Broj otpremnice..."
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block pl-10 p-2.5 transition-all outline-none hover:bg-slate-100/50 placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Registarski broj
             </label>
-            <input
-              type="text"
-              value={registrationNumberFilter}
-              onChange={(e) => {
-                setRegistrationNumberFilter(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Registarski broj..."
-              className="input w-full"
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0c0 .854.43 1.624 1.096 2.138A.996.996 0 0011 8.5H9a.996.996 0 00.904-.362A2.992 2.992 0 0110 6z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={registrationNumberFilter}
+                onChange={(e) => {
+                  setRegistrationNumberFilter(e.target.value)
+                  setPage(1)
+                }}
+                placeholder="Registarski broj..."
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block pl-10 p-2.5 transition-all outline-none hover:bg-slate-100/50 placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Datum od
             </label>
-            <input
-              type="date"
-              value={dateFromFilter}
-              onChange={(e) => {
-                setDateFromFilter(e.target.value)
-                setPage(1)
-              }}
-              className="input w-full"
-            />
+            <div className="relative">
+              <input
+                type="date"
+                value={dateFromFilter}
+                onChange={(e) => {
+                  setDateFromFilter(e.target.value)
+                  setPage(1)
+                }}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block p-2.5 transition-all outline-none hover:bg-slate-100/50"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-dark-600 uppercase tracking-wide mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Datum do
             </label>
-            <input
-              type="date"
-              value={dateToFilter}
-              onChange={(e) => {
-                setDateToFilter(e.target.value)
-                setPage(1)
-              }}
-              className="input w-full"
-            />
+            <div className="relative">
+              <input
+                type="date"
+                value={dateToFilter}
+                onChange={(e) => {
+                  setDateToFilter(e.target.value)
+                  setPage(1)
+                }}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-slate-400/20 focus:border-slate-400 block p-2.5 transition-all outline-none hover:bg-slate-100/50"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-[var(--shadow-soft)] border border-dark-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="text-center py-12 p-8">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            <p className="text-dark-500 mt-4">Učitavanje...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600"></div>
+            <p className="text-slate-500 mt-4">Učitavanje...</p>
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-12 p-8">
-            <p className="text-dark-500">Nema prijava koje odgovaraju kriterijima</p>
+            <p className="text-slate-500">Nema prijava koje odgovaraju kriterijima</p>
           </div>
         ) : (
           <>
@@ -460,27 +502,33 @@ export default function FuelEntriesPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-between items-center px-6 py-6 border-t border-dark-100 bg-dark-50">
-                <div className="text-sm text-dark-600 font-medium">
-                  Prikazano {((page - 1) * limit) + 1} - {Math.min(page * limit, total)} od {total}
+              <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                <div className="text-sm text-slate-500 font-medium">
+                  Prikazano <span className="font-bold text-slate-800">{((page - 1) * limit) + 1} - {Math.min(page * limit, total)}</span> od <span className="font-bold text-slate-800">{total}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-6 py-3 bg-white border border-dark-200 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-dark-50 transition-all shadow-[var(--shadow-soft)] text-sm"
+                    className="px-4 py-2 bg-white border border-slate-200 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 text-slate-600 transition-all shadow-sm text-sm flex items-center gap-1"
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
                     Prethodna
                   </button>
-                  <span className="px-6 py-3 bg-white rounded-xl font-medium border border-dark-100 shadow-[var(--shadow-soft)] text-sm">
-                    Stranica {page} od {totalPages}
+                  <span className="px-4 py-2 bg-white rounded-lg font-medium border border-slate-200 text-slate-600 text-sm shadow-sm min-w-[100px] text-center">
+                    {page} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="px-6 py-3 bg-white border border-dark-200 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-dark-50 transition-all shadow-[var(--shadow-soft)] text-sm"
+                    className="px-4 py-2 bg-white border border-slate-200 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 text-slate-600 transition-all shadow-sm text-sm flex items-center gap-1"
                   >
                     Sljedeća
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </button>
                 </div>
               </div>
