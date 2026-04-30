@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Warehouse as WarehouseIcon, Plus, BarChart3 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Warehouse as WarehouseIcon, Plus, BarChart3, Loader2 } from 'lucide-react'
 import WarehouseTable from '@/components/warehouses/WarehouseTable'
 import CreateWarehouseModal from '@/components/warehouses/CreateWarehouseModal'
 import EditWarehouseModal from '@/components/warehouses/EditWarehouseModal'
 
 export default function WarehousesPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [warehouses, setWarehouses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -17,8 +19,11 @@ export default function WarehousesPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null)
 
+  // Check if user is admin
+  const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'ADMIN'
+
   // Check if user can manage warehouses (create/edit/delete)
-  const canManageWarehouses = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'ADMIN'
+  const canManageWarehouses = isAdmin
 
   const fetchWarehouses = async () => {
     try {
@@ -37,8 +42,18 @@ export default function WarehousesPage() {
   }
 
   useEffect(() => {
-    fetchWarehouses()
-  }, [])
+    if (status === 'loading') return
+
+    // Redirect non-admin users to dashboard
+    if (status === 'authenticated' && !isAdmin) {
+      router.push('/dashboard')
+      return
+    }
+
+    if (isAdmin) {
+      fetchWarehouses()
+    }
+  }, [status, isAdmin, router])
 
   const handleEdit = (warehouse: any) => {
     setSelectedWarehouse(warehouse)
@@ -59,6 +74,20 @@ export default function WarehousesPage() {
     } catch (error) {
       console.error('Error deleting warehouse:', error)
     }
+  }
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 text-dark-400 animate-spin" />
+      </div>
+    )
+  }
+
+  // Don't render if not admin (will redirect in useEffect)
+  if (!isAdmin) {
+    return null
   }
 
   // Calculate statistics

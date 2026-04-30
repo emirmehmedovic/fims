@@ -20,6 +20,17 @@ export async function middleware(request: NextRequest) {
   }
 
   const isAuthPage = request.nextUrl.pathname === '/login'
+  const pathname = request.nextUrl.pathname
+
+  // Admin-only routes
+  const adminOnlyRoutes = [
+    '/dashboard/statistics',
+    '/dashboard/warehouses',
+    '/dashboard/users',
+    '/dashboard/master-data',
+    '/dashboard/audit-logs',
+    '/dashboard/auto-send'
+  ]
 
   // Ako nema tokena i nije auth stranica, redirectaj na login
   if (!token && !isAuthPage) {
@@ -33,6 +44,17 @@ export async function middleware(request: NextRequest) {
   if (token && isAuthPage) {
     logger.debug('[MIDDLEWARE] Has token on login page, redirecting to dashboard')
     return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Check role-based access for admin-only routes
+  if (token && adminOnlyRoutes.some(route => pathname.startsWith(route))) {
+    const userRole = token.role as string
+    const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN'
+
+    if (!isAdmin) {
+      logger.debug('[MIDDLEWARE] Non-admin user trying to access admin route, redirecting to dashboard')
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 
   logger.debug('[MIDDLEWARE] Allowing access to:', request.nextUrl.pathname)

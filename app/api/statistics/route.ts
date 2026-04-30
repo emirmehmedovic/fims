@@ -412,4 +412,4 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     console.error('Error fetching statistics:', error)
     return errorResponse('Failed to fetch statistics', 500)
   }
-})
+}, ['SUPER_ADMIN', 'ADMIN'])

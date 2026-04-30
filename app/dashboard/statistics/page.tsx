@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  BarChart3, TrendingUp, Package, Building2, Truck, Globe, Fuel, 
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import {
+  BarChart3, TrendingUp, Package, Building2, Truck, Globe, Fuel,
   Calendar, Loader2, ArrowUpRight, ArrowDownRight, MapPin, FlaskConical,
   Users, Sparkles, FileCheck, AlertTriangle, FileText
 } from 'lucide-react'
@@ -72,14 +74,29 @@ const TABS = [
 ]
 
 export default function StatisticsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [period, setPeriod] = useState('6months')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<StatisticsData | null>(null)
 
+  // Check if user is admin
+  const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'ADMIN'
+
   useEffect(() => {
-    fetchStatistics()
-  }, [period])
+    if (status === 'loading') return
+
+    // Redirect non-admin users to dashboard
+    if (status === 'authenticated' && !isAdmin) {
+      router.push('/dashboard')
+      return
+    }
+
+    if (isAdmin) {
+      fetchStatistics()
+    }
+  }, [period, status, isAdmin, router])
 
   const fetchStatistics = async () => {
     setLoading(true)
@@ -106,6 +123,20 @@ export default function StatisticsPage() {
     const [year, m] = month.split('-')
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
     return `${months[parseInt(m) - 1]} ${year.slice(2)}`
+  }
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 text-dark-400 animate-spin" />
+      </div>
+    )
+  }
+
+  // Don't render if not admin (will redirect in useEffect)
+  if (!isAdmin) {
+    return null
   }
 
   return (
