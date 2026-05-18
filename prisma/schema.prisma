@@ -103,6 +103,7 @@ model FuelEntry {
   // Quality Info
   isHigherQuality          Boolean   @default(false) @map("is_higher_quality")
   improvedCharacteristics  String[]  @map("improved_characteristics")
+  additiveDetails          Json?     @map("additive_details") // Details: [{name, addedAt, quantity}]
   countryOfOrigin          String?   @map("country_of_origin")
 
   // Laboratory Info
@@ -120,6 +121,9 @@ model FuelEntry {
   supplierId               String?   @map("supplier_id")
   transporterId            String?   @map("transporter_id")
   driverName               String?   @map("driver_name")
+  vehicleRegistration      String?   @map("vehicle_registration")
+  clientId                 String?   @map("client_id")
+  laboratoryId             String?   @map("laboratory_id")
 
   // Certificate Upload
   certificatePath          String?   @map("certificate_path")
@@ -131,6 +135,8 @@ model FuelEntry {
   operator                 User        @relation("CreatedBy", fields: [operatorId], references: [id])
   supplier                 Supplier?   @relation(fields: [supplierId], references: [id])
   transporter              Transporter? @relation(fields: [transporterId], references: [id])
+  client                   Client?     @relation(fields: [clientId], references: [id])
+  laboratory               Laboratory? @relation(fields: [laboratoryId], references: [id])
 
   // Status
   isActive                 Boolean   @default(true) @map("is_active")
@@ -145,10 +151,23 @@ model FuelEntry {
   // Audit Log Relation
   auditLogs                AuditLog[]
 
+  // Single column indexes
   @@index([registrationNumber])
   @@index([warehouseId])
   @@index([entryDate])
   @@index([productName])
+
+  // Foreign key indexes for better JOIN performance
+  @@index([clientId])
+  @@index([supplierId])
+  @@index([transporterId])
+  @@index([laboratoryId])
+
+  // Composite indexes for common query patterns
+  @@index([warehouseId, entryDate]) // Statistics queries
+  @@index([isActive, entryDate])     // Active entries by date
+  @@index([warehouseId, isActive])   // Warehouse filtering
+
   @@map("fuel_entries")
 }
 
@@ -190,12 +209,14 @@ model PickupLocation {
 }
 
 model FuelCharacteristic {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String?
+  manufacturers String[] @default([]) // Proizvođači aditiva
+  type          String?  // Vrsta aditiva
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("fuel_characteristics")
 }
@@ -240,6 +261,46 @@ model Transporter {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("transporters")
+}
+
+model Laboratory {
+  id                    String   @id @default(cuid())
+  name                  String
+  accreditationNumber   String?  @map("accreditation_number")
+  address               String?
+  contactPerson         String?  @map("contact_person")
+  phone                 String?
+  email                 String?
+  isActive              Boolean  @default(true) @map("is_active")
+
+  // Relations
+  fuelEntries           FuelEntry[]
+
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("laboratories")
+}
+
+model Client {
+  id                    String   @id @default(cuid())
+  name                  String
+  code                  String?  @unique
+  address               String?
+  contactPerson         String?  @map("contact_person")
+  phone                 String?
+  email                 String?
+  pib                   String?  // PIB (Poreski identifikacioni broj)
+  idNumber              String?  @map("id_number") // Identifikacijski broj
+  isActive              Boolean  @default(true) @map("is_active")
+
+  // Relations
+  fuelEntries           FuelEntry[]
+
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("clients")
 }
 
 // ============================================

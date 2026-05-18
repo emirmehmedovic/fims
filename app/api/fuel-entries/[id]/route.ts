@@ -10,8 +10,19 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
 
+    // OPTIMIZED: Build WHERE clause with authorization check for OPERATOR/VIEWER
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    const where: any = { id }
+
+    // Add warehouse access restriction in WHERE clause (performance optimization)
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      where.warehouseId = { in: warehouseIds }
+    }
+
     const fuelEntry = await prisma.fuelEntry.findUnique({
-      where: { id },
+      where,
       include: {
         warehouse: {
           select: {
@@ -54,18 +65,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     })
 
     if (!fuelEntry) {
+      // Entry either doesn't exist OR user doesn't have access
       return errorResponse('Fuel entry not found', 404)
-    }
-
-    // Check warehouse access for OPERATOR/VIEWER
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    
-    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      const hasAccess = userWarehouses.some((w: any) => w.id === fuelEntry.warehouseId)
-      if (!hasAccess) {
-        return errorResponse('Access denied to this fuel entry', 403)
-      }
     }
 
     return successResponse(fuelEntry)
@@ -81,24 +82,25 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
 
-    // Check if fuel entry exists
+    // OPTIMIZED: Build WHERE clause with authorization check
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    const where: any = { id }
+
+    // Add warehouse access restriction in WHERE clause (performance optimization)
+    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      where.warehouseId = { in: warehouseIds }
+    }
+
+    // Check if fuel entry exists (with authorization built into query)
     const existingEntry = await prisma.fuelEntry.findUnique({
-      where: { id }
+      where
     })
 
     if (!existingEntry) {
+      // Entry either doesn't exist OR user doesn't have access
       return errorResponse('Fuel entry not found', 404)
-    }
-
-    // Check warehouse access for OPERATOR/VIEWER
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    
-    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      const hasAccess = userWarehouses.some((w: any) => w.id === existingEntry.warehouseId)
-      if (!hasAccess) {
-        return errorResponse('Access denied to this fuel entry', 403)
-      }
     }
 
     const formData = await req.formData()
@@ -233,8 +235,19 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
 
+    // OPTIMIZED: Build WHERE clause with authorization check
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+    const where: any = { id }
+
+    // Add warehouse access restriction in WHERE clause (performance optimization)
+    if (userRole === 'OPERATOR') {
+      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      where.warehouseId = { in: warehouseIds }
+    }
+
     const existingEntry = await prisma.fuelEntry.findUnique({
-      where: { id },
+      where,
       select: {
         id: true,
         registrationNumber: true,
@@ -245,18 +258,8 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     })
 
     if (!existingEntry) {
+      // Entry either doesn't exist OR user doesn't have access
       return errorResponse('Fuel entry not found', 404)
-    }
-
-    // Check warehouse access for OPERATOR
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    
-    if (userRole === 'OPERATOR') {
-      const hasAccess = userWarehouses.some((w: any) => w.id === existingEntry.warehouseId)
-      if (!hasAccess) {
-        return errorResponse('Access denied to this fuel entry', 403)
-      }
     }
 
     if (!existingEntry.isActive) {

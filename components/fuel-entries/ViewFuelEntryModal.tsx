@@ -31,6 +31,7 @@ interface FuelEntryDetail {
   customsDeclarationDate: string | null
   isHigherQuality: boolean
   improvedCharacteristics: string[]
+  additiveDetails: any[] | null
   countryOfOrigin: string | null
   laboratoryName: string | null
   labAccreditationNumber: string | null
@@ -81,6 +82,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   const [details, setDetails] = useState<FuelEntryDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exportingPdf, setExportingPdf] = useState(false)
+  const [exportingAdditivePdf, setExportingAdditivePdf] = useState(false)
 
   useEffect(() => {
     fetchDetails()
@@ -113,15 +115,15 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
 
   const handleExportPdf = async () => {
     if (!details) return
-    
+
     setExportingPdf(true)
     try {
       const response = await fetch(`/api/exports/pdf/${details.id}`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to generate PDF')
       }
-      
+
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -136,6 +138,35 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       alert('Greška pri generiranju PDF-a')
     } finally {
       setExportingPdf(false)
+    }
+  }
+
+  const handleExportAdditivePdf = async () => {
+    if (!details) return
+
+    setExportingAdditivePdf(true)
+    try {
+      const response = await fetch(`/api/exports/additive-declaration/${details.id}`)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to generate additive declaration PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Izjava_O_Aditiviranju_${details.registrationNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error exporting additive declaration PDF:', error)
+      alert('Greška pri generiranju izjave o aditiviranju')
+    } finally {
+      setExportingAdditivePdf(false)
     }
   }
 
@@ -348,25 +379,46 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
         {/* Footer */}
         <div className="relative z-10 px-8 py-6 border-t border-dark-100 bg-dark-50/50">
           <div className="flex justify-between items-center">
-            <button
-              onClick={handleExportPdf}
-              disabled={exportingPdf}
-              className="px-6 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-semibold rounded-2xl hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
-            >
-              {exportingPdf ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  Generiranje PDF...
-                </>
-              ) : (
-                <>
-                  <Download className="w-5 h-5" />
-                  Preuzmi PDF
-                </>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportPdf}
+                disabled={exportingPdf}
+                className="px-6 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-semibold rounded-2xl hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
+              >
+                {exportingPdf ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    Generiranje PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Preuzmi Izjavu
+                  </>
+                )}
+              </button>
+              {details.additiveDetails && details.additiveDetails.length > 0 && (
+                <button
+                  onClick={handleExportAdditivePdf}
+                  disabled={exportingAdditivePdf}
+                  className="px-6 py-3 bg-gradient-to-br from-primary-600 to-primary-700 text-white font-semibold rounded-2xl hover:from-primary-500 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
+                >
+                  {exportingAdditivePdf ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      Generiranje PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      Izjava o aditiviranju
+                    </>
+                  )}
+                </button>
               )}
-            </button>
-            <button 
-              onClick={onClose} 
+            </div>
+            <button
+              onClick={onClose}
               className="px-6 py-3 bg-dark-900 text-white font-semibold rounded-2xl hover:bg-dark-800 transition-colors shadow-[var(--shadow-soft)]"
             >
               Zatvori

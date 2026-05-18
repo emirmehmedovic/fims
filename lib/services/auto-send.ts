@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { generateFuelEntryPDF } from '@/lib/utils/pdf-generator'
+import { generateFuelEntryPDF, createSharedBrowser } from '@/lib/utils/pdf-generator'
 import { buildFuelEntriesEmailHTML } from '@/lib/utils/email-templates'
 import { sendEmail } from '@/lib/utils/email'
 import {
@@ -185,60 +185,68 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
   const dateToLabel = formatDateSarajevo(new Date(batch.dateTo.getTime() - 1))
   const subject = `Automatski izvještaj - prijave goriva (${dateFromLabel} do ${dateToLabel})`
 
-  for (const item of batchItems) {
-    if (item.status === 'SENT') {
-      continue
-    }
-
-    try {
-      const entries = await prisma.fuelEntry.findMany({
-        where: { id: { in: item.entryIds } },
-        include: {
-          warehouse: {
-            select: {
-              id: true,
-              name: true,
-              code: true,
-              location: true
-            }
-          },
-          operator: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          supplier: {
-            select: {
-              id: true,
-              name: true,
-              code: true
-            }
-          },
-          transporter: {
-            select: {
-              id: true,
-              name: true,
-              code: true
-            }
-          }
+  // FIX: Fetch ALL entries at once (N+1 query optimization)
+  const allEntryIds = Array.from(new Set(batchItems.flatMap(item => item.entryIds)))
+  const allEntries = await prisma.fuelEntry.findMany({
+    where: { id: { in: allEntryIds } },
+    include: {
+      warehouse: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          location: true
         }
-      })
-
-      const entryMap = new Map(entries.map(entry => [entry.id, entry]))
-      const orderedEntries = item.entryIds.map(entryId => entryMap.get(entryId)).filter(Boolean)
-      const totalQuantity = orderedEntries.reduce((sum, entry) => sum + (entry?.quantity || 0), 0)
-
-      const attachments = []
-      for (const entry of orderedEntries) {
-        const pdfBuffer = await generateFuelEntryPDF(entry as any, item.includeCertificates)
-        attachments.push({
-          filename: `Izjava_${entry?.registrationNumber}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        })
+      },
+      operator: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      },
+      supplier: {
+        select: {
+          id: true,
+          name: true,
+          code: true
+        }
+      },
+      transporter: {
+        select: {
+          id: true,
+          name: true,
+          code: true
+        }
       }
+    }
+  })
+  const globalEntryMap = new Map(allEntries.map(entry => [entry.id, entry]))
+
+  // OPTIMIZED: Create ONE shared browser for all PDFs (memory optimization)
+  const browser = await createSharedBrowser()
+
+  try {
+    for (const item of batchItems) {
+      if (item.status === 'SENT') {
+        continue
+      }
+
+      try {
+        // Use pre-fetched entries from global map
+        const orderedEntries = item.entryIds.map(entryId => globalEntryMap.get(entryId)).filter(Boolean)
+        const totalQuantity = orderedEntries.reduce((sum, entry) => sum + (entry?.quantity || 0), 0)
+
+        const attachments = []
+        for (const entry of orderedEntries) {
+          // Reuse browser instance
+          const pdfBuffer = await generateFuelEntryPDF(entry as any, item.includeCertificates, browser)
+          attachments.push({
+            filename: `Izjava_${entry?.registrationNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          })
+        }
 
       const html = buildFuelEntriesEmailHTML({
         entries: orderedEntries.map(entry => ({
@@ -283,28 +291,33 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
     }
   }
 
-  const [sentCount, failedCount] = await Promise.all([
-    prisma.autoSendBatchItem.count({ where: { batchId, status: 'SENT' } }),
-    prisma.autoSendBatchItem.count({ where: { batchId, status: 'FAILED' } })
-  ])
+    const [sentCount, failedCount] = await Promise.all([
+      prisma.autoSendBatchItem.count({ where: { batchId, status: 'SENT' } }),
+      prisma.autoSendBatchItem.count({ where: { batchId, status: 'FAILED' } })
+    ])
 
-  if (initiatedBy) {
-    await prisma.auditLog.create({
-      data: {
-        userId: initiatedBy,
-        action: 'AUTO_SEND',
-        entityType: 'FuelEntry',
-        changes: {
-          batchId,
-          entriesCount: batch.totalEntries,
-          batchSize: batch.batchSize,
-          totalBatches: batch.totalBatches,
-          sentBatches: sentCount,
-          failedBatches: failedCount
+    if (initiatedBy) {
+      await prisma.auditLog.create({
+        data: {
+          userId: initiatedBy,
+          action: 'AUTO_SEND',
+          entityType: 'FuelEntry',
+          changes: {
+            batchId,
+            entriesCount: batch.totalEntries,
+            batchSize: batch.batchSize,
+            totalBatches: batch.totalBatches,
+            sentBatches: sentCount,
+            failedBatches: failedCount
+          }
         }
-      }
-    })
-  }
+      })
+    }
 
-  return { sentBatches: sentCount, failedBatches: failedCount }
+    return { sentBatches: sentCount, failedBatches: failedCount }
+  } finally {
+    // Always close the browser
+    await browser.close()
+    console.log('[AUTO_SEND] Browser instance closed')
+  }
 }

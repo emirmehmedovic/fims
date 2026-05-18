@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // External packages that should not be bundled (server-only)
+  serverExternalPackages: ['pino', 'pino-pretty'],
+
   async headers() {
     return [
       {

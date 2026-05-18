@@ -60,7 +60,7 @@ export const GET = withAuth(async (req: NextRequest) => {
 export const POST = withAuth(async (req: NextRequest, context, session) => {
   try {
     const body = await req.json()
-    const { type, name, description, code, address } = body
+    const { type, name, description, code, address, manufacturers, additiveType } = body
 
     console.log('POST /api/lookups - Received:', { type, name, validTypes: LOOKUP_TYPES })
 
@@ -88,15 +88,20 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
     // Build data object based on type
     const data: any = { name: name.trim() }
-    
+
     if (type === 'products' || type === 'fuelCharacteristics') {
       if (description) data.description = description
     }
-    
+
+    if (type === 'fuelCharacteristics') {
+      if (manufacturers) data.manufacturers = manufacturers
+      if (additiveType) data.type = additiveType
+    }
+
     if (type === 'countries') {
       if (code) data.code = code
     }
-    
+
     if (type === 'pickupLocations') {
       if (address) data.address = address
     }

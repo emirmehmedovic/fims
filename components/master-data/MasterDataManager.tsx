@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2, FlaskConical, Users } from 'lucide-react'
 
 interface LookupItem {
   id: string
@@ -12,16 +12,21 @@ interface LookupItem {
   contactPerson?: string
   phone?: string
   email?: string
+  accreditationNumber?: string
+  pib?: string
+  idNumber?: string
+  manufacturers?: string[]
+  additiveType?: string
   isActive: boolean
 }
 
-type LookupType = 'products' | 'countries' | 'pickupLocations' | 'fuelCharacteristics' | 'suppliers' | 'transporters'
+type LookupType = 'products' | 'countries' | 'pickupLocations' | 'fuelCharacteristics' | 'suppliers' | 'transporters' | 'laboratories' | 'clients'
 
 interface TabConfig {
   type: LookupType
   label: string
   icon: React.ReactNode
-  fields: { key: string; label: string; placeholder: string; required?: boolean }[]
+  fields: { key: string; label: string; placeholder: string; required?: boolean; isArray?: boolean }[]
   apiEndpoint?: string // Custom API endpoint for suppliers/transporters
 }
 
@@ -55,11 +60,13 @@ const TABS: TabConfig[] = [
   },
   {
     type: 'fuelCharacteristics',
-    label: 'Karakteristike',
+    label: 'Aditivi',
     icon: <Sparkles size={18} />,
     fields: [
       { key: 'name', label: 'Naziv', placeholder: 'npr. Aditivirano', required: true },
-      { key: 'description', label: 'Opis', placeholder: 'Opis karakteristike (opciono)' }
+      { key: 'description', label: 'Opis', placeholder: 'Opis aditiva (opciono)' },
+      { key: 'additiveType', label: 'Vrsta aditiva', placeholder: 'npr. Detergent, Antioksidant' },
+      { key: 'manufacturers', label: 'Proizvođači aditiva', placeholder: 'Dodajte proizvođače (odvojeni zarezom)', isArray: true }
     ]
   },
   {
@@ -85,6 +92,36 @@ const TABS: TabConfig[] = [
       { key: 'name', label: 'Naziv', placeholder: 'npr. Transport d.o.o.', required: true },
       { key: 'code', label: 'Šifra', placeholder: 'npr. TRANS-001', required: true },
       { key: 'address', label: 'Adresa', placeholder: 'Adresa prevoznika' },
+      { key: 'contactPerson', label: 'Kontakt osoba', placeholder: 'Ime i prezime' },
+      { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
+      { key: 'email', label: 'Email', placeholder: 'info@example.com' }
+    ]
+  },
+  {
+    type: 'laboratories',
+    label: 'Laboratorije',
+    icon: <FlaskConical size={18} />,
+    apiEndpoint: '/api/laboratories',
+    fields: [
+      { key: 'name', label: 'Naziv', placeholder: 'npr. Hemijska laboratorija d.o.o.', required: true },
+      { key: 'accreditationNumber', label: 'Broj akreditacije', placeholder: 'npr. AK-2023-001' },
+      { key: 'address', label: 'Adresa', placeholder: 'Adresa laboratorije' },
+      { key: 'contactPerson', label: 'Kontakt osoba', placeholder: 'Ime i prezime' },
+      { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
+      { key: 'email', label: 'Email', placeholder: 'info@example.com' }
+    ]
+  },
+  {
+    type: 'clients',
+    label: 'Klijenti',
+    icon: <Users size={18} />,
+    apiEndpoint: '/api/clients',
+    fields: [
+      { key: 'name', label: 'Naziv', placeholder: 'npr. Kompanija d.o.o.', required: true },
+      { key: 'code', label: 'Šifra', placeholder: 'npr. KOM-001' },
+      { key: 'pib', label: 'PIB', placeholder: 'npr. 123456789' },
+      { key: 'idNumber', label: 'Identifikacijski broj', placeholder: 'npr. 1234567890123' },
+      { key: 'address', label: 'Adresa', placeholder: 'Adresa klijenta' },
       { key: 'contactPerson', label: 'Kontakt osoba', placeholder: 'Ime i prezime' },
       { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
       { key: 'email', label: 'Email', placeholder: 'info@example.com' }
@@ -133,7 +170,7 @@ export default function MasterDataManager() {
 
   const handleAdd = async () => {
     setError('')
-    
+
     // Validate required fields
     const requiredFields = currentTab.fields.filter(f => f.required)
     for (const field of requiredFields) {
@@ -145,17 +182,30 @@ export default function MasterDataManager() {
 
     try {
       const endpoint = currentTab.apiEndpoint || '/api/lookups'
-      const body = currentTab.apiEndpoint 
-        ? formData 
-        : { type: activeTab, ...formData }
-      
+
+      // Process array fields (comma-separated to array)
+      const processedData = { ...formData }
+      currentTab.fields.forEach(field => {
+        if (field.isArray && processedData[field.key]) {
+          const value = processedData[field.key] as string
+          ;(processedData as any)[field.key] = value
+            .split(',')
+            .map((item: string) => item.trim())
+            .filter(Boolean)
+        }
+      })
+
+      const body = currentTab.apiEndpoint
+        ? processedData
+        : { type: activeTab, ...processedData }
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       const data = await res.json()
-      
+
       if (data.success) {
         setShowAddForm(false)
         setFormData({})
@@ -170,7 +220,7 @@ export default function MasterDataManager() {
 
   const handleUpdate = async (id: string) => {
     setError('')
-    
+
     // Validate required fields
     const requiredFields = currentTab.fields.filter(f => f.required)
     for (const field of requiredFields) {
@@ -181,20 +231,33 @@ export default function MasterDataManager() {
     }
 
     try {
-      const endpoint = currentTab.apiEndpoint 
+      const endpoint = currentTab.apiEndpoint
         ? `${currentTab.apiEndpoint}/${id}`
         : `/api/lookups/${id}`
-      const body = currentTab.apiEndpoint 
-        ? formData 
-        : { type: activeTab, ...formData }
-      
+
+      // Process array fields (comma-separated to array)
+      const processedData = { ...formData }
+      currentTab.fields.forEach(field => {
+        if (field.isArray && processedData[field.key]) {
+          const value = processedData[field.key] as string
+          ;(processedData as any)[field.key] = value
+            .split(',')
+            .map((item: string) => item.trim())
+            .filter(Boolean)
+        }
+      })
+
+      const body = currentTab.apiEndpoint
+        ? processedData
+        : { type: activeTab, ...processedData }
+
       const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       const data = await res.json()
-      
+
       if (data.success) {
         setEditingId(null)
         setFormData({})
@@ -261,7 +324,12 @@ export default function MasterDataManager() {
       address: item.address || '',
       contactPerson: item.contactPerson || '',
       phone: item.phone || '',
-      email: item.email || ''
+      email: item.email || '',
+      accreditationNumber: item.accreditationNumber || '',
+      pib: item.pib || '',
+      idNumber: item.idNumber || '',
+      manufacturers: item.manufacturers ? item.manufacturers.join(', ') : '',
+      additiveType: item.additiveType || ''
     })
     setError('')
   }
@@ -332,17 +400,28 @@ export default function MasterDataManager() {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
               {currentTab.fields.map(field => (
-                <div key={field.key}>
+                <div key={field.key} className={field.isArray ? 'sm:col-span-2' : ''}>
                   <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-1.5 sm:mb-2">
                     {field.label}
+                    {field.isArray && <span className="text-dark-400 font-normal ml-2">(odvojeni zarezom)</span>}
                   </label>
-                  <input
-                    type="text"
-                    placeholder={field.placeholder}
-                    value={formData[field.key] || ''}
-                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                    className="input w-full"
-                  />
+                  {field.isArray ? (
+                    <textarea
+                      placeholder={field.placeholder}
+                      value={formData[field.key] || ''}
+                      onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                      className="input w-full min-h-[80px]"
+                      rows={2}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder={field.placeholder}
+                      value={formData[field.key] || ''}
+                      onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                      className="input w-full"
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -384,10 +463,29 @@ export default function MasterDataManager() {
           </div>
         ) : (
           <div className="space-y-2 sm:space-y-3">
-            {items.map(item => (
-              <div
-                key={item.id}
-                className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all ${
+            {items
+              .sort((a, b) => {
+                // Active items first, then inactive
+                if (a.isActive === b.isActive) return 0
+                return a.isActive ? -1 : 1
+              })
+              .map((item, index, sortedItems) => {
+                // Check if we need to show separator (between active and inactive)
+                const showSeparator = index > 0 && sortedItems[index - 1].isActive && !item.isActive
+
+                return (
+                  <div key={item.id}>
+                    {showSeparator && (
+                      <div className="flex items-center gap-3 my-4 sm:my-6">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-dark-200 to-transparent"></div>
+                        <span className="text-xs font-semibold text-dark-400 uppercase tracking-wider px-3 py-1 bg-dark-50 rounded-full border border-dark-200">
+                          Neaktivne stavke
+                        </span>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-dark-200 to-transparent"></div>
+                      </div>
+                    )}
+                    <div
+                      className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all ${
                   item.isActive 
                     ? 'bg-white border-dark-100 hover:border-dark-200 hover:shadow-[var(--shadow-soft)]' 
                     : 'bg-dark-50 border-dark-100 opacity-60'
@@ -402,14 +500,25 @@ export default function MasterDataManager() {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3">
                       {currentTab.fields.map(field => (
-                        <input
-                          key={field.key}
-                          type="text"
-                          placeholder={field.placeholder}
-                          value={formData[field.key] || ''}
-                          onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                          className="input text-sm"
-                        />
+                        <div key={field.key} className={field.isArray ? 'sm:col-span-2' : ''}>
+                          {field.isArray ? (
+                            <textarea
+                              placeholder={field.placeholder}
+                              value={formData[field.key] || ''}
+                              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                              className="input text-sm min-h-[60px]"
+                              rows={2}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder={field.placeholder}
+                              value={formData[field.key] || ''}
+                              onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                              className="input text-sm"
+                            />
+                          )}
+                        </div>
                       ))}
                     </div>
                     <div className="flex gap-2">
@@ -444,10 +553,13 @@ export default function MasterDataManager() {
                             </span>
                           )}
                         </div>
-                        {(item.description || item.address || item.contactPerson || item.phone || item.email) && (
+                        {(item.description || item.address || item.contactPerson || item.phone || item.email ||
+                          item.accreditationNumber || item.pib || item.idNumber || item.additiveType || item.manufacturers) && (
                           <div className="text-xs sm:text-sm text-dark-500 truncate mt-0.5">
-                            {item.description || item.address || 
-                              [item.contactPerson, item.phone, item.email].filter(Boolean).join(' • ')}
+                            {item.description || item.address || item.accreditationNumber || item.additiveType ||
+                              [item.manufacturers && `Proizvođači: ${item.manufacturers.join(', ')}`,
+                               item.pib && `PIB: ${item.pib}`, item.idNumber && `ID: ${item.idNumber}`,
+                               item.contactPerson, item.phone, item.email].filter(Boolean).join(' • ')}
                           </div>
                         )}
                       </div>
@@ -479,7 +591,9 @@ export default function MasterDataManager() {
                   </div>
                 )}
               </div>
-            ))}
+                  </div>
+                )
+              })}
           </div>
         )}
       </div>

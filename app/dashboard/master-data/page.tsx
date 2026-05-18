@@ -1,6 +1,6 @@
 'use client'
 
-import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck } from 'lucide-react'
+import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck, FlaskConical, Users } from 'lucide-react'
 import MasterDataManager from '@/components/master-data/MasterDataManager'
 
 export default function MasterDataPage() {
@@ -27,14 +27,16 @@ export default function MasterDataPage() {
       </div>
 
       {/* Info Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {[
           { icon: Package, title: 'Proizvodi', description: 'Nazivi goriva', color: 'from-blue-500 to-blue-600' },
           { icon: Globe, title: 'Zemlje', description: 'Zemlje porijekla', color: 'from-emerald-500 to-emerald-600' },
           { icon: MapPin, title: 'Lokacije', description: 'Lokacije preuzimanja', color: 'from-amber-500 to-amber-600' },
-          { icon: Sparkles, title: 'Karakteristike', description: 'Karakteristike goriva', color: 'from-purple-500 to-purple-600' },
+          { icon: Sparkles, title: 'Aditivi', description: 'Aditivi za gorivo', color: 'from-purple-500 to-purple-600' },
           { icon: Building2, title: 'Dobavljači', description: 'Dobavljači goriva', color: 'from-indigo-500 to-indigo-600' },
           { icon: Truck, title: 'Prevoznici', description: 'Transportne firme', color: 'from-rose-500 to-rose-600' },
+          { icon: FlaskConical, title: 'Laboratorije', description: 'Laboratorije za testiranje', color: 'from-cyan-500 to-cyan-600' },
+          { icon: Users, title: 'Klijenti', description: 'Kupci goriva', color: 'from-teal-500 to-teal-600' },
         ].map((item) => (
           <div
             key={item.title}

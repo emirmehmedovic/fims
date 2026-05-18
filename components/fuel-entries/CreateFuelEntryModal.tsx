@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
-import { 
-  X, 
+import {
+  X,
   Plus,
   Calendar,
   Building2,
@@ -16,8 +16,10 @@ import {
   MapPin,
   User,
   Globe,
-  FileCheck
+  FileCheck,
+  Users
 } from 'lucide-react'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Warehouse {
   id: string
@@ -40,6 +42,22 @@ interface Transporter {
   isActive: boolean
 }
 
+interface Laboratory {
+  id: string
+  name: string
+  accreditationNumber?: string
+  isActive: boolean
+}
+
+interface Client {
+  id: string
+  name: string
+  code?: string
+  pib?: string
+  idNumber?: string
+  isActive: boolean
+}
+
 interface LookupItem {
   id: string
   name: string
@@ -59,7 +77,9 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
-  
+  const [laboratories, setLaboratories] = useState<Laboratory[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+
   // Lookup data
   const [products, setProducts] = useState<LookupItem[]>([])
   const [countries, setCountries] = useState<LookupItem[]>([])
@@ -71,6 +91,7 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [warehouseId, setWarehouseId] = useState('')
   const [productName, setProductName] = useState('')
   const [quantity, setQuantity] = useState('')
+  const [quantityError, setQuantityError] = useState('')
 
   // Form state - Delivery
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('')
@@ -81,11 +102,11 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   // Form state - Quality
   const [isHigherQuality, setIsHigherQuality] = useState(false)
   const [improvedCharacteristics, setImprovedCharacteristics] = useState<string[]>([])
+  const [additiveDetails, setAdditiveDetails] = useState<Record<string, { addedAt: string; quantity: string }>>({})
   const [countryOfOrigin, setCountryOfOrigin] = useState('')
 
   // Form state - Laboratory
-  const [laboratoryName, setLaboratoryName] = useState('')
-  const [labAccreditationNumber, setLabAccreditationNumber] = useState('')
+  const [laboratoryId, setLaboratoryId] = useState('')
   const [testReportNumber, setTestReportNumber] = useState('')
   const [testReportDate, setTestReportDate] = useState('')
 
@@ -95,6 +116,8 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [supplierId, setSupplierId] = useState('')
   const [transporterId, setTransporterId] = useState('')
   const [driverName, setDriverName] = useState('')
+  const [vehicleRegistration, setVehicleRegistration] = useState('')
+  const [clientId, setClientId] = useState('')
 
   // Form state - Certificate
   const [certificate, setCertificate] = useState<File | null>(null)
@@ -102,6 +125,8 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   useEffect(() => {
     fetchSuppliers()
     fetchTransporters()
+    fetchLaboratories()
+    fetchClients()
     fetchLookupData()
   }, [])
 
@@ -154,12 +179,51 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
     }
   }
 
+  const fetchLaboratories = async () => {
+    try {
+      const res = await fetch('/api/laboratories')
+      const data = await res.json()
+      if (data.success) {
+        setLaboratories(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching laboratories:', error)
+    }
+  }
+
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients')
+      const data = await res.json()
+      if (data.success) {
+        setClients(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+    }
+  }
+
   const handleCharacteristicToggle = (char: string) => {
-    setImprovedCharacteristics(prev =>
-      prev.includes(char)
-        ? prev.filter(c => c !== char)
-        : [...prev, char]
-    )
+    setImprovedCharacteristics(prev => {
+      const isCurrentlySelected = prev.includes(char)
+
+      if (isCurrentlySelected) {
+        // Remove from characteristics and details
+        setAdditiveDetails(prevDetails => {
+          const newDetails = { ...prevDetails }
+          delete newDetails[char]
+          return newDetails
+        })
+        return prev.filter(c => c !== char)
+      } else {
+        // Add to characteristics and initialize details
+        setAdditiveDetails(prevDetails => ({
+          ...prevDetails,
+          [char]: { addedAt: '', quantity: '' }
+        }))
+        return [...prev, char]
+      }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -167,6 +231,13 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
 
     if (!warehouseId || !productName || !quantity) {
       alert('Molimo popunite sva obavezna polja')
+      return
+    }
+
+    // Validate quantity
+    const numQuantity = parseInt(quantity)
+    if (numQuantity > 50000) {
+      alert('Količina ne može biti veća od 50,000 litara')
       return
     }
 
@@ -185,8 +256,16 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
       if (customsDeclarationNumber) formData.append('customsDeclarationNumber', customsDeclarationNumber)
       if (customsDeclarationDate) formData.append('customsDeclarationDate', customsDeclarationDate)
       if (countryOfOrigin) formData.append('countryOfOrigin', countryOfOrigin)
-      if (laboratoryName) formData.append('laboratoryName', laboratoryName)
-      if (labAccreditationNumber) formData.append('labAccreditationNumber', labAccreditationNumber)
+      if (laboratoryId) {
+        const selectedLab = laboratories.find(l => l.id === laboratoryId)
+        if (selectedLab) {
+          formData.append('laboratoryId', laboratoryId)
+          formData.append('laboratoryName', selectedLab.name)
+          if (selectedLab.accreditationNumber) {
+            formData.append('labAccreditationNumber', selectedLab.accreditationNumber)
+          }
+        }
+      }
       if (testReportNumber) formData.append('testReportNumber', testReportNumber)
       if (testReportDate) formData.append('testReportDate', testReportDate)
       if (orderOpenedBy) formData.append('orderOpenedBy', orderOpenedBy)
@@ -194,10 +273,22 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
       if (supplierId) formData.append('supplierId', supplierId)
       if (transporterId) formData.append('transporterId', transporterId)
       if (driverName) formData.append('driverName', driverName)
+      if (vehicleRegistration) formData.append('vehicleRegistration', vehicleRegistration)
+      if (clientId) formData.append('clientId', clientId)
 
       improvedCharacteristics.forEach(char => {
         formData.append('improvedCharacteristics[]', char)
       })
+
+      // Send additive details as JSON
+      if (Object.keys(additiveDetails).length > 0) {
+        const additiveDetailsArray = Object.entries(additiveDetails).map(([name, details]) => ({
+          name,
+          addedAt: details.addedAt || null,
+          quantity: details.quantity ? parseFloat(details.quantity) : null
+        }))
+        formData.append('additiveDetails', JSON.stringify(additiveDetailsArray))
+      }
 
       if (certificate) {
         formData.append('certificate', certificate)
@@ -294,16 +385,35 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                 </select>
               </FormField>
               <FormField label="Količina (litara)" required icon={Droplets}>
-                <input
-                  type="text"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="input w-full"
-                  placeholder="npr. 50000"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  required
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={quantity}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '')
+                      const numValue = parseInt(value || '0')
+
+                      if (numValue > 50000) {
+                        setQuantityError('Količina ne može biti veća od 50,000 litara')
+                        setQuantity(value)
+                      } else {
+                        setQuantityError('')
+                        setQuantity(value)
+                      }
+                    }}
+                    className={`input w-full ${quantityError ? 'border-error focus:ring-error' : ''}`}
+                    placeholder="npr. 50000"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    required
+                  />
+                  {quantityError && (
+                    <p className="text-error text-xs mt-1.5 flex items-center gap-1">
+                      <span className="font-semibold">⚠</span>
+                      {quantityError}
+                    </p>
+                  )}
+                </div>
               </FormField>
             </div>
           </FormSection>
@@ -389,25 +499,72 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                 {fuelCharacteristics.length === 0 ? (
                   <p className="text-sm text-dark-500">Nema definiranih karakteristika. Dodajte ih u Master Podacima.</p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {fuelCharacteristics.map(char => (
-                      <label 
-                        key={char.id} 
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                          improvedCharacteristics.includes(char.name)
-                            ? 'bg-primary-50 border-primary-200 text-primary-700'
-                            : 'bg-dark-50 border-dark-100 text-dark-700 hover:border-primary-200'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={improvedCharacteristics.includes(char.name)}
-                          onChange={() => handleCharacteristicToggle(char.name)}
-                          className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <span className="text-sm font-medium">{char.name}</span>
-                      </label>
-                    ))}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {fuelCharacteristics.map(char => (
+                        <label
+                          key={char.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                            improvedCharacteristics.includes(char.name)
+                              ? 'bg-primary-50 border-primary-200 text-primary-700'
+                              : 'bg-dark-50 border-dark-100 text-dark-700 hover:border-primary-200'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={improvedCharacteristics.includes(char.name)}
+                            onChange={() => handleCharacteristicToggle(char.name)}
+                            className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm font-medium">{char.name}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Additive Details for Selected Characteristics */}
+                    {improvedCharacteristics.length > 0 && (
+                      <div className="space-y-4 pt-4 border-t border-dark-200">
+                        <p className="text-xs font-semibold text-dark-600 uppercase tracking-wide">Detalji o aditivima</p>
+                        {improvedCharacteristics.map(charName => (
+                          <div key={charName} className="bg-white p-4 rounded-xl border border-dark-200">
+                            <p className="text-sm font-semibold text-dark-900 mb-3">{charName}</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-2">
+                                  Datum i vrijeme aditiviranja
+                                </label>
+                                <input
+                                  type="datetime-local"
+                                  value={additiveDetails[charName]?.addedAt || ''}
+                                  onChange={(e) => setAdditiveDetails(prev => ({
+                                    ...prev,
+                                    [charName]: { ...prev[charName], addedAt: e.target.value }
+                                  }))}
+                                  className="input w-full text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-2">
+                                  Količina (mg/kg)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="npr. 250.50"
+                                  value={additiveDetails[charName]?.quantity || ''}
+                                  onChange={(e) => setAdditiveDetails(prev => ({
+                                    ...prev,
+                                    [charName]: { ...prev[charName], quantity: e.target.value }
+                                  }))}
+                                  className="input w-full text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -417,38 +574,49 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
           {/* Laboratory Information */}
           <FormSection title="Laboratorijske informacije" icon={FlaskConical}>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Naziv laboratorije" icon={Building2}>
-                <input
-                  type="text"
-                  value={laboratoryName}
-                  onChange={(e) => setLaboratoryName(e.target.value)}
-                  className="input w-full"
+              <FormField label="Odaberite laboratoriju" icon={FlaskConical}>
+                <SearchableSelect
+                  options={laboratories.filter(l => l.isActive).map(l => ({
+                    id: l.id,
+                    label: l.name,
+                    sublabel: l.accreditationNumber ? `Akreditacija: ${l.accreditationNumber}` : undefined
+                  }))}
+                  value={laboratoryId}
+                  onChange={setLaboratoryId}
+                  placeholder="Odaberite laboratoriju"
+                  emptyMessage="Nema dostupnih laboratorija"
                 />
+                {laboratoryId && (
+                  <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm">
+                    <p className="text-dark-600 mb-1">
+                      <span className="font-semibold">Naziv:</span> {laboratories.find(l => l.id === laboratoryId)?.name}
+                    </p>
+                    {laboratories.find(l => l.id === laboratoryId)?.accreditationNumber && (
+                      <p className="text-dark-600">
+                        <span className="font-semibold">Akreditacija:</span> {laboratories.find(l => l.id === laboratoryId)?.accreditationNumber}
+                      </p>
+                    )}
+                  </div>
+                )}
               </FormField>
-              <FormField label="Broj akreditacije" icon={FileCheck}>
-                <input
-                  type="text"
-                  value={labAccreditationNumber}
-                  onChange={(e) => setLabAccreditationNumber(e.target.value)}
-                  className="input w-full"
-                />
-              </FormField>
-              <FormField label="Broj izvještaja" icon={FileText}>
-                <input
-                  type="text"
-                  value={testReportNumber}
-                  onChange={(e) => setTestReportNumber(e.target.value)}
-                  className="input w-full"
-                />
-              </FormField>
-              <FormField label="Datum izvještaja" icon={Calendar}>
-                <input
-                  type="date"
-                  value={testReportDate}
-                  onChange={(e) => setTestReportDate(e.target.value)}
-                  className="input w-full"
-                />
-              </FormField>
+              <div className="space-y-4">
+                <FormField label="Broj izvještaja" icon={FileText}>
+                  <input
+                    type="text"
+                    value={testReportNumber}
+                    onChange={(e) => setTestReportNumber(e.target.value)}
+                    className="input w-full"
+                  />
+                </FormField>
+                <FormField label="Datum izvještaja" icon={Calendar}>
+                  <input
+                    type="date"
+                    value={testReportDate}
+                    onChange={(e) => setTestReportDate(e.target.value)}
+                    className="input w-full"
+                  />
+                </FormField>
+              </div>
             </div>
           </FormSection>
 
@@ -501,6 +669,15 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                   placeholder="Ime i prezime vozača"
                 />
               </FormField>
+              <FormField label="Registarska oznaka vozila" icon={Truck}>
+                <input
+                  type="text"
+                  value={vehicleRegistration}
+                  onChange={(e) => setVehicleRegistration(e.target.value.toUpperCase())}
+                  className="input w-full"
+                  placeholder="npr. AA-123-BB"
+                />
+              </FormField>
             </div>
           </FormSection>
 
@@ -547,6 +724,45 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                 </div>
               )}
             </div>
+          </FormSection>
+
+          {/* Client Information */}
+          <FormSection title="Informacije o klijentu" icon={Users}>
+            <FormField label="Odaberite klijenta (firmu)" icon={Users}>
+              <SearchableSelect
+                options={clients.filter(c => c.isActive).map(c => ({
+                  id: c.id,
+                  label: c.name,
+                  sublabel: [c.code && `Šifra: ${c.code}`, c.pib && `PIB: ${c.pib}`].filter(Boolean).join(' | ') || undefined
+                }))}
+                value={clientId}
+                onChange={setClientId}
+                placeholder="Odaberite klijenta"
+                emptyMessage="Nema dostupnih klijenata"
+              />
+              {clientId && (
+                <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
+                  <p className="text-dark-600">
+                    <span className="font-semibold">Naziv:</span> {clients.find(c => c.id === clientId)?.name}
+                  </p>
+                  {clients.find(c => c.id === clientId)?.code && (
+                    <p className="text-dark-600">
+                      <span className="font-semibold">Šifra:</span> {clients.find(c => c.id === clientId)?.code}
+                    </p>
+                  )}
+                  {clients.find(c => c.id === clientId)?.pib && (
+                    <p className="text-dark-600">
+                      <span className="font-semibold">PIB:</span> {clients.find(c => c.id === clientId)?.pib}
+                    </p>
+                  )}
+                  {clients.find(c => c.id === clientId)?.idNumber && (
+                    <p className="text-dark-600">
+                      <span className="font-semibold">ID broj:</span> {clients.find(c => c.id === clientId)?.idNumber}
+                    </p>
+                  )}
+                </div>
+              )}
+            </FormField>
           </FormSection>
         </form>
 

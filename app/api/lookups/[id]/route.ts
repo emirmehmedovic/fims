@@ -29,7 +29,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
     const body = await req.json()
-    const { type, name, description, code, address, isActive } = body
+    const { type, name, description, code, address, isActive, manufacturers, additiveType } = body
 
     if (!type || !LOOKUP_TYPES.includes(type)) {
       return errorResponse(`Invalid lookup type. Valid types: ${LOOKUP_TYPES.join(', ')}`, 400)
@@ -64,15 +64,20 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const updateData: any = {}
     if (name !== undefined) updateData.name = name.trim()
     if (isActive !== undefined) updateData.isActive = isActive
-    
+
     if (type === 'products' || type === 'fuelCharacteristics') {
       if (description !== undefined) updateData.description = description || null
     }
-    
+
+    if (type === 'fuelCharacteristics') {
+      if (manufacturers !== undefined) updateData.manufacturers = manufacturers || []
+      if (additiveType !== undefined) updateData.type = additiveType || null
+    }
+
     if (type === 'countries') {
       if (code !== undefined) updateData.code = code || null
     }
-    
+
     if (type === 'pickupLocations') {
       if (address !== undefined) updateData.address = address || null
     }

@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { Role } from "@prisma/client"
+import { validateCSRF } from "@/lib/api/csrf"
 
 type Handler = (
   req: NextRequest,
@@ -16,6 +17,16 @@ export function withAuth(handler: Handler, allowedRoles?: Role[]) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // CSRF Protection: Validate origin/referer for state-changing operations
+    const csrfValidation = validateCSRF(req)
+    if (!csrfValidation.valid) {
+      console.error('[CSRF] Protection triggered:', csrfValidation.error)
+      return NextResponse.json(
+        { success: false, error: 'CSRF validation failed' },
+        { status: 403 }
       )
     }
 

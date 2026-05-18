@@ -53,7 +53,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       title: 'HOME',
       items: [
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/dashboard/fuel-entries', label: 'Evidencija goriva', icon: FileText },
+        { href: '/dashboard/fuel-entries', label: 'Izjave o usklađenosti', icon: FileText },
         { href: '/dashboard/account', label: 'Moj nalog', icon: UserCircle },
       ]
     },

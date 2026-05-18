@@ -4,11 +4,19 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import FuelEntryTable from '@/components/fuel-entries/FuelEntryTable'
 import CreateFuelEntryModal from '@/components/fuel-entries/CreateFuelEntryModal'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Warehouse {
   id: string
   name: string
   code: string
+  isActive: boolean
+}
+
+interface Client {
+  id: string
+  name: string
+  code?: string
   isActive: boolean
 }
 
@@ -32,6 +40,11 @@ interface FuelEntry {
     name: string
     email: string
   }
+  client?: {
+    id: string
+    name: string
+    code: string | null
+  } | null
   certificatePath: string | null
   certificateFileName: string | null
   createdAt: string
@@ -41,11 +54,13 @@ export default function FuelEntriesPage() {
   const { data: session } = useSession()
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   // Filter states
   const [warehouseFilter, setWarehouseFilter] = useState('')
+  const [clientFilter, setClientFilter] = useState('')
   const [productNameFilter, setProductNameFilter] = useState('')
   const [deliveryNoteFilter, setDeliveryNoteFilter] = useState('')
   const [registrationNumberFilter, setRegistrationNumberFilter] = useState('')
@@ -67,16 +82,17 @@ export default function FuelEntriesPage() {
   useEffect(() => {
     if (session) {
       fetchWarehouses()
+      fetchClients()
       fetchEntries()
     }
-  }, [session, page, warehouseFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
+  }, [session, page, warehouseFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
 
   const fetchWarehouses = async () => {
     try {
       // For OPERATOR/VIEWER, use warehouses from session
       const userRole = session?.user?.role
       const userWarehouses = (session?.user as any)?.warehouses || []
-      
+
       if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
         // Use only assigned warehouses
         setWarehouses(userWarehouses.map((w: any) => ({
@@ -98,6 +114,18 @@ export default function FuelEntriesPage() {
     }
   }
 
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients')
+      const data = await res.json()
+      if (data.success) {
+        setClients(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+    }
+  }
+
   const fetchEntries = async () => {
     setLoading(true)
     try {
@@ -105,6 +133,7 @@ export default function FuelEntriesPage() {
         page: page.toString(),
         limit: limit.toString(),
         ...(warehouseFilter && { warehouseId: warehouseFilter }),
+        ...(clientFilter && { clientId: clientFilter }),
         ...(productNameFilter && { productName: productNameFilter }),
         ...(deliveryNoteFilter && { deliveryNoteNumber: deliveryNoteFilter }),
         ...(registrationNumberFilter && { registrationNumber: registrationNumberFilter }),
@@ -137,6 +166,7 @@ export default function FuelEntriesPage() {
 
   const clearFilters = () => {
     setWarehouseFilter('')
+    setClientFilter('')
     setProductNameFilter('')
     setDeliveryNoteFilter('')
     setRegistrationNumberFilter('')
@@ -151,8 +181,8 @@ export default function FuelEntriesPage() {
       return
     }
 
-    if (total > 100) {
-      alert('Maksimalno 100 prijava može biti exportovano odjednom. Molimo suzite filtere.')
+    if (total > 200) {
+      alert('Maksimalno 200 prijava može biti exportovano odjednom. Molimo suzite filtere.')
       return
     }
 
@@ -163,7 +193,10 @@ export default function FuelEntriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           warehouseId: warehouseFilter || undefined,
+          clientId: clientFilter || undefined,
           productName: productNameFilter || undefined,
+          deliveryNoteNumber: deliveryNoteFilter || undefined,
+          registrationNumber: registrationNumberFilter || undefined,
           dateFrom: dateFromFilter || undefined,
           dateTo: dateToFilter || undefined,
           includeCertificates: true
@@ -230,7 +263,7 @@ export default function FuelEntriesPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Bulk Export ({total > 100 ? '100+' : total})
+                  Bulk Export ({total > 200 ? '200+' : total})
                 </>
               )}
             </button>
@@ -375,6 +408,26 @@ export default function FuelEntriesPage() {
                 </svg>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
+              Firma (Klijent)
+            </label>
+            <SearchableSelect
+              options={clients.filter(c => c.isActive).map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: c.code ? `Šifra: ${c.code}` : undefined
+              }))}
+              value={clientFilter}
+              onChange={(value) => {
+                setClientFilter(value)
+                setPage(1)
+              }}
+              placeholder="Sve firme"
+              emptyMessage="Nema dostupnih klijenata"
+            />
           </div>
 
           <div className="space-y-1.5">

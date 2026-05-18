@@ -26,6 +26,11 @@ interface FuelEntry {
     name: string
     email: string
   }
+  client?: {
+    id: string
+    name: string
+    code: string | null
+  } | null
   certificatePath: string | null
   certificateFileName: string | null
   createdAt: string
@@ -94,6 +99,9 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                 Skladište
               </th>
               <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Firma (Klijent)
+              </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Proizvod
               </th>
               <th className="text-right px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -137,6 +145,22 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                       {entry.warehouse.name}
                     </span>
                   </div>
+                </td>
+                <td className="px-6 py-4">
+                  {entry.client ? (
+                    <div className="flex flex-col">
+                      {entry.client.code && (
+                        <span className="text-xs text-slate-500 font-mono">
+                          {entry.client.code}
+                        </span>
+                      )}
+                      <span className="text-sm text-slate-700">
+                        {entry.client.name}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">—</span>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-slate-700 font-medium">

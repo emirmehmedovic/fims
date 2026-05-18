@@ -81,6 +81,19 @@ export async function generateQRCode(data: string): Promise<string> {
 export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string, footerBase64: string): string {
   const currentDate = formatDateSarajevo(new Date())
 
+  // Format delivery note or customs declaration info
+  let documentInfo = ''
+  if (entry.deliveryNoteNumber && entry.deliveryNoteDate) {
+    documentInfo = `${entry.deliveryNoteNumber}, ${formatDate(entry.deliveryNoteDate)}`
+  } else if (entry.customsDeclarationNumber && entry.customsDeclarationDate) {
+    documentInfo = `${entry.customsDeclarationNumber}, ${formatDate(entry.customsDeclarationDate)}`
+  }
+
+  // Format improved characteristics
+  const characteristicsText = entry.isHigherQuality && entry.improvedCharacteristics.length > 0
+    ? entry.improvedCharacteristics.join(', ')
+    : ''
+
   return `
 <!DOCTYPE html>
 <html lang="bs">
@@ -90,217 +103,130 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
   <style>
     @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
     body {
       font-family: Arial, sans-serif;
-      font-size: 11px;
-      line-height: 1.3;
-      color: #1a1a1a;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #000;
       background: white;
       width: 210mm;
       height: 297mm;
     }
-    
+
     .page {
       width: 210mm;
       height: 297mm;
       display: flex;
       flex-direction: column;
+      padding: 12mm 20mm;
     }
-    
-    /* Header - full width edge to edge */
-    .header-container {
-      width: 100%;
-    }
-    .header-image {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    
-    /* Main content */
-    .main-content {
-      flex: 1;
-      padding: 3mm 10mm;
-      display: flex;
-      flex-direction: column;
-    }
-    
+
     /* Title */
     .document-title {
       text-align: center;
-      margin-bottom: 3mm;
+      margin-bottom: 6mm;
     }
     .document-title h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a1a1a;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .registration-badge {
-      display: inline-block;
-      background: #1a1a1a;
-      color: white;
-      padding: 4px 16px;
-      border-radius: 4px;
       font-size: 14px;
-      font-weight: 600;
-      margin-top: 3mm;
-    }
-    .characteristics-tag {
-      background: #e0e0e0;
-      color: #1a1a1a;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 9px;
-      margin-right: 3px;
-      display: inline-block;
-      margin-top: 2px;
-    }
-    
-    /* Sections grid */
-    .sections-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2mm;
-      margin-bottom: 2mm;
-    }
-    
-    .section {
-      background: #f9f9f9;
-      border: 1px solid #e0e0e0;
-      border-radius: 3px;
-      padding: 2mm;
-    }
-    
-    .section-title {
-      font-size: 10px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: #000;
       text-transform: uppercase;
+      line-height: 1.4;
+      margin-bottom: 0;
+    }
+
+    /* Content */
+    .content {
+      flex: 1;
+    }
+
+    .field {
       margin-bottom: 1.5mm;
-      padding-bottom: 1mm;
-      border-bottom: 1px solid #ddd;
+      line-height: 1.6;
     }
-    
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1mm;
-      align-items: center;
-    }
-    .info-label {
-      font-size: 10px;
-      color: #555;
-    }
-    .info-value {
-      font-size: 11px;
-      color: #1a1a1a;
-      font-weight: 500;
-      text-align: right;
-    }
-    .info-value.highlight {
-      color: #1a1a1a;
-      font-weight: 700;
-      font-size: 12px;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 9px;
+
+    .field-label {
       font-weight: 600;
+      display: inline;
+      color: #000;
     }
-    .badge-success { background: #d4edda; color: #155724; }
-    .badge-info { background: #e2e3e5; color: #383d41; }
-    
+
+    .field-value {
+      display: inline;
+      font-weight: 400;
+      color: #000;
+    }
+
+    .checkbox-field {
+      margin: 3mm 0;
+      padding: 2mm 0;
+    }
+
+    .checkbox {
+      display: inline-block;
+      width: 3.5mm;
+      height: 3.5mm;
+      border: 1.5px solid #000;
+      margin-right: 2mm;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      top: -2mm;
+      left: 0.3mm;
+      font-size: 13px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .section-spacing {
+      margin-top: 4mm;
+    }
+
+    .subsection {
+      margin-left: 5mm;
+      margin-top: 1mm;
+    }
+
     /* Declaration */
     .declaration {
-      background: #f5f5f5;
-      border: 2px solid #1a1a1a;
-      border-radius: 4px;
-      padding: 4mm;
       margin: 4mm 0;
-    }
-    .declaration-text {
-      font-size: 12px;
-      line-height: 1.6;
-      color: #1a1a1a;
       text-align: justify;
-      font-weight: 500;
+      line-height: 1.5;
     }
-    
+
     /* Signature area */
     .signature-area {
+      margin-top: 6mm;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-top: auto;
-      padding-top: 3mm;
-      border-top: 1px solid #eee;
     }
-    
+
     .date-section {
-      flex: 0 0 30%;
+      flex: 0 0 40%;
     }
-    .date-label {
-      font-size: 10px;
-      color: #666;
-    }
-    .date-value {
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 2mm;
-    }
-    
-    .stamp-section {
-      flex: 0 0 45%;
+
+    .signature-section {
+      flex: 0 0 50%;
       text-align: right;
     }
-    .stamp-section img {
-      width: 45mm;
+
+    .signature-section img {
+      width: 50mm;
       height: auto;
+      margin-bottom: 2mm;
     }
-    .stamp-label {
+
+    .signature-label {
       font-size: 10px;
-      color: #666;
-      margin-top: 2mm;
-    }
-    
-    /* Bottom section - QR and Logo side by side */
-    .bottom-section {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10mm;
-      padding: 3mm 10mm;
-      border-top: 1px solid #eee;
-    }
-    
-    .qr-box {
       text-align: center;
     }
-    .qr-box img {
-      width: 20mm;
-      height: 20mm;
-    }
-    .qr-box .qr-label {
-      font-size: 7px;
-      color: #888;
-      margin-top: 1mm;
-    }
-    
-    .logo-box {
-      text-align: center;
-    }
-    .logo-box img {
-      height: 20mm;
-      width: auto;
-      border-radius: 5px;
-    }
-    
+
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
@@ -308,179 +234,115 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
 </head>
 <body>
   <div class="page">
-    <!-- Header - Full Width -->
-    <div class="header-container">
-      <img src="${headerBase64}" alt="HIFA PETROL" class="header-image" />
+    <!-- Title -->
+    <div class="document-title">
+      <h1>IZJAVA O USKLAĐENOSTI SA STANDARDIMA<br>KVALITETA TEČNIH NAFTNIH GORIVA</h1>
     </div>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Title -->
-      <div class="document-title">
-        <h1>Izjava o usklađenosti</h1>
-        <div class="registration-badge">Registarski broj: ${entry.registrationNumber}</div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="field">
+        <span class="field-label">Registracijski broj dobavljača:</span>
+        <span class="field-value">${entry.registrationNumber}</span>
       </div>
 
-      <!-- Sections Grid -->
-      <div class="sections-grid">
-        <!-- Osnovne informacije -->
-        <div class="section">
-          <div class="section-title">Osnovne informacije</div>
-          <div class="info-row">
-            <span class="info-label">Datum ulaza:</span>
-            <span class="info-value">${formatDate(entry.entryDate)}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Skladište:</span>
-            <span class="info-value">${entry.warehouse.code} - ${entry.warehouse.name}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Naziv proizvoda:</span>
-            <span class="info-value highlight">${entry.productName}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Količina:</span>
-            <span class="info-value highlight">${entry.quantity.toLocaleString()} L</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Zemlja porijekla:</span>
-            <span class="info-value">${entry.countryOfOrigin || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Viša kvaliteta:</span>
-            <span class="info-value">${entry.isHigherQuality ? '<span class="badge badge-success">Da</span>' : '<span class="badge badge-info">Ne</span>'}</span>
-          </div>
-          ${entry.isHigherQuality && entry.improvedCharacteristics.length > 0 ? `
-          <div class="info-row" style="flex-wrap: wrap;">
-            <span class="info-label">Karakteristike:</span>
-            <span class="info-value" style="flex: 1; text-align: right;">
-              ${entry.improvedCharacteristics.map(char => `<span class="characteristics-tag">${char}</span>`).join('')}
-            </span>
-          </div>
-          ` : ''}
-        </div>
-
-        <!-- Dokumentacija -->
-        <div class="section">
-          <div class="section-title">Dokumentacija</div>
-          <div class="info-row">
-            <span class="info-label">Broj otpremnice:</span>
-            <span class="info-value">${entry.deliveryNoteNumber || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Datum otpremnice:</span>
-            <span class="info-value">${formatDate(entry.deliveryNoteDate)}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Broj carinske dekl.:</span>
-            <span class="info-value">${entry.customsDeclarationNumber || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Datum carinske dekl.:</span>
-            <span class="info-value">${formatDate(entry.customsDeclarationDate)}</span>
-          </div>
-        </div>
-
-        <!-- Laboratorij -->
-        <div class="section">
-          <div class="section-title">Laboratorijske informacije</div>
-          <div class="info-row">
-            <span class="info-label">Naziv laboratorije:</span>
-            <span class="info-value">${entry.laboratoryName || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Broj akreditacije:</span>
-            <span class="info-value">${entry.labAccreditationNumber || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Broj izvještaja:</span>
-            <span class="info-value">${entry.testReportNumber || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Datum izvještaja:</span>
-            <span class="info-value">${formatDate(entry.testReportDate)}</span>
-          </div>
-        </div>
-
-        <!-- Transport -->
-        <div class="section">
-          <div class="section-title">Dobavljač i transport</div>
-          <div class="info-row">
-            <span class="info-label">Dobavljač:</span>
-            <span class="info-value">${entry.supplier?.name || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Prevoznik:</span>
-            <span class="info-value">${entry.transporter?.name || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Vozač:</span>
-            <span class="info-value">${entry.driverName || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Lokacija preuzimanja:</span>
-            <span class="info-value">${entry.pickupLocation || '-'}</span>
-          </div>
-        </div>
+      <div class="field">
+        <span class="field-label">Matični broj dobavljača:</span>
+        <span class="field-value">4200999090005</span>
       </div>
 
-      <!-- Evidencija - full width -->
-      <div class="section">
-        <div class="section-title">Evidencija</div>
-        <div style="display: flex; gap: 8mm;">
-          <div style="flex: 1;">
-            <div class="info-row">
-              <span class="info-label">Operator:</span>
-              <span class="info-value">${entry.operator.name}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Narudžbu otvorio:</span>
-              <span class="info-value">${entry.orderOpenedBy || '-'}</span>
-            </div>
-          </div>
-          <div style="flex: 1;">
-            <div class="info-row">
-              <span class="info-label">Datum kreiranja:</span>
-              <span class="info-value">${formatDateTime(entry.createdAt)}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Certifikat:</span>
-              <span class="info-value">${entry.certificatePath ? '<span class="badge badge-success">Priložen</span>' : '<span class="badge badge-info">Nije priložen</span>'}</span>
-            </div>
-          </div>
-        </div>
+      <div class="field">
+        <span class="field-label">Naziv dobavljača:</span>
+        <span class="field-value">HIFA-PETROL d.o.o. Sarajevo</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Adresa dobavljača:</span>
+        <span class="field-value">Hotonj bb</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Broj telefona/Fax/e-mail:</span>
+        <span class="field-value">033/584 370, Fax: 033/584 482, email:info@hifapetrol.ba</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Mjesto sjedišta:</span>
+        <span class="field-value">Hotonj bb, 71320 Vogošća</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Ime i prezime odgovorne osobe u pravnom licu:</span>
+        <span class="field-value">Halid Kadrić, direktor</span>
+      </div>
+
+      <div class="field section-spacing">
+        <span class="field-label">Naziv proizvoda:</span>
+        <span class="field-value">${entry.productName}</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Količina pošiljke:</span>
+        <span class="field-value">${entry.quantity.toLocaleString()} L</span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Broj otpremnice i datum ili broj carinske deklaracije i datum:</span>
+        <span class="field-value">${documentInfo}</span>
+      </div>
+
+      <div class="checkbox-field section-spacing">
+        <span class="checkbox ${entry.isHigherQuality ? 'checked' : ''}"></span>
+        <span class="field-label">Tekuće naftno gorivo višeg kvalitetnog nivoa</span>
+      </div>
+${entry.isHigherQuality && characteristicsText ? `
+      <div class="field subsection">
+        <span class="field-label">Poboljšane karakteristike:</span>
+        <span class="field-value">${characteristicsText}</span>
+      </div>` : ''}
+
+      <div class="field section-spacing">
+        <span class="field-label">Tečno naftno gorivo proizvedeno u:</span>
+        <span class="field-value">${entry.countryOfOrigin || ''}</span>
+      </div>
+
+      <div class="field section-spacing">
+        <span class="field-label">Tečno naftno gorivo je ispitano u akreditiranoj laboratoriji:</span>
+      </div>
+
+      <div class="field subsection">
+        <span class="field-label">Naziv i sjedište laboratorije:</span>
+        <span class="field-value">${entry.laboratoryName || ''}</span>
+      </div>
+
+      <div class="field subsection">
+        <span class="field-label">Broj rješenja akreditacije laboratorije:</span>
+        <span class="field-value">${entry.labAccreditationNumber || ''}</span>
+      </div>
+
+      <div class="field subsection">
+        <span class="field-label">Broj i datum izvještaja o ispitivanju:</span>
+        <span class="field-value">${entry.testReportNumber || ''}${entry.testReportDate ? ', ' + formatDate(entry.testReportDate) : ''}</span>
       </div>
 
       <!-- Declaration -->
-      <div class="declaration">
-        <p class="declaration-text">
-          Pod punom materijalnom i krivičnom odgovornošću izjavljujem da tečno naftno gorivo, 
-          na koje se odnosi ova izjava, odgovara kvalitetu i graničnim vrijednostima definiranim 
-          Odlukom o kvalitetu tečnih naftnih goriva ("Službeni glasnik BiH", broj: 10/24).
-        </p>
+      <div class="declaration section-spacing">
+        Pod punom materijalnom i krivičnom odgovornošću izjavljujem da tečno naftno gorivo,
+        na koje se odnosi ova izjava, odgovara kvalitetu i graničnim vrijednostima definiranim
+        Odlukom o kvalitetu tečnih naftnih goriva („Službeni glasnik BiH", broj: 10/24).
       </div>
 
       <!-- Signature Area -->
       <div class="signature-area">
         <div class="date-section">
-          <div class="date-label">U Sarajevu,</div>
-          <div class="date-value">${currentDate}</div>
+          <div>U Sarajevu</div>
+          <div>Dana ${currentDate}</div>
         </div>
-        
-        <div class="stamp-section">
-          <img src="${stampBase64}" alt="Pečat i potpis" />
-          <div class="stamp-label">Potpis odgovorne osobe</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Bottom Section - QR and Logo side by side -->
-    <div class="bottom-section">
-      <div class="qr-box">
-        ${qrCodeDataUrl ? `<img src="${qrCodeDataUrl}" alt="QR Code" /><div class="qr-label">Skeniraj za verifikaciju</div>` : ''}
-      </div>
-      <div class="logo-box">
-        <img src="${footerBase64}" alt="HIFA PETROL" />
+        <div class="signature-section">
+          <img src="${stampBase64}" alt="Pečat i potpis" />
+          <div class="signature-label">Direktor Društva</div>
+        </div>
       </div>
     </div>
   </div>
@@ -502,10 +364,34 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
   }
 }
 
-export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
+// Helper function to create browser instance
+async function createBrowser() {
+  if (isServerless) {
+    const executablePath = await chromium.executablePath(
+      'https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
+    )
+    return await puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1920, height: 1080 },
+      executablePath,
+      headless: true,
+    })
+  } else {
+    return await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+  }
+}
+
+// OPTIMIZED: Accepts optional browser instance for reuse
+export async function generatePDF(
+  entry: FuelEntryData,
+  browserInstance?: any
+): Promise<Buffer> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
   const verificationUrl = `${baseUrl}/verify/${entry.id}`
-  
+
   // Load images as base64
   const [qrCodeDataUrl, headerBase64, stampBase64, footerBase64] = await Promise.all([
     generateQRCode(verificationUrl),
@@ -513,34 +399,17 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
     loadImageAsBase64('pecat.png'),
     loadImageAsBase64('Screenshot_8.png')
   ])
-  
+
   const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64, footerBase64)
 
-  let browser
-  
-  if (isServerless) {
-    // Vercel/Serverless: use puppeteer-core with @sparticuz/chromium-min
-    const executablePath = await chromium.executablePath(
-      'https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
-    )
-    browser = await puppeteerCore.launch({
-      args: chromium.args,
-      defaultViewport: { width: 1920, height: 1080 },
-      executablePath,
-      headless: true,
-    })
-  } else {
-    // Local/Private server: use regular puppeteer
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
-  }
+  // Use provided browser or create new one
+  const browser = browserInstance || await createBrowser()
+  const shouldCloseBrowser = !browserInstance // Only close if we created it
 
   try {
     const page = await browser.newPage()
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
-    
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -552,9 +421,12 @@ export async function generatePDF(entry: FuelEntryData): Promise<Buffer> {
       }
     })
 
+    await page.close() // Always close the page
     return Buffer.from(pdfBuffer)
   } finally {
-    await browser.close()
+    if (shouldCloseBrowser) {
+      await browser.close()
+    }
   }
 }
 
@@ -597,12 +469,22 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
   }
 }
 
-export async function generateFuelEntryPDF(entry: FuelEntryData, includeCertificate: boolean = true): Promise<Buffer> {
-  const mainPdf = await generatePDF(entry)
-  
+// OPTIMIZED: Accepts optional browser instance for bulk operations
+export async function generateFuelEntryPDF(
+  entry: FuelEntryData,
+  includeCertificate: boolean = true,
+  browserInstance?: any
+): Promise<Buffer> {
+  const mainPdf = await generatePDF(entry, browserInstance)
+
   if (includeCertificate && entry.certificatePath) {
     return await mergePDFs(mainPdf, entry.certificatePath)
   }
-  
+
   return mainPdf
+}
+
+// Helper to create shared browser for bulk operations
+export async function createSharedBrowser() {
+  return await createBrowser()
 }

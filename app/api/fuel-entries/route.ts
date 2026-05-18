@@ -14,6 +14,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const warehouseId = searchParams.get('warehouseId')
+    const clientId = searchParams.get('clientId')
     const productName = searchParams.get('productName')
     const deliveryNoteNumber = searchParams.get('deliveryNoteNumber')
     const registrationNumber = searchParams.get('registrationNumber')
@@ -50,6 +51,10 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
         }
       }
       where.warehouseId = warehouseId
+    }
+
+    if (clientId) {
+      where.clientId = clientId
     }
 
     if (productName) {
@@ -102,6 +107,20 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             name: true,
             email: true
           }
+        },
+        client: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        laboratory: {
+          select: {
+            id: true,
+            name: true,
+            accreditationNumber: true
+          }
         }
       },
       orderBy: {
@@ -132,6 +151,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const customsDeclarationDate = formData.get('customsDeclarationDate') as string | null
     const isHigherQuality = formData.get('isHigherQuality') === 'true'
     const improvedCharacteristics = formData.getAll('improvedCharacteristics[]') as string[]
+    const additiveDetailsStr = formData.get('additiveDetails') as string | null
+    const additiveDetails = additiveDetailsStr ? JSON.parse(additiveDetailsStr) : null
     const countryOfOrigin = formData.get('countryOfOrigin') as string | null
     const laboratoryName = formData.get('laboratoryName') as string | null
     const labAccreditationNumber = formData.get('labAccreditationNumber') as string | null
@@ -142,6 +163,9 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const supplierId = formData.get('supplierId') as string | null
     const transporterId = formData.get('transporterId') as string | null
     const driverName = formData.get('driverName') as string | null
+    const vehicleRegistration = formData.get('vehicleRegistration') as string | null
+    const clientId = formData.get('clientId') as string | null
+    const laboratoryId = formData.get('laboratoryId') as string | null
     const certificate = formData.get('certificate') as File | null
 
     // Validation
@@ -178,6 +202,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         customsDeclarationDate: customsDeclarationDate ? new Date(customsDeclarationDate) : null,
         isHigherQuality,
         improvedCharacteristics: improvedCharacteristics.filter(Boolean),
+        additiveDetails: additiveDetails || null,
         countryOfOrigin: countryOfOrigin || null,
         laboratoryName: laboratoryName || null,
         labAccreditationNumber: labAccreditationNumber || null,
@@ -189,6 +214,9 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         supplierId: supplierId || null,
         transporterId: transporterId || null,
         driverName: driverName || null,
+        vehicleRegistration: vehicleRegistration || null,
+        clientId: clientId || null,
+        laboratoryId: laboratoryId || null,
         certificatePath: null,
         certificateFileName: null,
         certificateUploadedAt: null,
@@ -207,6 +235,20 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             id: true,
             name: true,
             email: true
+          }
+        },
+        client: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        laboratory: {
+          select: {
+            id: true,
+            name: true,
+            accreditationNumber: true
           }
         }
       }
