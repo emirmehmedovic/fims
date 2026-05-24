@@ -23,12 +23,15 @@ const getLookupModel = (type: LookupType) => {
   }
 }
 
-// GET /api/lookups?type=products - Get all items of a lookup type
+// GET /api/lookups?type=products - Get all items of a lookup type with pagination and search
 export const GET = withAuth(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const type = searchParams.get('type') as LookupType
     const includeInactive = searchParams.get('includeInactive') === 'true'
+    const page = parseInt(searchParams.get('page') || '1')
+    const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    const search = searchParams.get('search') || ''
 
     if (!type || !LOOKUP_TYPES.includes(type)) {
       return errorResponse(`Invalid lookup type. Valid types: ${LOOKUP_TYPES.join(', ')}`, 400)
@@ -44,12 +47,31 @@ export const GET = withAuth(async (req: NextRequest) => {
       where.isActive = true
     }
 
+    // Add search filter
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' }
+    }
+
+    // Get total count
+    const totalCount = await (model as any).count({ where })
+
+    // Get paginated results
     const items = await (model as any).findMany({
       where,
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize
     })
 
-    return successResponse(items)
+    return successResponse({
+      data: items,
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages: Math.ceil(totalCount / pageSize)
+      }
+    })
   } catch (error) {
     console.error('Error fetching lookup items:', error)
     return errorResponse('Failed to fetch lookup items', 500)

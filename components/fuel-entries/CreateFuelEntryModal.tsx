@@ -133,23 +133,23 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const fetchLookupData = async () => {
     try {
       const [productsRes, countriesRes, locationsRes, characteristicsRes] = await Promise.all([
-        fetch('/api/lookups?type=products'),
-        fetch('/api/lookups?type=countries'),
-        fetch('/api/lookups?type=pickupLocations'),
-        fetch('/api/lookups?type=fuelCharacteristics')
+        fetch('/api/lookups?type=products&pageSize=1000'),
+        fetch('/api/lookups?type=countries&pageSize=1000'),
+        fetch('/api/lookups?type=pickupLocations&pageSize=1000'),
+        fetch('/api/lookups?type=fuelCharacteristics&pageSize=1000')
       ])
-      
+
       const [productsData, countriesData, locationsData, characteristicsData] = await Promise.all([
         productsRes.json(),
         countriesRes.json(),
         locationsRes.json(),
         characteristicsRes.json()
       ])
-      
-      if (productsData.success) setProducts(productsData.data)
-      if (countriesData.success) setCountries(countriesData.data)
-      if (locationsData.success) setPickupLocations(locationsData.data)
-      if (characteristicsData.success) setFuelCharacteristics(characteristicsData.data)
+
+      if (productsData.success) setProducts(productsData.data.data || productsData.data)
+      if (countriesData.success) setCountries(countriesData.data.data || countriesData.data)
+      if (locationsData.success) setPickupLocations(locationsData.data.data || locationsData.data)
+      if (characteristicsData.success) setFuelCharacteristics(characteristicsData.data.data || characteristicsData.data)
     } catch (error) {
       console.error('Error fetching lookup data:', error)
     }
@@ -157,10 +157,10 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
 
   const fetchSuppliers = async () => {
     try {
-      const res = await fetch('/api/suppliers')
+      const res = await fetch('/api/suppliers?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setSuppliers(data.data)
+        setSuppliers(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching suppliers:', error)
@@ -169,10 +169,10 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
 
   const fetchTransporters = async () => {
     try {
-      const res = await fetch('/api/transporters')
+      const res = await fetch('/api/transporters?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setTransporters(data.data)
+        setTransporters(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching transporters:', error)
@@ -181,10 +181,10 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
 
   const fetchLaboratories = async () => {
     try {
-      const res = await fetch('/api/laboratories')
+      const res = await fetch('/api/laboratories?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setLaboratories(data.data)
+        setLaboratories(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching laboratories:', error)
@@ -193,10 +193,10 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
 
   const fetchClients = async () => {
     try {
-      const res = await fetch('/api/clients')
+      const res = await fetch('/api/clients?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setClients(data.data)
+        setClients(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching clients:', error)

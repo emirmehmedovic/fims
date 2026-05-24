@@ -5,11 +5,11 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import Link from 'next/link'
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Building2, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  Building2,
+  Users,
   ClipboardList,
   LogOut,
   Fuel,
@@ -17,7 +17,8 @@ import {
   Database,
   BarChart3,
   Mail,
-  UserCircle
+  UserCircle,
+  Upload
 } from 'lucide-react'
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         { href: '/dashboard/statistics', label: 'Statistika', icon: BarChart3 },
         { href: '/dashboard/users', label: 'Korisnici', icon: Users },
         { href: '/dashboard/master-data', label: 'Master Podaci', icon: Database },
+        { href: '/dashboard/admin/import', label: 'Import Klijenata', icon: Upload },
         { href: '/dashboard/audit-logs', label: 'Audit Logovi', icon: ClipboardList },
         { href: '/dashboard/auto-send', label: 'Auto slanje', icon: Mail },
       ]

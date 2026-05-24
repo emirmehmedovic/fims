@@ -106,7 +106,7 @@ export default function FuelEntriesPage() {
         const res = await fetch('/api/warehouses')
         const data = await res.json()
         if (data.success) {
-          setWarehouses(data.data)
+          setWarehouses(data.data.data || data.data)
         }
       }
     } catch (error) {
@@ -116,10 +116,10 @@ export default function FuelEntriesPage() {
 
   const fetchClients = async () => {
     try {
-      const res = await fetch('/api/clients')
+      const res = await fetch('/api/clients?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setClients(data.data)
+        setClients(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching clients:', error)

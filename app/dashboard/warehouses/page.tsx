@@ -28,11 +28,11 @@ export default function WarehousesPage() {
   const fetchWarehouses = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/warehouses?includeInactive=true')
+      const response = await fetch('/api/warehouses?includeInactive=true&pageSize=1000')
       const data = await response.json()
 
       if (data.success) {
-        setWarehouses(data.data)
+        setWarehouses(data.data.data || data.data)
       }
     } catch (error) {
       console.error('Error fetching warehouses:', error)

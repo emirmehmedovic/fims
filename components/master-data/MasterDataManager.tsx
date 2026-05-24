@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2, FlaskConical, Users } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2, FlaskConical, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface LookupItem {
   id: string
@@ -138,11 +138,28 @@ export default function MasterDataManager() {
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
 
+  // Pagination and search state
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(50)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
   const currentTab = TABS.find(t => t.type === activeTab)!
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setPage(1) // Reset to page 1 when searching
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   useEffect(() => {
     fetchItems()
-  }, [activeTab])
+  }, [activeTab, page, debouncedSearch])
 
   // Get API endpoint based on tab type
   const getApiEndpoint = () => {
@@ -152,14 +169,26 @@ export default function MasterDataManager() {
   const fetchItems = async () => {
     setLoading(true)
     try {
-      const endpoint = currentTab.apiEndpoint 
-        ? `${currentTab.apiEndpoint}?includeInactive=true`
-        : `/api/lookups?type=${activeTab}&includeInactive=true`
-      
+      const params = new URLSearchParams({
+        includeInactive: 'true',
+        page: page.toString(),
+        pageSize: pageSize.toString()
+      })
+
+      if (debouncedSearch) {
+        params.append('search', debouncedSearch)
+      }
+
+      const endpoint = currentTab.apiEndpoint
+        ? `${currentTab.apiEndpoint}?${params}`
+        : `/api/lookups?type=${activeTab}&${params}`
+
       const res = await fetch(endpoint)
       const data = await res.json()
       if (data.success) {
-        setItems(data.data)
+        setItems(data.data.data || data.data)
+        setTotalPages(data.data.pagination?.totalPages || 1)
+        setTotalCount(data.data.pagination?.totalCount || 0)
       }
     } catch (error) {
       console.error('Error fetching items:', error)
@@ -354,6 +383,8 @@ export default function MasterDataManager() {
                 setEditingId(null)
                 setFormData({})
                 setError('')
+                setSearchQuery('')
+                setPage(1)
               }}
               className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                 activeTab === tab.type
@@ -370,21 +401,51 @@ export default function MasterDataManager() {
       </div>
 
       <div className="p-4 sm:p-6">
-        {/* Add Button */}
-        {!showAddForm && !editingId && (
-          <button
-            onClick={() => {
-              setShowAddForm(true)
-              setFormData({})
-              setError('')
-            }}
-            className="btn-primary flex items-center gap-2 text-sm mb-4 sm:mb-6"
-          >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Dodaj {currentTab.label.slice(0, -1).toLowerCase()}</span>
-            <span className="sm:hidden">Dodaj</span>
-          </button>
+        {/* Total Count */}
+        {!loading && (
+          <div className="text-sm text-dark-600 mb-3">
+            Ukupno: <span className="font-semibold text-dark-900">{totalCount}</span> {searchQuery && `(filtrirano)`}
+          </div>
         )}
+
+        {/* Search and Add Button Row */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+          {/* Search Bar */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+            <input
+              type="text"
+              placeholder={`Pretraži ${currentTab.label.toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input w-full pl-10 text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Add Button */}
+          {!showAddForm && !editingId && (
+            <button
+              onClick={() => {
+                setShowAddForm(true)
+                setFormData({})
+                setError('')
+              }}
+              className="btn-primary flex items-center gap-2 text-sm whitespace-nowrap"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Dodaj {currentTab.label.slice(0, -1).toLowerCase()}</span>
+              <span className="sm:hidden">Dodaj</span>
+            </button>
+          )}
+        </div>
 
         {/* Add Form */}
         {showAddForm && (
@@ -462,7 +523,8 @@ export default function MasterDataManager() {
             <p className="text-dark-400 text-xs sm:text-sm mt-1">Dodajte prvi unos klikom na dugme iznad</p>
           </div>
         ) : (
-          <div className="space-y-2 sm:space-y-3">
+          <>
+            <div className="space-y-2 sm:space-y-3">
             {items
               .sort((a, b) => {
                 // Active items first, then inactive
@@ -591,10 +653,63 @@ export default function MasterDataManager() {
                   </div>
                 )}
               </div>
-                  </div>
-                )
-              })}
+            </div>
+          )
+        })}
           </div>
+
+          {/* Pagination */}
+          {!loading && items.length > 0 && totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-dark-100">
+              <div className="text-sm text-dark-600">
+                Prikazano {Math.min((page - 1) * pageSize + 1, totalCount)}-{Math.min(page * pageSize, totalCount)} od {totalCount}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 rounded-lg border border-dark-200 hover:bg-dark-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = idx + 1
+                    } else if (page <= 3) {
+                      pageNum = idx + 1
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + idx
+                    } else {
+                      pageNum = page - 2 + idx
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          page === pageNum
+                            ? 'bg-dark-900 text-white'
+                            : 'hover:bg-dark-100 text-dark-600'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 rounded-lg border border-dark-200 hover:bg-dark-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

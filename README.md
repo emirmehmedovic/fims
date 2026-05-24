@@ -121,7 +121,29 @@ fims/
 
 ## 📄 Dokumentacija
 
+### Production Deployment
+
+**🚀 Za deployment na production server:**
+- **[/docs/DEPLOYMENT_GUIDE.md](/docs/DEPLOYMENT_GUIDE.md)** - Kompletan deployment vodič sa:
+  - Sistemski zahtevi i instalacija
+  - PostgreSQL, Nginx, PM2 setup
+  - SSL certifikati (Certbot)
+  - Firewall i sigurnost
+  - Backup strategija
+  - Troubleshooting
+
+- **[/docs/OPERATIONS_CHEATSHEET.md](/docs/OPERATIONS_CHEATSHEET.md)** - Brzi referentni vodič sa najčešćim komandama
+
+- **[/scripts/](/scripts/)** - Backup i restore skripte:
+  - `backup-db.sh` - Automatski database backup
+  - `backup-files.sh` - Backup aplikacijskih fajlova
+  - `restore-db.sh` - Database restore procedura
+  - `README-BACKUP.md` - Detaljna dokumentacija za backup/restore
+
+### Development & API
+
 Kompletna dokumentacija projekta se nalazi u `/docs` folderu:
+- **[/docs/README.md](/docs/README.md)** - Pregled sve dokumentacije
 - `FUEL_INVENTORY_SPEC.md` - Tehnička specifikacija
 - `API_EXAMPLES.md` - API primjeri
 - `UTILITIES.md` - Helper funkcije i snippeti
@@ -142,5 +164,40 @@ Provjeri da je `NEXTAUTH_URL` postavljen na `http://localhost:3000`
 
 ---
 
+## 🛠️ Production Management
+
+### PM2 Process Manager
+
+```bash
+# Start aplikacije sa PM2
+pm2 start ecosystem.config.js
+
+# Status
+pm2 status
+
+# Logs
+pm2 logs fims
+
+# Restart (zero-downtime)
+pm2 reload fims
+```
+
+Vidi `ecosystem.config.js` za konfiguraciju.
+
+### Backup & Restore
+
+```bash
+# Manual backup
+./scripts/backup-db.sh
+./scripts/backup-files.sh
+
+# Restore
+./scripts/restore-db.sh /path/to/backup.sql.gz
+```
+
+Za automatske backup-e, vidi [/scripts/README-BACKUP.md](/scripts/README-BACKUP.md).
+
+---
+
 **Version:** 1.0.0
-**Last Updated:** November 28, 2024
+**Last Updated:** January 21, 2025
