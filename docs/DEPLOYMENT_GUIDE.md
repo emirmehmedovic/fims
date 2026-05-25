@@ -280,6 +280,9 @@ SMTP_SECURE="false"
 
 # Cron (za scheduled tasks)
 CRON_SECRET="GENERISITE_DRUGI_RANDOM_STRING"
+
+# File Uploads
+UPLOAD_DIR="./public/uploads/certificates"
 ```
 
 **Generisanje sigurnih secret-a:**
@@ -316,7 +319,37 @@ npm run prisma:seed
 
 ⚠️ **BITNO:** Promijenite admin lozinku odmah nakon prvog logina!
 
-### 5.5 Build aplikacije
+### 5.5 Setup upload foldera
+
+Aplikacija koristi folder za upload certifikata. Kreiranje i postavljanje permisija:
+
+```bash
+# Kreiranje upload direktorija
+mkdir -p public/uploads/certificates
+
+# Postavljanje permisija
+# Opcija 1: Osnovna permisija (owner može sve, group i others read+execute)
+chmod 755 public/uploads
+chmod 755 public/uploads/certificates
+
+# Opcija 2: Restriktivnija permisija (samo owner)
+chmod 700 public/uploads/certificates
+
+# Verifikacija
+ls -la public/uploads/
+```
+
+**Preporučene permisije:**
+- **Development:** `chmod 755` (dovoljno fleksibilno)
+- **Production:** `chmod 755` ili `chmod 775` (ako Nginx treba pristup)
+
+**BITNO:** Osiguraj da je owner fajlova user koji pokreće PM2 (npr. `fims`):
+```bash
+# Ako treba promijeniti owner-a
+chown -R fims:fims public/uploads
+```
+
+### 5.6 Build aplikacije
 
 ```bash
 npm run build
@@ -327,7 +360,7 @@ Verifikacija build-a:
 ls -lh .next/
 ```
 
-### 5.6 Test lokalno
+### 5.7 Test lokalno
 
 ```bash
 # Test run
@@ -340,6 +373,18 @@ curl http://localhost:3000
 ```
 
 Ako radi, zaustavi sa `Ctrl+C`.
+
+**Test upload funkcionalnosti (opciono):**
+```bash
+# Kreiraj test fajl
+echo "test" > public/uploads/certificates/test.txt
+
+# Provjeri permisije
+ls -la public/uploads/certificates/test.txt
+
+# Cleanup
+rm public/uploads/certificates/test.txt
+```
 
 ---
 

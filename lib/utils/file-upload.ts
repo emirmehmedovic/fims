@@ -2,7 +2,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
-const UPLOAD_DIR = './public/uploads/certificates'
+const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads/certificates'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
 

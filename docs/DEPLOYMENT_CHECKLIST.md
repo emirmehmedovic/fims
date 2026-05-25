@@ -39,11 +39,14 @@ Pre-deployment i post-deployment checklist za FIMS aplikaciju.
 - [ ] `NEXTAUTH_SECRET` generisan (64+ chars)
 - [ ] `NEXTAUTH_URL` postavljen na production URL
 - [ ] `CRON_SECRET` generisan
+- [ ] `UPLOAD_DIR` postavljen (default: `./public/uploads/certificates`)
 - [ ] SMTP postavke konfigurisane i testirane
 - [ ] Dependencies instalirani (`npm ci`)
 - [ ] Prisma Client generisan
 - [ ] Database migrations pokrenute
 - [ ] Database seed-ovan (admin user kreiran)
+- [ ] Upload folder kreiran (`public/uploads/certificates`)
+- [ ] Upload folder permisije postavljene (`chmod 755`)
 - [ ] Next.js build uspješan (`npm run build`)
 
 ### DNS & Network

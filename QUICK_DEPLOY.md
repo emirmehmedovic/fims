@@ -79,6 +79,11 @@ npm ci
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
+
+# Setup upload folder
+mkdir -p public/uploads/certificates
+chmod 755 public/uploads/certificates
+
 npm run build
 
 # PM2
@@ -129,6 +134,9 @@ SMTP_FROM="FIMS <noreply@domena.com>"
 SMTP_SECURE="false"
 
 CRON_SECRET="$(openssl rand -base64 32)"
+
+# File Uploads
+UPLOAD_DIR="./public/uploads/certificates"
 ```
 
 ---
