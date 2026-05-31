@@ -343,7 +343,7 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
           {/* Basic Information */}
           <FormSection title="Osnovne informacije" icon={Droplets} required>
             <div className="grid grid-cols-2 gap-4">

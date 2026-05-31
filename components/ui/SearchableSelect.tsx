@@ -29,7 +29,7 @@ export default function SearchableSelect({
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 240, openUpwards: false })
   const [mounted, setMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -66,10 +66,31 @@ export default function SearchableSelect({
       const updatePosition = () => {
         if (buttonRef.current) {
           const rect = buttonRef.current.getBoundingClientRect()
+          const viewportHeight = window.innerHeight
+          const dropdownMaxHeight = 240 // Max height from max-h-60 (15rem = 240px)
+          const dropdownHeight = dropdownMaxHeight + 56 // Account for search input + padding
+
+          // Calculate space above and below
+          const spaceBelow = viewportHeight - rect.bottom
+          const spaceAbove = rect.top
+
+          // Determine if we should open upwards
+          const shouldOpenUpwards = spaceBelow < dropdownHeight && spaceAbove > spaceBelow
+
+          // Calculate available height
+          const availableHeight = shouldOpenUpwards
+            ? Math.min(spaceAbove - 16, dropdownMaxHeight)
+            : Math.min(spaceBelow - 16, dropdownMaxHeight)
+
+          // Calculate actual dropdown height with search input
+          const actualDropdownHeight = availableHeight + 56 // 56px for search input area
+
           setDropdownPosition({
-            top: rect.bottom + 8,
+            top: shouldOpenUpwards ? rect.top - actualDropdownHeight : rect.bottom + 8,
             left: rect.left,
-            width: rect.width
+            width: rect.width,
+            maxHeight: availableHeight,
+            openUpwards: shouldOpenUpwards
           })
         }
       }
@@ -115,7 +136,9 @@ export default function SearchableSelect({
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="input w-full flex items-center justify-between gap-2 text-left"
+        className={`input w-full flex items-center justify-between gap-2 text-left transition-all ${
+          isOpen ? 'ring-2 ring-primary-500 border-primary-500' : ''
+        }`}
       >
         <span className={selectedOption ? 'text-dark-900' : 'text-dark-400'}>
           {selectedOption ? (
@@ -145,7 +168,7 @@ export default function SearchableSelect({
       {mounted && isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] bg-white border border-dark-200 rounded-2xl shadow-[var(--shadow-soft-xl)] overflow-hidden"
+          className="fixed z-[9999] bg-white border-2 border-primary-500 rounded-2xl shadow-[var(--shadow-soft-xl)] overflow-hidden ring-4 ring-primary-100"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -153,22 +176,25 @@ export default function SearchableSelect({
           }}
         >
           {/* Search Input */}
-          <div className="p-3 border-b border-dark-100">
+          <div className="p-3 border-b border-primary-200 bg-primary-50/30">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-600" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Pretraži..."
-                className="w-full pl-10 pr-4 py-2 bg-dark-50 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-primary-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
           </div>
 
           {/* Options List */}
-          <div className="max-h-60 overflow-y-auto">
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: `${dropdownPosition.maxHeight}px` }}
+          >
             {filteredOptions.length === 0 ? (
               <div className="px-4 py-8 text-center text-dark-500 text-sm">
                 {emptyMessage}
