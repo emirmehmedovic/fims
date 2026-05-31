@@ -1,0 +1,66 @@
+[
+  {
+    "name": "ED 5 - Dizel BAS EN 590 (10 ppm)",
+    "description": ""
+  },
+  {
+    "name": "ED 5 - Dizel BAS EN 590 (10 ppm)+ADT",
+    "description": ""
+  },
+  {
+    "name": "ED 6 - HPLUS",
+    "description": ""
+  },
+  {
+    "name": "LPG (auto-plin) BAS EN 589",
+    "description": ""
+  },
+  {
+    "name": "LPG (tečni naftni gas) BAS EN 589",
+    "description": ""
+  },
+  {
+    "name": "LPG ( dom i industrija -\"povlašteni\" ) BAS EN 589",
+    "description": ""
+  },
+  {
+    "name": "BMB 95 - Bezolovni benzin BAS EN 228",
+    "description": ""
+  },
+  {
+    "name": "BMB 95 HPLUS - Bezolovni benzin BAS EN 228",
+    "description": ""
+  },
+  {
+    "name": "BMB 95 - Bezolovni benzin BAS EN 228 +ADT",
+    "description": ""
+  },
+  {
+    "name": "BMB 98 - Bezolovni benzin BAS EN 228",
+    "description": ""
+  },
+  {
+    "name": "BMB 100- Bezolovni benzin BAS EN 228",
+    "description": ""
+  },
+  {
+    "name": "LUEL - Lož ulje ekstra lako BAS 1002",
+    "description": ""
+  },
+  {
+    "name": "MLAZNO GORIVO JET A-1",
+    "description": ""
+  },
+  {
+    "name": "MAZUT NISKOSUMPORNI",
+    "description": ""
+  },
+  {
+    "name": "Propan",
+    "description": ""
+  },
+  {
+    "name": "Izo-butan",
+    "description": ""
+  }
+]

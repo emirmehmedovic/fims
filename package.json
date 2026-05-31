@@ -13,7 +13,10 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "import:convert": "node scripts/convert-excel-to-json.js",
+    "import:data": "tsx scripts/import-master-data-direct.ts",
+    "import:all": "npm run import:convert && npm run import:data"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

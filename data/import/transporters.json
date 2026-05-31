@@ -1,0 +1,834 @@
+[
+  {
+    "name": "SJAJ D.O.O. MAGLAJ",
+    "code": "TRN-001",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ZLATA TRANS doo Vogošća",
+    "code": "TRN-002",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EURO PETROL OIL d.o.o. Zvornik",
+    "code": "TRN-003",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SB OILGAS d.o.o. Banja Luka",
+    "code": "TRN-004",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "OIL MEĐUGORJE doo Međugorje",
+    "code": "TRN-005",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "TRANSPORT PAŽIN d.o.o. Stolac",
+    "code": "TRN-006",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ZIBLIN TRANSPORT doo Ljubuški",
+    "code": "TRN-007",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "FENIX TRANSPORT d.o.o.",
+    "code": "TRN-008",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ZEKA COMERC doo Gračanica",
+    "code": "TRN-009",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "L PRESTIŽ TRANS DOO LAKTAŠI",
+    "code": "TRN-010",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MD Mitrovic company\" d.o.o.",
+    "code": "TRN-011",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "BAREL D.o.o. Cazin",
+    "code": "TRN-012",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SELEX D.O.O.",
+    "code": "TRN-013",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "BIJELIĆ-PETROL d.o.o. Doboj",
+    "code": "TRN-014",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MUŠINBEGOVIĆ GRADNJA d.o.o. Visoko",
+    "code": "TRN-015",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DAKMA OIL d.o.o. Grude",
+    "code": "TRN-016",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "TP OMERBAŠIĆ Ljubljana",
+    "code": "TRN-017",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MEVA - KOMERC d.o.o. Tešanj",
+    "code": "TRN-018",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "NAFTA GAJ",
+    "code": "TRN-019",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "PERIŠIĆ d.o.o. Grude",
+    "code": "TRN-020",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SARAJEVOPUTEVI d.d.",
+    "code": "TRN-021",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MILAN JAVNI PREVOZ VL MILOŠEVIĆ MILAN",
+    "code": "TRN-022",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MADŽAR d.o.o. Gradiška",
+    "code": "TRN-023",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "PIRO-PROMET doo",
+    "code": "TRN-024",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DŽAMBO GROUP d.o.o",
+    "code": "TRN-025",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DC-OIL d.o.o. Pale",
+    "code": "TRN-026",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "KNEZ PETROL d.o.o. Banja Luka",
+    "code": "TRN-027",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "GORJA TRANSPORTI d.o.o. Žepče",
+    "code": "TRN-028",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MAN-SPEED d.o.o. Konjic",
+    "code": "TRN-029",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "TTP-DARIO d.o.o. Posušje",
+    "code": "TRN-030",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "AS COMMPANY d.o.o. Bileća",
+    "code": "TRN-031",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ORMAN d.o.o. ",
+    "code": "TRN-032",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ŠARAC CO d.o.o. Čitluk",
+    "code": "TRN-033",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "FAND DOO",
+    "code": "TRN-034",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "VAMIKS-POBJEDA d.o.o. Modriča",
+    "code": "TRN-035",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "S-PRIJEVOZ D.O.O.",
+    "code": "TRN-036",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "HASANAL D.O.O. ILIJAŠ",
+    "code": "TRN-037",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "BRUTO-ŠPED d.o.o. Gradiška",
+    "code": "TRN-038",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MARINČIĆ BENZ d.o.o. Čitluk",
+    "code": "TRN-039",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DELTA PETROL doo Kakanj",
+    "code": "TRN-040",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DOO \"ING TRANSPORTI\" ZVORNIK",
+    "code": "TRN-041",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MUJKAN ŠPED DOO GRADAČAC",
+    "code": "TRN-042",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MANDIĆ PETROL doo Istočno Sarajevo",
+    "code": "TRN-043",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ĆAĐOPREVOZ d.o.o. Tuzla",
+    "code": "TRN-045",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EXPRES ŠPED d.o.o. Čapljina",
+    "code": "TRN-046",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "HIFA d.o.o. Tešanj",
+    "code": "TRN-047",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "4. APRIL d.o.o. Bijeljina",
+    "code": "TRN-048",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MEPROMEX d.o.o. TEŠANJ",
+    "code": "TRN-049",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DMD COMPANY d.o.o. Brčko",
+    "code": "TRN-050",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "IBRAHIMOVIĆ doo Bosanska Krupa",
+    "code": "TRN-051",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "LEKA d.o.o. Mrkonjić Grad",
+    "code": "TRN-052",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "VG COMPANY društvo s ograničenom odgovornošću za prijevoz i usluge",
+    "code": "TRN-053",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "NADA d.o.o. ",
+    "code": "TRN-054",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "TEHNOŠPED d.o.o. Novi Grad",
+    "code": "TRN-055",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "POLO d.o.o. Kalesija",
+    "code": "TRN-056",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "JAVNI PREVOZ VL. ĐURIĆ VESELKO S.P.",
+    "code": "TRN-057",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "TECO PROMET DOO",
+    "code": "TRN-058",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MALIŠIĆ MP d.o.o. Čitluk",
+    "code": "TRN-059",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "AMOX-TREYD d.o.o. Kalesija",
+    "code": "TRN-060",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "AUTOPRIJEVOZNIK GORAN ARAR ČAPLJINA",
+    "code": "TRN-061",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "HS BAUKOP doo Gračanica",
+    "code": "TRN-062",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "JAVNI PREVOZ STVARI-TERETA SRĐAN LAZOVIĆ",
+    "code": "TRN-063",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "BILAN D.O.O. Kiseljak",
+    "code": "TRN-064",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ONIKS TRANSPORT d.o.o. Ljetnić-Tešanj",
+    "code": "TRN-065",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "LINIJA VOĆA d.o.o.",
+    "code": "TRN-066",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "POJUŽINA PROM DOO",
+    "code": "TRN-067",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "JUNUZOVIĆ KOPEX doo LUKAVAC",
+    "code": "TRN-068",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "BARAĆ-CO d.o.o. Čitluk",
+    "code": "TRN-069",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SUŠAK BENZ 2 d.o.o. Čapljina",
+    "code": "TRN-070",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "RADIAL-LOGISTIC doo Gračanica",
+    "code": "TRN-071",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EKS M-A d.o.o.",
+    "code": "TRN-072",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "VICANOVIĆ COMPANY ",
+    "code": "TRN-073",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ECOTOK d.o.o.Travnik",
+    "code": "TRN-074",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DALPROM doo Zvornik",
+    "code": "TRN-075",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "M & V GROUP d.o.o. Zvornik",
+    "code": "TRN-076",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "OPTIMA BENZ d.o.o. Modriča",
+    "code": "TRN-077",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ZAIMOVIĆ doo KAKANJ",
+    "code": "TRN-078",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "NADA TRANSPORT d.o.o. CELJE",
+    "code": "TRN-079",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EURO-JET d.o.o. Cazin",
+    "code": "TRN-080",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "HERBECO doo",
+    "code": "TRN-081",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "KUZMA TRANSPORT d.o.o. Kakanj",
+    "code": "TRN-082",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "LEYS TRANS DOO TEŠANJ",
+    "code": "TRN-083",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ZDB doo Široki brijeg",
+    "code": "TRN-084",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ČAVKUNOVIĆ-BP d.o.o. Bihać",
+    "code": "TRN-085",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "REBAC-ŠPED d.o.o. Čapljina",
+    "code": "TRN-086",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "GRIN TANK DOO",
+    "code": "TRN-087",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "IM TRANSPORT D.O.O. ŽEPČE",
+    "code": "TRN-088",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "LOVAC OIL D.O.O.",
+    "code": "TRN-089",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "HIFA-OKTAN d.o.o. Tešanj",
+    "code": "TRN-090",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EL TARIK OIL BENZINSKE STANICE d.o.o Sarajevo",
+    "code": "TRN-091",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "ISMAR OIL d.o.o. Visoko",
+    "code": "TRN-092",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "DMV\" Dragan Poprzen S.P. Banja Luka",
+    "code": "TRN-093",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "GIGA TRANS SP DRAGAN RADIĆ",
+    "code": "TRN-094",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "EUROBENZ d.o.o. Banja Luka",
+    "code": "TRN-095",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "KESO-PROMET d.o.o. Zvornik",
+    "code": "TRN-096",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "M3 d.o.o. Istočno Sarajevo\t\t\t \t\t\t \t\t\t",
+    "code": "TRN-097",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "NAFTA PROMET d.o.o. Grude",
+    "code": "TRN-098",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "LIQUIVEX doo Usora",
+    "code": "TRN-099",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MONACO d.o.o.",
+    "code": "TRN-100",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "MILUXLine d.o.o. Čapljina ",
+    "code": "TRN-101",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SINTEKO PLUS d.o.o.",
+    "code": "TRN-102",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "GAS-PETROL doo TEŠANJ",
+    "code": "TRN-103",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "SMIT d.o.o. Mostar",
+    "code": "TRN-104",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  },
+  {
+    "name": "Silver šped d.o.o.",
+    "code": "TRN-105",
+    "address": "",
+    "contactPerson": "",
+    "phone": "",
+    "email": ""
+  }
+]
