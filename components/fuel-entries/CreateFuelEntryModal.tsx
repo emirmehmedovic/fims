@@ -367,7 +367,6 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                   onChange={setWarehouseId}
                   placeholder="Odaberite skladište"
                   emptyMessage="Nema dostupnih skladišta"
-                  required
                 />
               </FormField>
               <FormField label="Naziv proizvoda" required icon={FileText}>
@@ -381,7 +380,6 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
                   onChange={setProductName}
                   placeholder="Odaberite proizvod"
                   emptyMessage="Nema dostupnih proizvoda"
-                  required
                 />
               </FormField>
               <FormField label="Količina (litara)" required icon={Droplets}>

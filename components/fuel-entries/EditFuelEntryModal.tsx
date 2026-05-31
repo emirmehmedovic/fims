@@ -328,7 +328,6 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                   onChange={setWarehouseId}
                   placeholder="Odaberite skladište"
                   emptyMessage="Nema dostupnih skladišta"
-                  required
                 />
               </FormField>
               <FormField label="Naziv proizvoda" required icon={FileText}>
