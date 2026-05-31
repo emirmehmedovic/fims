@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
-import { 
-  X, 
+import {
+  X,
   Pencil,
   Calendar,
   Building2,
@@ -20,6 +20,7 @@ import {
   Download,
   Save
 } from 'lucide-react'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Warehouse {
   id: string
@@ -317,19 +318,18 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 />
               </FormField>
               <FormField label="Skladište" required icon={Building2}>
-                <select
+                <SearchableSelect
+                  options={warehouses.filter(w => w.isActive).map(w => ({
+                    id: w.id,
+                    label: w.name,
+                    sublabel: `Šifra: ${w.code}`
+                  }))}
                   value={warehouseId}
-                  onChange={(e) => setWarehouseId(e.target.value)}
-                  className="input w-full"
+                  onChange={setWarehouseId}
+                  placeholder="Odaberite skladište"
+                  emptyMessage="Nema dostupnih skladišta"
                   required
-                >
-                  <option value="">Odaberite skladište</option>
-                  {warehouses.filter(w => w.isActive).map(w => (
-                    <option key={w.id} value={w.id}>
-                      {w.code} - {w.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </FormField>
               <FormField label="Naziv proizvoda" required icon={FileText}>
                 <input
@@ -502,32 +502,30 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 />
               </FormField>
               <FormField label="Dobavljač" icon={Building2}>
-                <select
+                <SearchableSelect
+                  options={suppliers.filter(s => s.isActive).map(s => ({
+                    id: s.id,
+                    label: s.name,
+                    sublabel: `Šifra: ${s.code}`
+                  }))}
                   value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
-                  className="input w-full"
-                >
-                  <option value="">Odaberite dobavljača</option>
-                  {suppliers.filter(s => s.isActive).map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.code} - {s.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSupplierId}
+                  placeholder="Odaberite dobavljača"
+                  emptyMessage="Nema dostupnih dobavljača"
+                />
               </FormField>
               <FormField label="Prevoznik" icon={Truck}>
-                <select
+                <SearchableSelect
+                  options={transporters.filter(t => t.isActive).map(t => ({
+                    id: t.id,
+                    label: t.name,
+                    sublabel: `Šifra: ${t.code}`
+                  }))}
                   value={transporterId}
-                  onChange={(e) => setTransporterId(e.target.value)}
-                  className="input w-full"
-                >
-                  <option value="">Odaberite prevoznika</option>
-                  {transporters.filter(t => t.isActive).map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.code} - {t.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTransporterId}
+                  placeholder="Odaberite prevoznika"
+                  emptyMessage="Nema dostupnih prevoznika"
+                />
               </FormField>
               <FormField label="Vozač" icon={User}>
                 <input
