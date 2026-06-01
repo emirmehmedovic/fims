@@ -18,7 +18,9 @@ import {
   BarChart3,
   Mail,
   UserCircle,
-  Upload
+  Upload,
+  BookOpen,
+  Shield
 } from 'lucide-react'
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -55,12 +57,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       items: [
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/dashboard/fuel-entries', label: 'Izjave o usklađenosti', icon: FileText },
+        { href: '/dashboard/uputstvo', label: 'Operativno uputstvo', icon: BookOpen },
         { href: '/dashboard/account', label: 'Moj nalog', icon: UserCircle },
       ]
     },
     ...(isAdmin ? [{
       title: 'ADMIN',
       items: [
+        { href: '/dashboard/uputstvo/admin', label: 'Admin uputstvo', icon: Shield },
         { href: '/dashboard/warehouses', label: 'Skladišta', icon: Building2 },
         { href: '/dashboard/statistics', label: 'Statistika', icon: BarChart3 },
         { href: '/dashboard/users', label: 'Korisnici', icon: Users },

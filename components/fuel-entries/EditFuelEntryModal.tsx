@@ -141,8 +141,8 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
       const [entryRes, warehousesRes, suppliersRes, transportersRes] = await Promise.all([
         fetch(`/api/fuel-entries/${entry.id}`),
         fetch('/api/warehouses'),
-        fetch('/api/suppliers'),
-        fetch('/api/transporters')
+        fetch('/api/suppliers?pageSize=1000'),
+        fetch('/api/transporters?pageSize=1000')
       ])
 
       const [entryData, warehousesData, suppliersData, transportersData] = await Promise.all([
@@ -153,8 +153,8 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
       ])
 
       if (warehousesData.success) setWarehouses(warehousesData.data)
-      if (suppliersData.success) setSuppliers(suppliersData.data)
-      if (transportersData.success) setTransporters(transportersData.data)
+      if (suppliersData.success) setSuppliers(suppliersData.data.data || suppliersData.data)
+      if (transportersData.success) setTransporters(transportersData.data.data || transportersData.data)
 
       if (entryData.success) {
         const e = entryData.data
