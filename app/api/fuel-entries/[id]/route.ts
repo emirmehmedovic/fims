@@ -127,6 +127,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const transporterId = formData.get('transporterId') as string | null
     const driverName = formData.get('driverName') as string | null
     const certificate = formData.get('certificate') as File | null
+    const existingCertificatePath = formData.get('existingCertificatePath') as string | null
 
     // Build update data object
     const updateData: any = {}
@@ -161,8 +162,9 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     if (transporterId !== null) updateData.transporterId = transporterId || null
     if (driverName !== null) updateData.driverName = driverName || null
 
-    // Handle certificate upload (if new file provided)
+    // Handle certificate (upload new OR use existing)
     if (certificate && certificate.size > 0) {
+      // Upload new certificate
       const validation = await validateFile(certificate)
       if (!validation.valid) {
         return errorResponse(validation.error || 'Invalid file', 400)
@@ -171,6 +173,11 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
       const certificatePath = await saveFile(certificate, existingEntry.registrationNumber)
       updateData.certificatePath = certificatePath
       updateData.certificateFileName = certificate.name
+      updateData.certificateUploadedAt = new Date()
+    } else if (existingCertificatePath) {
+      // Use existing certificate
+      updateData.certificatePath = existingCertificatePath
+      updateData.certificateFileName = existingCertificatePath.split('/').pop() || 'certificate'
       updateData.certificateUploadedAt = new Date()
     }
 

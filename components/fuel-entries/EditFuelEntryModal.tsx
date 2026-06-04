@@ -21,6 +21,7 @@ import {
   Save
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import CertificateSelector from '@/components/ui/CertificateSelector'
 
 interface Warehouse {
   id: string
@@ -119,7 +120,20 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
   const [driverName, setDriverName] = useState('')
 
   // Form state - Certificate
-  const [certificate, setCertificate] = useState<File | null>(null)
+  const [certificateSelection, setCertificateSelection] = useState<{
+    type: 'new' | 'existing'
+    file?: File
+    path?: string
+  } | null>(null)
+
+  // Max date for date inputs (today)
+  const maxDate = formatDateInputValueSarajevo(new Date())
+
+  // Date validation errors
+  const [entryDateError, setEntryDateError] = useState('')
+  const [deliveryNoteDateError, setDeliveryNoteDateError] = useState('')
+  const [customsDeclarationDateError, setCustomsDeclarationDateError] = useState('')
+  const [testReportDateError, setTestReportDateError] = useState('')
 
   const characteristicOptions = [
     'Niža gustina',
@@ -197,8 +211,77 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
     )
   }
 
+  // Validate date - check if it's in the future
+  const validateDate = (dateValue: string): string => {
+    if (!dateValue) return ''
+
+    const selectedDate = new Date(dateValue)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to start of day
+    selectedDate.setHours(0, 0, 0, 0)
+
+    if (selectedDate > today) {
+      return 'Nije moguće odabrati datum u budućnosti. Maksimalno današnji dan.'
+    }
+    return ''
+  }
+
+  // Handle date changes with validation
+  const handleEntryDateChange = (value: string) => {
+    setEntryDate(value)
+    setEntryDateError(validateDate(value))
+  }
+
+  const handleDeliveryNoteDateChange = (value: string) => {
+    setDeliveryNoteDate(value)
+    setDeliveryNoteDateError(validateDate(value))
+  }
+
+  const handleCustomsDeclarationDateChange = (value: string) => {
+    setCustomsDeclarationDate(value)
+    setCustomsDeclarationDateError(validateDate(value))
+  }
+
+  const handleTestReportDateChange = (value: string) => {
+    setTestReportDate(value)
+    setTestReportDateError(validateDate(value))
+  }
+
+  // Handle Enter key to move to next field
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const target = e.target as HTMLElement
+
+      // Don't prevent default for textareas or if it's a button
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') {
+        return
+      }
+
+      e.preventDefault()
+
+      // Find all focusable elements
+      const form = e.currentTarget
+      const focusableElements = form.querySelectorAll(
+        'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])'
+      )
+      const focusableArray = Array.from(focusableElements) as HTMLElement[]
+      const currentIndex = focusableArray.indexOf(target)
+
+      // Move to next focusable element
+      if (currentIndex > -1 && currentIndex < focusableArray.length - 1) {
+        focusableArray[currentIndex + 1].focus()
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check for date validation errors
+    if (entryDateError || deliveryNoteDateError || customsDeclarationDateError || testReportDateError) {
+      alert('Molimo ispravite greške u datumima prije slanja')
+      return
+    }
 
     if (!warehouseId || !productName || !quantity) {
       alert('Molimo popunite sva obavezna polja')
@@ -234,8 +317,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
         formData.append('improvedCharacteristics[]', char)
       })
 
-      if (certificate) {
-        formData.append('certificate', certificate)
+      // Handle certificate selection
+      if (certificateSelection) {
+        if (certificateSelection.type === 'new' && certificateSelection.file) {
+          formData.append('certificate', certificateSelection.file)
+        } else if (certificateSelection.type === 'existing' && certificateSelection.path) {
+          formData.append('existingCertificatePath', certificateSelection.path)
+        }
       }
 
       const res = await fetch(`/api/fuel-entries/${entry.id}`, {
@@ -304,7 +392,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
           {/* Basic Information */}
           <FormSection title="Osnovne informacije" icon={Droplets} required>
             <div className="grid grid-cols-2 gap-4">
@@ -312,10 +400,14 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 <input
                   type="date"
                   value={entryDate}
-                  onChange={(e) => setEntryDate(e.target.value)}
-                  className="input w-full"
+                  onChange={(e) => handleEntryDateChange(e.target.value)}
+                  max={maxDate}
+                  className={`input w-full ${entryDateError ? 'border-red-500 border-2' : ''}`}
                   required
                 />
+                {entryDateError && (
+                  <p className="text-red-500 text-sm mt-1">{entryDateError}</p>
+                )}
               </FormField>
               <FormField label="Skladište" required icon={Building2}>
                 <SearchableSelect
@@ -370,9 +462,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 <input
                   type="date"
                   value={deliveryNoteDate}
-                  onChange={(e) => setDeliveryNoteDate(e.target.value)}
-                  className="input w-full"
+                  onChange={(e) => handleDeliveryNoteDateChange(e.target.value)}
+                  max={maxDate}
+                  className={`input w-full ${deliveryNoteDateError ? 'border-red-500 border-2' : ''}`}
                 />
+                {deliveryNoteDateError && (
+                  <p className="text-red-500 text-sm mt-1">{deliveryNoteDateError}</p>
+                )}
               </FormField>
               <FormField label="Broj carinske deklaracije" icon={FileCheck}>
                 <input
@@ -386,9 +482,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 <input
                   type="date"
                   value={customsDeclarationDate}
-                  onChange={(e) => setCustomsDeclarationDate(e.target.value)}
-                  className="input w-full"
+                  onChange={(e) => handleCustomsDeclarationDateChange(e.target.value)}
+                  max={maxDate}
+                  className={`input w-full ${customsDeclarationDateError ? 'border-red-500 border-2' : ''}`}
                 />
+                {customsDeclarationDateError && (
+                  <p className="text-red-500 text-sm mt-1">{customsDeclarationDateError}</p>
+                )}
               </FormField>
               <FormField label="Zemlja porijekla" icon={Globe}>
                 <input
@@ -481,9 +581,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 <input
                   type="date"
                   value={testReportDate}
-                  onChange={(e) => setTestReportDate(e.target.value)}
-                  className="input w-full"
+                  onChange={(e) => handleTestReportDateChange(e.target.value)}
+                  max={maxDate}
+                  className={`input w-full ${testReportDateError ? 'border-red-500 border-2' : ''}`}
                 />
+                {testReportDateError && (
+                  <p className="text-red-500 text-sm mt-1">{testReportDateError}</p>
+                )}
               </FormField>
             </div>
           </FormSection>
@@ -564,49 +668,11 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 </div>
               </div>
             )}
-            <div className="border-2 border-dashed border-dark-200 rounded-2xl p-6 hover:border-primary-300 hover:bg-primary-50/20 transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-dark-100 flex items-center justify-center mx-auto mb-3">
-                  <Upload className="w-6 h-6 text-dark-400" />
-                </div>
-                <p className="text-sm font-medium text-dark-700 mb-1">
-                  {fullEntry?.certificatePath ? 'Zamijeni certifikat' : 'Upload certifikata'}
-                </p>
-                <p className="text-xs text-dark-500 mb-4">PDF, JPG, PNG (max 10MB)</p>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setCertificate(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="certificate-upload-edit"
-                />
-                <label
-                  htmlFor="certificate-upload-edit"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-dark-900 text-white text-sm font-medium rounded-xl hover:bg-dark-800 transition-colors cursor-pointer"
-                >
-                  <Upload className="w-4 h-4" />
-                  Odaberi fajl
-                </label>
-              </div>
-              {certificate && (
-                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-dark-900">Novi fajl: {certificate.name}</p>
-                    <p className="text-xs text-dark-500">{(certificate.size / 1024 / 1024).toFixed(2)} MB</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCertificate(null)}
-                    className="p-1 text-dark-400 hover:text-red-600 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-            </div>
+            <CertificateSelector
+              value={certificateSelection}
+              onChange={setCertificateSelection}
+              existingCertificatePath={fullEntry?.certificatePath}
+            />
           </FormSection>
         </form>
 

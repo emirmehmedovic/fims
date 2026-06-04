@@ -48,6 +48,12 @@ interface FuelEntryData {
     name: string
     code: string
   } | null
+  laboratory: {
+    id: string
+    name: string
+    address: string | null
+    accreditationNumber: string | null
+  } | null
   createdAt: Date
 }
 
@@ -79,20 +85,49 @@ export async function generateQRCode(data: string): Promise<string> {
 }
 
 export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string, footerBase64: string): string {
-  const currentDate = formatDateSarajevo(new Date())
+  // Use delivery note date as the declaration date, fallback to today
+  const declarationDate = entry.deliveryNoteDate
+    ? formatDateSarajevo(entry.deliveryNoteDate)
+    : formatDateSarajevo(new Date())
 
-  // Format delivery note or customs declaration info
+  // Format customs declaration info only
   let documentInfo = ''
-  if (entry.deliveryNoteNumber && entry.deliveryNoteDate) {
-    documentInfo = `${entry.deliveryNoteNumber}, ${formatDate(entry.deliveryNoteDate)}`
-  } else if (entry.customsDeclarationNumber && entry.customsDeclarationDate) {
+  if (entry.customsDeclarationNumber && entry.customsDeclarationDate) {
     documentInfo = `${entry.customsDeclarationNumber}, ${formatDate(entry.customsDeclarationDate)}`
   }
 
-  // Format improved characteristics
-  const characteristicsText = entry.isHigherQuality && entry.improvedCharacteristics.length > 0
-    ? entry.improvedCharacteristics.join(', ')
-    : ''
+  // Fixed characteristics for higher quality fuel based on product type
+  const productNameLower = entry.productName.toLowerCase()
+  const isDiesel = productNameLower.includes('dizel') ||
+                   productNameLower.includes('ulsd') ||
+                   productNameLower.startsWith('ed ') ||
+                   productNameLower === 'ed' ||
+                   productNameLower.includes('bas en 590')
+  const isBenzin = productNameLower.includes('benzin') ||
+                   productNameLower.includes('bmb') ||
+                   productNameLower.includes('bas en 228')
+
+  let characteristicsBullets = ''
+  if (entry.isHigherQuality) {
+    if (isDiesel) {
+      characteristicsBullets = `
+      <ul style="margin: 0; padding-left: 5mm; list-style-type: disc;">
+        <li>Poboljšana protočnost i funkcionalnost na niskim temperaturama</li>
+        <li>Mirni rad motora</li>
+        <li>Poboljšanje podmazivanja</li>
+        <li>Obezbjeđena antikorozivna zaštita</li>
+        <li>Antipenski efekat</li>
+      </ul>`
+    } else if (isBenzin) {
+      characteristicsBullets = `
+      <ul style="margin: 0; padding-left: 5mm; list-style-type: disc;">
+        <li>Održavanje čistoće motora</li>
+        <li>Brže i lakše pokretanje motora</li>
+        <li>Smanjenje potrošnje</li>
+        <li>Smanjenje emisije štetnih gasova</li>
+      </ul>`
+    }
+  }
 
   return `
 <!DOCTYPE html>
@@ -192,6 +227,18 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
       margin-top: 1mm;
     }
 
+    .subsection ul {
+      margin: 1mm 0 0 0;
+      padding-left: 5mm;
+      line-height: 1.5;
+    }
+
+    .subsection li {
+      margin-bottom: 1mm;
+      font-weight: 400;
+      color: #000;
+    }
+
     /* Declaration */
     .declaration {
       margin: 4mm 0;
@@ -273,7 +320,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
 
       <div class="field">
         <span class="field-label">Ime i prezime odgovorne osobe u pravnom licu:</span>
-        <span class="field-value">Halid Kadrić, direktor</span>
+        <span class="field-value">Halid Kadrić, zamjenik direktora</span>
       </div>
 
       <div class="field section-spacing">
@@ -287,7 +334,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
       </div>
 
       <div class="field">
-        <span class="field-label">Broj otpremnice i datum ili broj carinske deklaracije i datum:</span>
+        <span class="field-label">Broj carinske deklaracije i datum:</span>
         <span class="field-value">${documentInfo}</span>
       </div>
 
@@ -295,10 +342,10 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
         <span class="checkbox ${entry.isHigherQuality ? 'checked' : ''}"></span>
         <span class="field-label">Tekuće naftno gorivo višeg kvalitetnog nivoa</span>
       </div>
-${entry.isHigherQuality && characteristicsText ? `
+${entry.isHigherQuality ? `
       <div class="field subsection">
         <span class="field-label">Poboljšane karakteristike:</span>
-        <span class="field-value">${characteristicsText}</span>
+        ${characteristicsBullets}
       </div>` : ''}
 
       <div class="field section-spacing">
@@ -308,16 +355,17 @@ ${entry.isHigherQuality && characteristicsText ? `
 
       <div class="field section-spacing">
         <span class="field-label">Tečno naftno gorivo je ispitano u akreditiranoj laboratoriji:</span>
+        <span class="field-value">${entry.laboratory?.name || entry.laboratoryName || ''}</span>
       </div>
 
       <div class="field subsection">
         <span class="field-label">Naziv i sjedište laboratorije:</span>
-        <span class="field-value">${entry.laboratoryName || ''}</span>
+        <span class="field-value">${entry.laboratory ? `${entry.laboratory.name}${entry.laboratory.address ? ', ' + entry.laboratory.address : ''}` : (entry.laboratoryName || '')}</span>
       </div>
 
       <div class="field subsection">
         <span class="field-label">Broj rješenja akreditacije laboratorije:</span>
-        <span class="field-value">${entry.labAccreditationNumber || ''}</span>
+        <span class="field-value">${entry.laboratory?.accreditationNumber || entry.labAccreditationNumber || ''}</span>
       </div>
 
       <div class="field subsection">
@@ -336,12 +384,12 @@ ${entry.isHigherQuality && characteristicsText ? `
       <div class="signature-area">
         <div class="date-section">
           <div>U Sarajevu</div>
-          <div>Dana ${currentDate}</div>
+          <div>Dana ${declarationDate}</div>
         </div>
 
         <div class="signature-section">
           <img src="${stampBase64}" alt="Pečat i potpis" />
-          <div class="signature-label">Direktor Društva</div>
+          <div class="signature-label">Zamjenik direktora</div>
         </div>
       </div>
     </div>

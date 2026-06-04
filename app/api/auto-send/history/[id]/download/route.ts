@@ -23,7 +23,8 @@ export const GET = withAuth(async (req: NextRequest, context) => {
         warehouse: { select: { id: true, name: true, code: true, location: true } },
         operator: { select: { id: true, name: true, email: true } },
         supplier: { select: { id: true, name: true, code: true } },
-        transporter: { select: { id: true, name: true, code: true } }
+        transporter: { select: { id: true, name: true, code: true } },
+        laboratory: { select: { id: true, name: true, address: true, accreditationNumber: true } }
       }
     })
 

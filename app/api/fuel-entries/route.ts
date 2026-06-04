@@ -167,6 +167,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const clientId = formData.get('clientId') as string | null
     const laboratoryId = formData.get('laboratoryId') as string | null
     const certificate = formData.get('certificate') as File | null
+    const existingCertificatePath = formData.get('existingCertificatePath') as string | null
 
     // Validation
     if (!entryDate || !warehouseId || !productName || !quantity) {
@@ -254,28 +255,19 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       }
     })
 
-    // Handle certificate upload AFTER entry is created
+    // Handle certificate (upload new OR use existing) AFTER entry is created
     // If upload fails, we rollback the entry (compensating transaction)
+    let finalCertificatePath: string | null = null
+    let finalCertificateFileName: string | null = null
+    let finalCertificateUploadedAt: Date | null = null
+
     if (certificate && certificate.size > 0) {
+      // Upload new certificate
       try {
         // Upload file using the database-generated registrationNumber
-        const certificatePath = await saveFile(certificate, fuelEntry.registrationNumber)
-        const certificateFileName = certificate.name
-
-        // Update entry with certificate info
-        await prisma.fuelEntry.update({
-          where: { id: fuelEntry.id },
-          data: {
-            certificatePath,
-            certificateFileName,
-            certificateUploadedAt: new Date()
-          }
-        })
-
-        // Update local object for response
-        fuelEntry.certificatePath = certificatePath
-        fuelEntry.certificateFileName = certificateFileName
-        fuelEntry.certificateUploadedAt = new Date()
+        finalCertificatePath = await saveFile(certificate, fuelEntry.registrationNumber)
+        finalCertificateFileName = certificate.name
+        finalCertificateUploadedAt = new Date()
       } catch (uploadError) {
         logger.error('[FUEL_ENTRY] Certificate upload failed, rolling back entry:', uploadError)
 
@@ -296,6 +288,28 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
           500
         )
       }
+    } else if (existingCertificatePath) {
+      // Use existing certificate
+      finalCertificatePath = existingCertificatePath
+      finalCertificateFileName = existingCertificatePath.split('/').pop() || 'certificate'
+      finalCertificateUploadedAt = new Date()
+    }
+
+    // Update entry with certificate info if we have one
+    if (finalCertificatePath) {
+      await prisma.fuelEntry.update({
+        where: { id: fuelEntry.id },
+        data: {
+          certificatePath: finalCertificatePath,
+          certificateFileName: finalCertificateFileName,
+          certificateUploadedAt: finalCertificateUploadedAt
+        }
+      })
+
+      // Update local object for response
+      fuelEntry.certificatePath = finalCertificatePath
+      fuelEntry.certificateFileName = finalCertificateFileName
+      fuelEntry.certificateUploadedAt = finalCertificateUploadedAt
     }
 
     // Log audit

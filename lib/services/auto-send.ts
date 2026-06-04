@@ -118,6 +118,14 @@ export const createAutoSendBatch = async ({
           name: true,
           code: true
         }
+      },
+      laboratory: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          accreditationNumber: true
+        }
       }
     },
     orderBy: { entryDate: 'asc' },
@@ -217,6 +225,14 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
           id: true,
           name: true,
           code: true
+        }
+      },
+      laboratory: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          accreditationNumber: true
         }
       }
     }
