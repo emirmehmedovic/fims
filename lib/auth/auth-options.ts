@@ -50,6 +50,11 @@ export const authOptions = {
                 include: {
                   warehouse: true
                 }
+              },
+              stations: {
+                include: {
+                  station: true
+                }
               }
             }
           })
@@ -117,6 +122,12 @@ export const authOptions = {
               id: uw.warehouse.id,
               name: uw.warehouse.name,
               code: uw.warehouse.code
+            })),
+            stations: user.stations.map(us => ({
+              id: us.station.id,
+              name: us.station.name,
+              code: us.station.code,
+              address: us.station.address
             }))
           }
         } catch (error) {
@@ -132,6 +143,7 @@ export const authOptions = {
         token.id = user.id
         token.role = user.role
         token.warehouses = user.warehouses
+        token.stations = user.stations
       }
       return token
     },
@@ -140,6 +152,7 @@ export const authOptions = {
         session.user.id = token.id
         session.user.role = token.role
         session.user.warehouses = token.warehouses
+        session.user.stations = token.stations
       }
       return session
     }

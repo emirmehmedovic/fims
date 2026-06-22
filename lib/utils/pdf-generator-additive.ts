@@ -45,6 +45,12 @@ interface FuelEntryAdditiveData {
     name: string
     code: string | null
   } | null
+  station: {
+    id: string
+    name: string
+    code: string
+    address: string
+  } | null
   createdAt: Date
 }
 
@@ -111,7 +117,7 @@ function generateAdditiveTableRows(
     <tr>
       <td class="row-number">2</td>
       <td class="row-label">POSLOVNA JEDINICA</td>
-      <td class="row-value">${entry.warehouse.code} ${entry.warehouse.name}</td>
+      <td class="row-value">${entry.station ? `${entry.station.name}, ${entry.station.address}` : '-'}</td>
     </tr>
     <tr>
       <td class="row-number">3</td>

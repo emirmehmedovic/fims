@@ -1,0 +1,374 @@
+[
+  {
+    "name": "Hifa Petrol Travnik",
+    "code": "BP-001",
+    "address": "M-5, Runjići, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Derventa 2",
+    "code": "BP-002",
+    "address": "L-DE1, Osojci, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Grude",
+    "code": "BP-003",
+    "address": "bb, Sovići, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Gradiška",
+    "code": "BP-004",
+    "address": "bb M-I 102, Gradiška, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Modriča",
+    "code": "BP-005",
+    "address": "Šamački put, Modriča, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Jelah",
+    "code": "BP-006",
+    "address": "Maršala Tita, Potočani, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Zenica 3",
+    "code": "BP-007",
+    "address": "Zmaja od Bosne, Zenica, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Turbe",
+    "code": "BP-008",
+    "address": "M-5, Runjići, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Gradačac",
+    "code": "BP-009",
+    "address": "Sarajevska, Gradačac, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Živinice",
+    "code": "BP-010",
+    "address": "224 I. ulica, Živinice, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Žepče",
+    "code": "BP-011",
+    "address": "M-17, Golubinja, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Zenica 2",
+    "code": "BP-012",
+    "address": "Zmaja od Bosne, Zenica, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Zenica",
+    "code": "BP-013",
+    "address": "20 Aleja šehida, Zenica, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Zavidovići",
+    "code": "BP-014",
+    "address": "Zlatnih Ljiljana, Zavidovići, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Vogošća 2",
+    "code": "BP-015",
+    "address": "Igmanska, Ugorsko, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Vogošća",
+    "code": "BP-016",
+    "address": "Igmanska, Hotonj, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Vitez",
+    "code": "BP-017",
+    "address": "1 Branilaca Starog Viteza, Vitez, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Visoko",
+    "code": "BP-018",
+    "address": "Mule Hodžića, Visoko, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Višegrad",
+    "code": "BP-019",
+    "address": "Vojvode Stepe, Višegrad, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Velika Kladuša",
+    "code": "BP-020",
+    "address": "Ibrahima Mržljaka, Velika Kladuša, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Tuzla 2",
+    "code": "BP-021",
+    "address": "9 Stara Solana, Simin Han, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Tuzla",
+    "code": "BP-022",
+    "address": "Bulevar 2. korpusa Armije BiH, Tuzla, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Teslić",
+    "code": "BP-023",
+    "address": "Donji Ružević, Teslić, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Tešanj 2",
+    "code": "BP-024",
+    "address": "Simetrale, Dobropolje, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Tešanj",
+    "code": "BP-025",
+    "address": "Put Izudina Alićehajića, Tešanj, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Srebrenik",
+    "code": "BP-026",
+    "address": "M-1.8, Srebrenik, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Sanski Most",
+    "code": "BP-027",
+    "address": "Bulevar 7. korpusa, Sanski Most, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Rajlovac",
+    "code": "BP-028",
+    "address": "Safeta Zajke, Sarajevo, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Posušje",
+    "code": "BP-029",
+    "address": "R-420, Vinjani, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Orašje",
+    "code": "BP-030",
+    "address": "M-1.8, Orašje, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Mostar",
+    "code": "BP-031",
+    "address": "M-17, Mostar, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Milići",
+    "code": "BP-032",
+    "address": "30 Miloša Obilića, Milići, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Ljubuški",
+    "code": "BP-033",
+    "address": "Antuna Gustava Matoša, Ljubuški, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Lukavac",
+    "code": "BP-034",
+    "address": "Lukavačkih brigada, Lukavac, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Livno",
+    "code": "BP-035",
+    "address": "bb Drinova Međa, Livno, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Lašva",
+    "code": "BP-036",
+    "address": "M-5, Grablje, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Kreševo",
+    "code": "BP-037",
+    "address": "R-443, Komari, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Kozarac",
+    "code": "BP-038",
+    "address": "M-I 108, MZ Kozarac, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Konjic",
+    "code": "BP-039",
+    "address": "Trešanica, Konjic, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Kiseljak",
+    "code": "BP-040",
+    "address": "M-5, Brnjaci, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Kakanj",
+    "code": "BP-041",
+    "address": "Alije Izetbegovića, Kakanj, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Jajce",
+    "code": "BP-042",
+    "address": "M-5, Jajce, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Istočno Sarajevo",
+    "code": "BP-043",
+    "address": "121 Vojvode Radomira Putnika, Lukavica, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Istočna Ilidža",
+    "code": "BP-044",
+    "address": "Ravnogorska, Općina Istočna Ilidža, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Ilidža",
+    "code": "BP-045",
+    "address": "Rustem-pašina, Grad Sarajevo, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Ilidža 2",
+    "code": "BP-046",
+    "address": "Osik, Ilidža, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Derventa",
+    "code": "BP-047",
+    "address": "M-I 103, Polje, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Cazin",
+    "code": "BP-048",
+    "address": "Žrtava Domovinskog rata, Cazin, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Busovača",
+    "code": "BP-049",
+    "address": "Nikola Šubić Zrinski, Jazvine, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Bugojno",
+    "code": "BP-050",
+    "address": "29 307. motorizovane brigade, Bugojno, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Buća Potok",
+    "code": "BP-051",
+    "address": "Adema Buće, Sarajevo, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Bratunac",
+    "code": "BP-052",
+    "address": "Светог Саве, Bratunac, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Bihać 3",
+    "code": "BP-053",
+    "address": "Plješevička, Bihać, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "INA Rijeka",
+    "code": "OST-001",
+    "address": "Jadranska magistrala, Kostrena, Hrvatska",
+    "type": "Ostalo"
+  },
+  {
+    "name": "NIS Pančevo",
+    "code": "SKL-001",
+    "address": "199 Спољностарчевачка, Pančevo, Srbija",
+    "type": "Skladište"
+  },
+  {
+    "name": "Luka Ploče",
+    "code": "LUK-001",
+    "address": "Luka Ploče, Grad Ploče, Hrvatska",
+    "type": "Luka"
+  },
+  {
+    "name": "Luka Kopar",
+    "code": "LUK-002",
+    "address": "Luka Koper, Koper / Capodistria, Slovenija",
+    "type": "Luka"
+  },
+  {
+    "name": "Hifa Petrol Bihać 2",
+    "code": "BP-054",
+    "address": "Dr. Irfana Ljubijankića, Bihać, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Bihać",
+    "code": "BP-055",
+    "address": "Put Armije Republike Bosne i Hercegovine, Pritoka, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Banovići",
+    "code": "BP-056",
+    "address": "M-17.1, Banovići, Federacija Bosne i Hercegovine",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Banja Luka",
+    "code": "BP-057",
+    "address": "Branka Grbčića, Banja Luka, Republika Srpska",
+    "type": "Benzinska pumpa"
+  },
+  {
+    "name": "Hifa Petrol Banja Luka 2",
+    "code": "BP-058",
+    "address": "bb Ivana Gorana Kovačića, Banja Luka, Republika Srpska",
+    "type": "Benzinska pumpa"
+  }
+]

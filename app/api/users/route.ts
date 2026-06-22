@@ -64,6 +64,18 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
               }
             }
           }
+        },
+        stations: {
+          include: {
+            station: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                address: true
+              }
+            }
+          }
         }
       },
       orderBy: {
@@ -74,7 +86,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Transform data
     const transformedUsers = users.map(user => ({
       ...user,
-      warehouses: user.warehouses.map(uw => uw.warehouse)
+      warehouses: user.warehouses.map(uw => uw.warehouse),
+      stations: user.stations.map(us => us.station)
     }))
 
     return paginatedResponse(transformedUsers, { total, page, limit })
@@ -96,7 +109,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Validation failed', 400, errors)
     }
 
-    const { name, email, password, role, warehouseIds } = validation.data
+    const { name, email, password, role, warehouseIds, stationIds = [] } = validation.data
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
@@ -110,7 +123,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     // Hash password
     const passwordHash = await hash(password, 10)
 
-    // Create user with warehouse assignments
+    // Create user with warehouse and station assignments
     const user = await prisma.user.create({
       data: {
         name,
@@ -120,6 +133,11 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         warehouses: {
           create: warehouseIds.map((warehouseId: string) => ({
             warehouseId
+          }))
+        },
+        stations: {
+          create: stationIds.map((stationId: string) => ({
+            stationId
           }))
         }
       },
@@ -131,6 +149,18 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
                 id: true,
                 name: true,
                 code: true
+              }
+            }
+          }
+        },
+        stations: {
+          include: {
+            station: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                address: true
               }
             }
           }
@@ -159,7 +189,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const response = {
       ...user,
       passwordHash: undefined,
-      warehouses: user.warehouses.map(uw => uw.warehouse)
+      warehouses: user.warehouses.map(uw => uw.warehouse),
+      stations: user.stations.map(us => us.station)
     }
 
     return successResponse(response, 201)

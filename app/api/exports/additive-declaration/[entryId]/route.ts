@@ -35,6 +35,14 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             name: true,
             code: true
           }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true
+          }
         }
       }
     })

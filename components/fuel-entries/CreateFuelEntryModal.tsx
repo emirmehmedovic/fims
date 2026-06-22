@@ -17,7 +17,8 @@ import {
   User,
   Globe,
   FileCheck,
-  Users
+  Users,
+  Fuel
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import CertificateSelector from '@/components/ui/CertificateSelector'
@@ -59,6 +60,14 @@ interface Client {
   isActive: boolean
 }
 
+interface Station {
+  id: string
+  name: string
+  code: string
+  address: string
+  isActive: boolean
+}
+
 interface LookupItem {
   id: string
   name: string
@@ -70,11 +79,12 @@ interface LookupItem {
 
 interface Props {
   warehouses: Warehouse[]
+  stations: Station[]
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }: Props) {
+export default function CreateFuelEntryModal({ warehouses, stations, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
@@ -128,6 +138,7 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
   const [driverName, setDriverName] = useState('')
   const [vehicleRegistration, setVehicleRegistration] = useState('')
   const [clientId, setClientId] = useState('')
+  const [stationId, setStationId] = useState('')
 
   // Form state - Certificate
   const [certificateSelection, setCertificateSelection] = useState<{
@@ -135,6 +146,14 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
     file?: File
     path?: string
   } | null>(null)
+
+  // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
+  useEffect(() => {
+    const selectedClient = clients.find(c => c.id === clientId)
+    if (selectedClient && selectedClient.code !== '650') {
+      setStationId('')
+    }
+  }, [clientId, clients])
 
   useEffect(() => {
     fetchSuppliers()
@@ -285,7 +304,14 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
       const res = await fetch('/api/clients?pageSize=1000')
       const data = await res.json()
       if (data.success) {
-        setClients(data.data.data || data.data)
+        const clientsList = data.data.data || data.data
+        setClients(clientsList)
+
+        // Auto-select HIFA-PETROL client (code: 650) by default
+        const hifaPetrolClient = clientsList.find((c: any) => c.code === '650')
+        if (hifaPetrolClient) {
+          setClientId(hifaPetrolClient.id)
+        }
       }
     } catch (error) {
       console.error('Error fetching clients:', error)
@@ -370,6 +396,7 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
       if (driverName) formData.append('driverName', driverName)
       if (vehicleRegistration) formData.append('vehicleRegistration', vehicleRegistration)
       if (clientId) formData.append('clientId', clientId)
+      if (stationId) formData.append('stationId', stationId)
 
       improvedCharacteristics.forEach(char => {
         formData.append('improvedCharacteristics[]', char)
@@ -737,6 +764,11 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
           {/* Client Information */}
           <FormSection title="Informacije o klijentu" icon={Users}>
             <FormField label="Odaberite klijenta (firmu)" icon={Users}>
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija.
+                </p>
+              </div>
               <SearchableSelect
                 options={clients.filter(c => c.isActive).map(c => ({
                   id: c.id,
@@ -772,6 +804,44 @@ export default function CreateFuelEntryModal({ warehouses, onClose, onSuccess }:
               )}
             </FormField>
           </FormSection>
+
+          {/* Station Information - Only shown for HIFA-PETROL client (code: 650) */}
+          {clients.find(c => c.id === clientId)?.code === '650' && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 shadow-sm">
+              <FormSection title="Poslovnica (benzinska pumpa)" icon={Fuel}>
+                <FormField label="Odaberite poslovnicu" icon={Fuel}>
+                <SearchableSelect
+                  options={stations.filter(s => s.isActive).map(s => ({
+                    id: s.id,
+                    label: s.name,
+                    sublabel: [s.code && `Šifra: ${s.code}`, s.address && `Adresa: ${s.address}`].filter(Boolean).join(' | ') || undefined
+                  }))}
+                  value={stationId}
+                  onChange={setStationId}
+                  placeholder="Odaberite poslovnicu"
+                  emptyMessage="Nema dostupnih poslovnica"
+                />
+                {stationId && (
+                  <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
+                    <p className="text-dark-600">
+                      <span className="font-semibold">Naziv:</span> {stations.find(s => s.id === stationId)?.name}
+                    </p>
+                    {stations.find(s => s.id === stationId)?.code && (
+                      <p className="text-dark-600">
+                        <span className="font-semibold">Šifra:</span> {stations.find(s => s.id === stationId)?.code}
+                      </p>
+                    )}
+                    {stations.find(s => s.id === stationId)?.address && (
+                      <p className="text-dark-600">
+                        <span className="font-semibold">Adresa:</span> {stations.find(s => s.id === stationId)?.address}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </FormField>
+            </FormSection>
+            </div>
+          )}
 
           {/* Supplier & Transporter */}
           <FormSection title="Dobavljač i prevoznik" icon={Truck}>

@@ -14,13 +14,14 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const warehouseId = searchParams.get('warehouseId')
+    const stationId = searchParams.get('stationId')
     const clientId = searchParams.get('clientId')
     const productName = searchParams.get('productName')
     const deliveryNoteNumber = searchParams.get('deliveryNoteNumber')
     const registrationNumber = searchParams.get('registrationNumber')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
-    const sortBy = searchParams.get('sortBy') || 'entryDate'
+    const sortBy = searchParams.get('sortBy') || 'registrationNumber'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
     const skip = (page - 1) * limit
@@ -51,6 +52,10 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
         }
       }
       where.warehouseId = warehouseId
+    }
+
+    if (stationId) {
+      where.stationId = stationId
     }
 
     if (clientId) {
@@ -121,6 +126,14 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             name: true,
             accreditationNumber: true
           }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true
+          }
         }
       },
       orderBy: {
@@ -166,6 +179,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const vehicleRegistration = formData.get('vehicleRegistration') as string | null
     const clientId = formData.get('clientId') as string | null
     const laboratoryId = formData.get('laboratoryId') as string | null
+    const stationId = formData.get('stationId') as string | null
     const certificate = formData.get('certificate') as File | null
     const existingCertificatePath = formData.get('existingCertificatePath') as string | null
 
@@ -218,6 +232,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         vehicleRegistration: vehicleRegistration || null,
         clientId: clientId || null,
         laboratoryId: laboratoryId || null,
+        stationId: stationId || null,
         certificatePath: null,
         certificateFileName: null,
         certificateUploadedAt: null,
@@ -250,6 +265,14 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             id: true,
             name: true,
             accreditationNumber: true
+          }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true
           }
         }
       }

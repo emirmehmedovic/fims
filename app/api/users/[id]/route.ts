@@ -30,6 +30,18 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
               }
             }
           }
+        },
+        stations: {
+          include: {
+            station: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                address: true
+              }
+            }
+          }
         }
       }
     })
@@ -41,7 +53,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Transform data
     const response = {
       ...user,
-      warehouses: user.warehouses.map(uw => uw.warehouse)
+      warehouses: user.warehouses.map(uw => uw.warehouse),
+      stations: user.stations.map(us => us.station)
     }
 
     return successResponse(response)
@@ -57,7 +70,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
     const body = await req.json()
-    const { name, email, role, isActive, warehouseIds } = body
+    const { name, email, role, isActive, warehouseIds, stationIds } = body
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -110,6 +123,18 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
                 }
               }
             }
+          },
+          stations: {
+            include: {
+              station: {
+                select: {
+                  id: true,
+                  name: true,
+                  code: true,
+                  address: true
+                }
+              }
+            }
           }
         }
       })
@@ -130,8 +155,28 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
             }))
           })
         }
+      }
 
-        // Fetch updated user with new warehouses
+      // Update station assignments if provided
+      if (stationIds && Array.isArray(stationIds)) {
+        // Delete existing assignments
+        await tx.userStation.deleteMany({
+          where: { userId: id }
+        })
+
+        // Create new assignments
+        if (stationIds.length > 0) {
+          await tx.userStation.createMany({
+            data: stationIds.map((stationId: string) => ({
+              userId: id,
+              stationId
+            }))
+          })
+        }
+      }
+
+      // If warehouses or stations were updated, fetch updated user
+      if ((warehouseIds && Array.isArray(warehouseIds)) || (stationIds && Array.isArray(stationIds))) {
         return tx.user.findUnique({
           where: { id },
           include: {
@@ -142,6 +187,18 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
                     id: true,
                     name: true,
                     code: true
+                  }
+                }
+              }
+            },
+            stations: {
+              include: {
+                station: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    address: true
                   }
                 }
               }
@@ -183,7 +240,8 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const response = {
       ...updatedUser,
       passwordHash: undefined,
-      warehouses: updatedUser?.warehouses.map(uw => uw.warehouse)
+      warehouses: updatedUser?.warehouses.map(uw => uw.warehouse) || [],
+      stations: updatedUser?.stations.map(us => us.station) || []
     }
 
     return successResponse(response)

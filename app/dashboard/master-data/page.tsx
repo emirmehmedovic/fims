@@ -1,6 +1,6 @@
 'use client'
 
-import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck, FlaskConical, Users } from 'lucide-react'
+import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck, FlaskConical, Users, Fuel } from 'lucide-react'
 import MasterDataManager from '@/components/master-data/MasterDataManager'
 
 export default function MasterDataPage() {
@@ -37,6 +37,7 @@ export default function MasterDataPage() {
           { icon: Truck, title: 'Prevoznici', description: 'Transportne firme', color: 'from-rose-500 to-rose-600' },
           { icon: FlaskConical, title: 'Laboratorije', description: 'Laboratorije za testiranje', color: 'from-cyan-500 to-cyan-600' },
           { icon: Users, title: 'Klijenti', description: 'Kupci goriva', color: 'from-teal-500 to-teal-600' },
+          { icon: Fuel, title: 'Poslovnice', description: 'Benzinske pumpe', color: 'from-orange-500 to-orange-600' },
         ].map((item) => (
           <div
             key={item.title}

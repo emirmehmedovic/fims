@@ -90,10 +90,12 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
     ? formatDateSarajevo(entry.deliveryNoteDate)
     : formatDateSarajevo(new Date())
 
-  // Format customs declaration info only
+  // Format customs declaration or delivery note info (priority: customs first)
   let documentInfo = ''
   if (entry.customsDeclarationNumber && entry.customsDeclarationDate) {
     documentInfo = `${entry.customsDeclarationNumber}, ${formatDate(entry.customsDeclarationDate)}`
+  } else if (entry.deliveryNoteNumber && entry.deliveryNoteDate) {
+    documentInfo = `${entry.deliveryNoteNumber}, ${formatDate(entry.deliveryNoteDate)}`
   }
 
   // Fixed characteristics for higher quality fuel based on product type
@@ -284,13 +286,14 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
     <!-- Title -->
     <div class="document-title">
       <h1>IZJAVA O USKLAĐENOSTI SA STANDARDIMA<br>KVALITETA TEČNIH NAFTNIH GORIVA</h1>
+      <div style="margin-top: 4mm; font-size: 13px; font-weight: 600;">BROJ: ${entry.registrationNumber}</div>
     </div>
 
     <!-- Content -->
     <div class="content">
       <div class="field">
         <span class="field-label">Registracijski broj dobavljača:</span>
-        <span class="field-value">${entry.registrationNumber}</span>
+        <span class="field-value">${entry.supplier?.code || '-'}</span>
       </div>
 
       <div class="field">
@@ -334,7 +337,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
       </div>
 
       <div class="field">
-        <span class="field-label">Broj carinske deklaracije i datum:</span>
+        <span class="field-label">Broj otpremnice i datum ili broj carinske deklaracije i datum:</span>
         <span class="field-value">${documentInfo}</span>
       </div>
 

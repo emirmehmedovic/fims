@@ -30,6 +30,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const body = await req.json()
     const {
       warehouseId,
+      stationId,
       clientId,
       productName,
       deliveryNoteNumber,
@@ -51,6 +52,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     } else {
       // Otherwise use filters
       if (warehouseId) where.warehouseId = warehouseId
+      if (stationId) where.stationId = stationId
       if (clientId) where.clientId = clientId
       if (productName) where.productName = { contains: productName, mode: 'insensitive' }
       if (deliveryNoteNumber) where.deliveryNoteNumber = { contains: deliveryNoteNumber, mode: 'insensitive' }

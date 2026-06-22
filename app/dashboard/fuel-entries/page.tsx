@@ -50,16 +50,26 @@ interface FuelEntry {
   createdAt: string
 }
 
+interface Station {
+  id: string
+  name: string
+  code: string
+  address: string
+  isActive: boolean
+}
+
 export default function FuelEntriesPage() {
   const { data: session } = useSession()
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [stations, setStations] = useState<Station[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   // Filter states
   const [warehouseFilter, setWarehouseFilter] = useState('')
+  const [stationFilter, setStationFilter] = useState('')
   const [clientFilter, setClientFilter] = useState('')
   const [productNameFilter, setProductNameFilter] = useState('')
   const [deliveryNoteFilter, setDeliveryNoteFilter] = useState('')
@@ -82,10 +92,11 @@ export default function FuelEntriesPage() {
   useEffect(() => {
     if (session) {
       fetchWarehouses()
+      fetchStations()
       fetchClients()
       fetchEntries()
     }
-  }, [session, page, warehouseFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
+  }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
 
   const fetchWarehouses = async () => {
     try {
@@ -114,6 +125,34 @@ export default function FuelEntriesPage() {
     }
   }
 
+  const fetchStations = async () => {
+    try {
+      // For OPERATOR/VIEWER, use stations from session
+      const userRole = session?.user?.role
+      const userStations = (session?.user as any)?.stations || []
+
+      if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+        // Use only assigned stations
+        setStations(userStations.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          code: s.code,
+          address: s.address,
+          isActive: true
+        })))
+      } else {
+        // Admins can see all stations
+        const res = await fetch('/api/stations?pageSize=1000')
+        const data = await res.json()
+        if (data.success) {
+          setStations(data.data.data || data.data)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stations:', error)
+    }
+  }
+
   const fetchClients = async () => {
     try {
       const res = await fetch('/api/clients?pageSize=1000')
@@ -133,6 +172,7 @@ export default function FuelEntriesPage() {
         page: page.toString(),
         limit: limit.toString(),
         ...(warehouseFilter && { warehouseId: warehouseFilter }),
+        ...(stationFilter && { stationId: stationFilter }),
         ...(clientFilter && { clientId: clientFilter }),
         ...(productNameFilter && { productName: productNameFilter }),
         ...(deliveryNoteFilter && { deliveryNoteNumber: deliveryNoteFilter }),
@@ -166,6 +206,7 @@ export default function FuelEntriesPage() {
 
   const clearFilters = () => {
     setWarehouseFilter('')
+    setStationFilter('')
     setClientFilter('')
     setProductNameFilter('')
     setDeliveryNoteFilter('')
@@ -193,6 +234,7 @@ export default function FuelEntriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           warehouseId: warehouseFilter || undefined,
+          stationId: stationFilter || undefined,
           clientId: clientFilter || undefined,
           productName: productNameFilter || undefined,
           deliveryNoteNumber: deliveryNoteFilter || undefined,
@@ -412,6 +454,26 @@ export default function FuelEntriesPage() {
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
+              Poslovnica
+            </label>
+            <SearchableSelect
+              options={stations.filter(s => s.isActive).map(s => ({
+                id: s.id,
+                label: s.name,
+                sublabel: s.code ? `${s.code} - ${s.address}` : s.address
+              }))}
+              value={stationFilter}
+              onChange={(value) => {
+                setStationFilter(value)
+                setPage(1)
+              }}
+              placeholder="Sve poslovnice"
+              emptyMessage="Nema dostupnih poslovnica"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Firma (Klijent)
             </label>
             <SearchableSelect
@@ -594,6 +656,7 @@ export default function FuelEntriesPage() {
       {showCreateModal && (
         <CreateFuelEntryModal
           warehouses={warehouses}
+          stations={stations}
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleEntryCreated}
         />

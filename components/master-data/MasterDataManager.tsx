@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2, FlaskConical, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, Package, Globe, MapPin, Sparkles, Truck, Building2, FlaskConical, Users, Search, ChevronLeft, ChevronRight, Fuel } from 'lucide-react'
 
 interface LookupItem {
   id: string
@@ -20,7 +20,7 @@ interface LookupItem {
   isActive: boolean
 }
 
-type LookupType = 'products' | 'countries' | 'pickupLocations' | 'fuelCharacteristics' | 'suppliers' | 'transporters' | 'laboratories' | 'clients'
+type LookupType = 'products' | 'countries' | 'pickupLocations' | 'fuelCharacteristics' | 'suppliers' | 'transporters' | 'laboratories' | 'clients' | 'stations'
 
 interface TabConfig {
   type: LookupType
@@ -126,6 +126,20 @@ const TABS: TabConfig[] = [
       { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
       { key: 'email', label: 'Email', placeholder: 'info@example.com' }
     ]
+  },
+  {
+    type: 'stations',
+    label: 'Poslovnice',
+    icon: <Fuel size={18} />,
+    apiEndpoint: '/api/stations',
+    fields: [
+      { key: 'name', label: 'Naziv', placeholder: 'npr. Benzinska pumpa Centar', required: true },
+      { key: 'code', label: 'Šifra', placeholder: 'npr. BP-001', required: true },
+      { key: 'address', label: 'Adresa', placeholder: 'Ulica i broj, Grad', required: true },
+      { key: 'contactPerson', label: 'Kontakt osoba', placeholder: 'Ime i prezime' },
+      { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
+      { key: 'email', label: 'Email', placeholder: 'info@example.com' }
+    ]
   }
 ]
 
@@ -156,6 +170,13 @@ export default function MasterDataManager() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Reset page and clear items when tab changes
+  useEffect(() => {
+    setPage(1)
+    setItems([])
+    setSearchQuery('')
+  }, [activeTab])
 
   useEffect(() => {
     fetchItems()

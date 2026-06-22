@@ -15,6 +15,7 @@ export const createUserSchema = z.object({
     message: "Invalid role"
   }),
   warehouseIds: z.array(z.string().cuid("Invalid warehouse ID")).min(1, "At least one warehouse must be assigned"),
+  stationIds: z.array(z.string().cuid("Invalid station ID")).optional().default([]),
 })
 
 export const updateUserSchema = z.object({
@@ -22,6 +23,7 @@ export const updateUserSchema = z.object({
   email: z.string().email().optional(),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER']).optional(),
   warehouseIds: z.array(z.string().cuid()).min(1).optional(),
+  stationIds: z.array(z.string().cuid()).optional(),
   isActive: z.boolean().optional(),
 })
 

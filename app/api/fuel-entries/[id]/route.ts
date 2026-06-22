@@ -60,6 +60,30 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             phone: true,
             email: true
           }
+        },
+        client: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            pib: true,
+            idNumber: true
+          }
+        },
+        laboratory: {
+          select: {
+            id: true,
+            name: true,
+            accreditationNumber: true
+          }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true
+          }
         }
       }
     })
@@ -214,7 +238,10 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
           }
         },
         supplier: true,
-        transporter: true
+        transporter: true,
+        client: true,
+        laboratory: true,
+        station: true
       }
     })
 
