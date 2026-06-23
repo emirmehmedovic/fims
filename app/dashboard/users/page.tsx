@@ -21,7 +21,7 @@ export default function UsersPage() {
   // Filters
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('true') // Default: show only active users
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -205,8 +205,8 @@ export default function UsersPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="input"
             >
-              <option value="">Svi statusi</option>
               <option value="true">Aktivni</option>
+              <option value="">Svi statusi</option>
               <option value="false">Neaktivni</option>
             </select>
           </div>
