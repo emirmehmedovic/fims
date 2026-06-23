@@ -142,8 +142,9 @@ export const authOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
-        token.warehouses = user.warehouses
-        token.stations = user.stations
+        // Store only IDs to keep JWT token small (avoid cookie size limit)
+        token.warehouseIds = user.warehouses?.map((w: any) => w.id) || []
+        token.stationIds = user.stations?.map((s: any) => s.id) || []
       }
       return token
     },
@@ -151,8 +152,43 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id
         session.user.role = token.role
-        session.user.warehouses = token.warehouses
-        session.user.stations = token.stations
+        // Fetch full warehouse and station data from database
+        // This avoids JWT size issues while keeping session data complete
+        if (token.warehouseIds?.length > 0 || token.stationIds?.length > 0) {
+          const userData = await prisma.user.findUnique({
+            where: { id: token.id },
+            include: {
+              warehouses: {
+                include: {
+                  warehouse: {
+                    select: {
+                      id: true,
+                      name: true,
+                      code: true
+                    }
+                  }
+                }
+              },
+              stations: {
+                include: {
+                  station: {
+                    select: {
+                      id: true,
+                      name: true,
+                      code: true,
+                      address: true
+                    }
+                  }
+                }
+              }
+            }
+          })
+          session.user.warehouses = userData?.warehouses.map(uw => uw.warehouse) || []
+          session.user.stations = userData?.stations.map(us => us.station) || []
+        } else {
+          session.user.warehouses = []
+          session.user.stations = []
+        }
       }
       return session
     }
