@@ -113,15 +113,13 @@ export const authOptions = {
 
           logger.debug('[AUTH] Login successful for:', email)
 
-          // Return only IDs to keep JWT token small
-          // Full data will be loaded in session callback
+          // Return MINIMAL data - only what's needed for JWT
+          // All warehouse/station data will be fetched in session callback
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
-            warehouseIds: user.warehouses.map(uw => uw.warehouse.id),
-            stationIds: user.stations.map(us => us.station.id)
+            role: user.role
           }
         } catch (error) {
           logger.error('[AUTH] Login error:', error)
@@ -133,11 +131,9 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }: any) {
       if (user) {
+        // Store ONLY essential data in JWT to keep it minimal
         token.id = user.id
         token.role = user.role
-        // Store only IDs to keep JWT token small (avoid cookie size limit)
-        token.warehouseIds = user.warehouseIds || []
-        token.stationIds = user.stationIds || []
       }
       return token
     },
@@ -147,53 +143,48 @@ export const authOptions = {
           session.user.id = token.id
           session.user.role = token.role
 
-          // Fetch full warehouse and station data from database
-          // This avoids JWT size issues while keeping session data complete
-          if (token.warehouseIds?.length > 0 || token.stationIds?.length > 0) {
-            try {
-              const userData = await prisma.user.findUnique({
-                where: { id: token.id },
-                include: {
-                  warehouses: {
-                    include: {
-                      warehouse: {
-                        select: {
-                          id: true,
-                          name: true,
-                          code: true
-                        }
+          // ALWAYS fetch warehouse and station data from database
+          // This keeps JWT token minimal and avoids cookie size limits
+          try {
+            const userData = await prisma.user.findUnique({
+              where: { id: token.id },
+              include: {
+                warehouses: {
+                  include: {
+                    warehouse: {
+                      select: {
+                        id: true,
+                        name: true,
+                        code: true
                       }
                     }
-                  },
-                  stations: {
-                    include: {
-                      station: {
-                        select: {
-                          id: true,
-                          name: true,
-                          code: true,
-                          address: true
-                        }
+                  }
+                },
+                stations: {
+                  include: {
+                    station: {
+                      select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        address: true
                       }
                     }
                   }
                 }
-              })
-
-              if (userData) {
-                session.user.warehouses = userData.warehouses.map(uw => uw.warehouse) || []
-                session.user.stations = userData.stations.map(us => us.station) || []
-              } else {
-                logger.warn('[AUTH] User not found in session callback:', token.id)
-                session.user.warehouses = []
-                session.user.stations = []
               }
-            } catch (error) {
-              logger.error('[AUTH] Failed to fetch user data in session callback:', error)
+            })
+
+            if (userData) {
+              session.user.warehouses = userData.warehouses.map(uw => uw.warehouse) || []
+              session.user.stations = userData.stations.map(us => us.station) || []
+            } else {
+              logger.warn('[AUTH] User not found in session callback:', token.id)
               session.user.warehouses = []
               session.user.stations = []
             }
-          } else {
+          } catch (error) {
+            logger.error('[AUTH] Failed to fetch user data in session callback:', error)
             session.user.warehouses = []
             session.user.stations = []
           }
