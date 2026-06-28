@@ -9,6 +9,7 @@ import ViewFuelEntryModal from './ViewFuelEntryModal'
 interface FuelEntry {
   id: string
   registrationNumber: number
+  declarationNumber?: string | null
   entryDate: string
   productName: string
   quantity: number
@@ -130,7 +131,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
               >
                 <td className="px-6 py-4">
                   <div className="font-mono font-bold text-slate-700 bg-slate-100 inline-block px-2 py-1 rounded text-sm">
-                    {entry.registrationNumber}
+                    {entry.declarationNumber || entry.registrationNumber}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-600">

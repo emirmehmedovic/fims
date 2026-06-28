@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
-import { 
-  X, 
-  FileText, 
-  Download, 
-  Building2, 
-  Droplets, 
-  Calendar, 
-  User, 
-  Truck, 
+import { getCertificateDownloadUrl } from '@/lib/utils/certificate-url'
+import {
+  X,
+  FileText,
+  Download,
+  Building2,
+  Droplets,
+  Calendar,
+  User,
+  Truck,
   MapPin,
   FlaskConical,
   FileCheck,
@@ -22,6 +23,7 @@ import {
 interface FuelEntryDetail {
   id: string
   registrationNumber: number
+  declarationNumber?: string | null
   entryDate: string
   productName: string
   quantity: number
@@ -202,7 +204,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-2xl font-bold text-dark-900">
-                    Prijava #{details.registrationNumber}
+                    Izjava br. {details.declarationNumber || details.registrationNumber}
                   </h2>
                   {details.isActive ? (
                     <span className="badge badge-success flex items-center gap-1">
@@ -361,7 +363,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                       </div>
                     </div>
                     <a
-                      href={details.certificatePath}
+                      href={getCertificateDownloadUrl(details.certificatePath) || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-dark-900 text-white text-sm font-medium rounded-xl hover:bg-dark-800 transition-colors flex items-center gap-2"

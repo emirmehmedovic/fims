@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
+import { getCertificateDownloadUrl } from '@/lib/utils/certificate-url'
 import {
   X,
   Pencil,
@@ -657,7 +658,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                     </div>
                   </div>
                   <a
-                    href={fullEntry.certificatePath}
+                    href={getCertificateDownloadUrl(fullEntry.certificatePath) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors flex items-center gap-2"

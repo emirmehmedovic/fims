@@ -13,6 +13,7 @@ const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 interface FuelEntryData {
   id: string
   registrationNumber: number
+  declarationNumber?: string | null
   entryDate: Date
   productName: string
   quantity: number
@@ -136,7 +137,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
 <html lang="bs">
 <head>
   <meta charset="UTF-8">
-  <title>Izjava o usklađenosti - ${entry.registrationNumber}</title>
+  <title>Izjava o usklađenosti - ${entry.declarationNumber || entry.registrationNumber}</title>
   <style>
     @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -286,7 +287,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
     <!-- Title -->
     <div class="document-title">
       <h1>IZJAVA O USKLAĐENOSTI SA STANDARDIMA<br>KVALITETA TEČNIH NAFTNIH GORIVA</h1>
-      <div style="margin-top: 4mm; font-size: 13px; font-weight: 600;">BROJ: ${entry.registrationNumber}</div>
+      <div style="margin-top: 4mm; font-size: 13px; font-weight: 600;">BROJ: ${entry.declarationNumber || entry.registrationNumber}</div>
     </div>
 
     <!-- Content -->
@@ -487,16 +488,21 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
   }
 
   try {
+    // Remove leading slash from certificatePath to avoid path.join issues
+    const cleanPath = certificatePath.startsWith('/') ? certificatePath.slice(1) : certificatePath
     // Check if certificate file exists
-    const fullPath = path.join(process.cwd(), 'public', certificatePath)
+    const fullPath = path.join(process.cwd(), 'public', cleanPath)
+    console.log('[PDF] Attempting to merge certificate from:', fullPath)
     await fs.access(fullPath)
 
     // Check if certificate is a PDF
-    if (!certificatePath.toLowerCase().endsWith('.pdf')) {
+    if (!cleanPath.toLowerCase().endsWith('.pdf')) {
       // For non-PDF files (images), just return the main PDF
+      console.log('[PDF] Certificate is not a PDF, skipping merge')
       return mainPdfBuffer
     }
 
+    console.log('[PDF] Reading certificate file...')
     const certificateBytes = await fs.readFile(fullPath)
     
     const mainPdf = await PDFDocument.load(mainPdfBuffer)

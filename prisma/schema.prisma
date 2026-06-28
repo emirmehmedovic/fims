@@ -100,8 +100,9 @@ model UserStation {
 // ============================================
 
 model FuelEntry {
-  id                 String @id @default(cuid())
-  registrationNumber Int    @unique @default(autoincrement()) @map("registration_number")
+  id                 String  @id @default(cuid())
+  registrationNumber Int     @unique @default(autoincrement()) @map("registration_number")
+  declarationNumber  String? @unique @map("declaration_number") // Format: XXXX/YY (e.g., 0001/26)
 
   // Basic Info
   entryDate   DateTime @map("entry_date")
