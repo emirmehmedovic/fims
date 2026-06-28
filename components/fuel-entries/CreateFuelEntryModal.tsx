@@ -104,8 +104,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [quantity, setQuantity] = useState('')
   const [quantityError, setQuantityError] = useState('')
 
-  // Max date for date inputs (today)
-  const maxDate = formatDateInputValueSarajevo(new Date())
+  // Max date for date inputs (30 days in future)
+  const maxDate = formatDateInputValueSarajevo(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
 
   // Date validation errors
   const [entryDateError, setEntryDateError] = useState('')
@@ -175,17 +175,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     }
   }, [warehouses])
 
-  // Validate date - check if it's in the future
+  // Validate date - allow up to 30 days in the future
   const validateDate = (dateValue: string): string => {
     if (!dateValue) return ''
 
     const selectedDate = new Date(dateValue)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Reset time to start of day
+    const maxAllowedDate = new Date()
+    maxAllowedDate.setDate(maxAllowedDate.getDate() + 30) // 30 days in future
+    maxAllowedDate.setHours(23, 59, 59, 999) // End of day
     selectedDate.setHours(0, 0, 0, 0)
 
-    if (selectedDate > today) {
-      return 'Nije moguće odabrati datum u budućnosti. Maksimalno današnji dan.'
+    if (selectedDate > maxAllowedDate) {
+      return 'Nije moguće odabrati datum više od 30 dana u budućnosti.'
     }
     return ''
   }
