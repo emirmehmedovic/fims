@@ -519,13 +519,6 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
 
     console.log('[PDF] Current working directory:', process.cwd())
 
-    // Check if certificate is a PDF
-    if (!cleanPath.toLowerCase().endsWith('.pdf')) {
-      // For non-PDF files (images), just return the main PDF
-      console.log('[PDF] Certificate is not a PDF (extension:', path.extname(cleanPath), '), skipping merge')
-      return mainPdfBuffer
-    }
-
     console.log('[PDF] Reading certificate file...')
     const certificateBytes = await fs.readFile(fullPath)
     console.log('[PDF] Certificate file size:', certificateBytes.length, 'bytes')
@@ -533,17 +526,81 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
     const mainPdf = await PDFDocument.load(mainPdfBuffer)
     console.log('[PDF] Main PDF loaded, pages:', mainPdf.getPageCount())
 
-    const certificatePdf = await PDFDocument.load(certificateBytes)
-    console.log('[PDF] Certificate PDF loaded, pages:', certificatePdf.getPageCount())
+    const ext = path.extname(fullPath).toLowerCase()
 
-    const copiedPages = await mainPdf.copyPages(
-      certificatePdf,
-      certificatePdf.getPageIndices()
-    )
+    if (ext === '.pdf') {
+      // Merge PDF certificate
+      const certificatePdf = await PDFDocument.load(certificateBytes)
+      console.log('[PDF] Certificate PDF loaded, pages:', certificatePdf.getPageCount())
 
-    copiedPages.forEach(page => {
-      mainPdf.addPage(page)
-    })
+      const copiedPages = await mainPdf.copyPages(
+        certificatePdf,
+        certificatePdf.getPageIndices()
+      )
+
+      copiedPages.forEach(page => {
+        mainPdf.addPage(page)
+      })
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+      // Embed JPG image as new page
+      console.log('[PDF] Embedding JPG image as new page...')
+      const jpgImage = await mainPdf.embedJpg(certificateBytes)
+
+      // Create A4 page and fit image
+      const page = mainPdf.addPage([595.28, 841.89]) // A4 size in points
+      const { width, height } = jpgImage.scale(1)
+
+      // Calculate scale to fit image on page with margins
+      const maxWidth = 555 // A4 width minus margins
+      const maxHeight = 800 // A4 height minus margins
+      const scale = Math.min(maxWidth / width, maxHeight / height, 1)
+
+      const scaledWidth = width * scale
+      const scaledHeight = height * scale
+
+      // Center image on page
+      const x = (595.28 - scaledWidth) / 2
+      const y = (841.89 - scaledHeight) / 2
+
+      page.drawImage(jpgImage, {
+        x,
+        y,
+        width: scaledWidth,
+        height: scaledHeight,
+      })
+      console.log('[PDF] JPG image embedded successfully')
+    } else if (ext === '.png') {
+      // Embed PNG image as new page
+      console.log('[PDF] Embedding PNG image as new page...')
+      const pngImage = await mainPdf.embedPng(certificateBytes)
+
+      // Create A4 page and fit image
+      const page = mainPdf.addPage([595.28, 841.89]) // A4 size in points
+      const { width, height } = pngImage.scale(1)
+
+      // Calculate scale to fit image on page with margins
+      const maxWidth = 555 // A4 width minus margins
+      const maxHeight = 800 // A4 height minus margins
+      const scale = Math.min(maxWidth / width, maxHeight / height, 1)
+
+      const scaledWidth = width * scale
+      const scaledHeight = height * scale
+
+      // Center image on page
+      const x = (595.28 - scaledWidth) / 2
+      const y = (841.89 - scaledHeight) / 2
+
+      page.drawImage(pngImage, {
+        x,
+        y,
+        width: scaledWidth,
+        height: scaledHeight,
+      })
+      console.log('[PDF] PNG image embedded successfully')
+    } else {
+      console.log('[PDF] Unsupported certificate format:', ext)
+      return mainPdfBuffer
+    }
 
     console.log('[PDF] Merged PDF total pages:', mainPdf.getPageCount())
     const mergedPdfBytes = await mainPdf.save()
