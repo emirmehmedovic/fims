@@ -493,13 +493,31 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
   try {
     // Remove leading slash from certificatePath to avoid path.join issues
     const cleanPath = certificatePath.startsWith('/') ? certificatePath.slice(1) : certificatePath
-    // Check if certificate file exists
-    const fullPath = path.join(process.cwd(), 'public', cleanPath)
-    console.log('[PDF] Attempting to merge certificate from:', fullPath)
-    console.log('[PDF] Current working directory:', process.cwd())
 
-    await fs.access(fullPath)
-    console.log('[PDF] File exists, checking type...')
+    // Try multiple possible locations for the certificate
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', cleanPath),  // /public/uploads/certificates/cert.pdf
+      path.join(process.cwd(), 'public', 'uploads', path.basename(cleanPath)),  // /public/uploads/cert.pdf
+    ]
+
+    let fullPath = ''
+    for (const p of possiblePaths) {
+      try {
+        await fs.access(p)
+        fullPath = p
+        console.log('[PDF] Found certificate at:', fullPath)
+        break
+      } catch {
+        console.log('[PDF] Certificate not found at:', p)
+      }
+    }
+
+    if (!fullPath) {
+      console.log('[PDF] Certificate file not found in any location')
+      return mainPdfBuffer
+    }
+
+    console.log('[PDF] Current working directory:', process.cwd())
 
     // Check if certificate is a PDF
     if (!cleanPath.toLowerCase().endsWith('.pdf')) {

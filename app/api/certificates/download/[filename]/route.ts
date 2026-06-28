@@ -23,10 +23,23 @@ export const GET = withAuth(async (
       return errorResponse('Invalid filename format', 400)
     }
 
-    const filepath = path.join(process.cwd(), UPLOAD_DIR.replace('./', ''), sanitizedFilename)
+    // Try multiple possible locations
+    const possiblePaths = [
+      path.join(process.cwd(), UPLOAD_DIR.replace('./', ''), sanitizedFilename),
+      path.join(process.cwd(), 'public', 'uploads', sanitizedFilename),
+      path.join(process.cwd(), 'public', 'uploads', 'certificates', sanitizedFilename),
+    ]
+
+    let filepath = ''
+    for (const p of possiblePaths) {
+      if (existsSync(p)) {
+        filepath = p
+        break
+      }
+    }
 
     // Check if file exists
-    if (!existsSync(filepath)) {
+    if (!filepath) {
       return errorResponse('Certificate not found', 404)
     }
 

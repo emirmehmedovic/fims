@@ -109,8 +109,11 @@ export async function saveFile(file: File, registrationNumber: number): Promise<
   const buffer = Buffer.from(bytes)
   await writeFile(filepath, buffer)
 
-  // Return relative path for database
-  return `/uploads/certificates/${filename}`
+  // Return relative path for database based on actual UPLOAD_DIR
+  // UPLOAD_DIR is "./public/uploads" or "./public/uploads/certificates"
+  // We need to return path relative to /public, e.g., "/uploads/filename.pdf"
+  const relativePath = UPLOAD_DIR.replace('./public', '').replace('public', '')
+  return `${relativePath}/${filename}`
 }
 
 export function getFileUrl(filepath: string | null): string | null {
