@@ -58,6 +58,9 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Fuel entry not found', 404)
     }
 
+    console.log('[PDF EXPORT] Entry found:', fuelEntry.registrationNumber)
+    console.log('[PDF EXPORT] certificatePath:', fuelEntry.certificatePath)
+
     // Check if user has access to this warehouse (for non-admin users)
     if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
       const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []

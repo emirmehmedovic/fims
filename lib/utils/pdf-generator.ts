@@ -483,7 +483,10 @@ export async function generatePDF(
 }
 
 export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string | null): Promise<Buffer> {
+  console.log('[PDF] mergePDFs called with certificatePath:', certificatePath)
+
   if (!certificatePath) {
+    console.log('[PDF] No certificate path provided, skipping merge')
     return mainPdfBuffer
   }
 
@@ -493,34 +496,43 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
     // Check if certificate file exists
     const fullPath = path.join(process.cwd(), 'public', cleanPath)
     console.log('[PDF] Attempting to merge certificate from:', fullPath)
+    console.log('[PDF] Current working directory:', process.cwd())
+
     await fs.access(fullPath)
+    console.log('[PDF] File exists, checking type...')
 
     // Check if certificate is a PDF
     if (!cleanPath.toLowerCase().endsWith('.pdf')) {
       // For non-PDF files (images), just return the main PDF
-      console.log('[PDF] Certificate is not a PDF, skipping merge')
+      console.log('[PDF] Certificate is not a PDF (extension:', path.extname(cleanPath), '), skipping merge')
       return mainPdfBuffer
     }
 
     console.log('[PDF] Reading certificate file...')
     const certificateBytes = await fs.readFile(fullPath)
-    
+    console.log('[PDF] Certificate file size:', certificateBytes.length, 'bytes')
+
     const mainPdf = await PDFDocument.load(mainPdfBuffer)
+    console.log('[PDF] Main PDF loaded, pages:', mainPdf.getPageCount())
+
     const certificatePdf = await PDFDocument.load(certificateBytes)
-    
+    console.log('[PDF] Certificate PDF loaded, pages:', certificatePdf.getPageCount())
+
     const copiedPages = await mainPdf.copyPages(
       certificatePdf,
       certificatePdf.getPageIndices()
     )
-    
+
     copiedPages.forEach(page => {
       mainPdf.addPage(page)
     })
-    
+
+    console.log('[PDF] Merged PDF total pages:', mainPdf.getPageCount())
     const mergedPdfBytes = await mainPdf.save()
+    console.log('[PDF] Merge successful!')
     return Buffer.from(mergedPdfBytes)
   } catch (error) {
-    console.error('Error merging PDFs:', error)
+    console.error('[PDF] Error merging PDFs:', error)
     // If merge fails, return the main PDF
     return mainPdfBuffer
   }
@@ -532,12 +544,18 @@ export async function generateFuelEntryPDF(
   includeCertificate: boolean = true,
   browserInstance?: any
 ): Promise<Buffer> {
+  console.log('[PDF] generateFuelEntryPDF called for entry:', entry.registrationNumber)
+  console.log('[PDF] includeCertificate:', includeCertificate)
+  console.log('[PDF] entry.certificatePath:', entry.certificatePath)
+
   const mainPdf = await generatePDF(entry, browserInstance)
 
   if (includeCertificate && entry.certificatePath) {
+    console.log('[PDF] Will merge with certificate')
     return await mergePDFs(mainPdf, entry.certificatePath)
   }
 
+  console.log('[PDF] No certificate to merge')
   return mainPdf
 }
 
