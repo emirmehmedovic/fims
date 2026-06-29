@@ -287,14 +287,13 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
     <!-- Title -->
     <div class="document-title">
       <h1>IZJAVA O USKLAĐENOSTI SA STANDARDIMA<br>KVALITETA TEČNIH NAFTNIH GORIVA</h1>
-      <div style="margin-top: 4mm; font-size: 13px; font-weight: 600;">BROJ: ${entry.declarationNumber || entry.registrationNumber}</div>
     </div>
 
     <!-- Content -->
     <div class="content">
       <div class="field">
         <span class="field-label">Registracijski broj dobavljača:</span>
-        <span class="field-value">${entry.supplier?.code || '-'}</span>
+        <span class="field-value">${entry.declarationNumber || entry.registrationNumber}</span>
       </div>
 
       <div class="field">
