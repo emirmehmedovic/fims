@@ -1,22 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/withAuth"
+import fs from 'fs'
+import path from 'path'
 
 // GET /api/version - Get application version information
 export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
-    // Read package.json to get versions
-    const packageJson = require('@/../package.json')
+    // Read package.json from project root
+    const packageJsonPath = path.join(process.cwd(), 'package.json')
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
 
     const versionInfo = {
       application: {
-        name: packageJson.name,
-        version: packageJson.version
+        name: packageJson.name || 'fims',
+        version: packageJson.version || '1.0.0'
       },
       dependencies: {
-        nextjs: packageJson.dependencies.next,
-        react: packageJson.dependencies.react,
-        reactDom: packageJson.dependencies['react-dom'],
-        prisma: packageJson.dependencies['@prisma/client']
+        nextjs: packageJson.dependencies?.next || 'unknown',
+        react: packageJson.dependencies?.react || 'unknown',
+        reactDom: packageJson.dependencies?.['react-dom'] || 'unknown',
+        prisma: packageJson.dependencies?.['@prisma/client'] || 'unknown'
       },
       environment: process.env.NODE_ENV,
       nodeVersion: process.version,
