@@ -110,10 +110,12 @@ function generateAdditiveTableRows(
                    productNameLower.includes('bmb') ||
                    productNameLower.includes('bas en 228')
 
-  // Fixed characteristics based on fuel type
+  // Fixed characteristics based on fuel type, with additive name at the top
+  const additiveName = detail.name
   let propertiesHtml = ''
   if (isDiesel) {
     propertiesHtml = `
+      <div><strong>${additiveName}</strong></div>
       <div>- Poboljšana protočnost i funkcionalnost na niskim temperaturama</div>
       <div>- Mirni rad motora</div>
       <div>- Poboljšanje podmazivanja</div>
@@ -122,6 +124,7 @@ function generateAdditiveTableRows(
     `
   } else if (isBenzin) {
     propertiesHtml = `
+      <div><strong>${additiveName}</strong></div>
       <div>- Održavanje čistoće motora</div>
       <div>- Brže i lakše pokretanje motora</div>
       <div>- Smanjenje potrošnje</div>
@@ -132,9 +135,9 @@ function generateAdditiveTableRows(
     const properties = additive?.description
       ? additive.description.split('\n').map(prop => prop.trim()).filter(Boolean)
       : []
-    propertiesHtml = properties.length > 0
+    propertiesHtml = `<div><strong>${additiveName}</strong></div>` + (properties.length > 0
       ? properties.map(prop => `<div>- ${prop}</div>`).join('')
-      : `- ${detail.name}`
+      : '')
   }
 
   return `
