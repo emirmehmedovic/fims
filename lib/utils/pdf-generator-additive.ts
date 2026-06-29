@@ -99,14 +99,43 @@ function generateAdditiveTableRows(
   const manufacturers = additive?.manufacturers?.join(', ') || '-'
   const type = additive?.type || '-'
 
-  // Parse properties/description into bullet points
-  const properties = additive?.description
-    ? additive.description.split('\n').map(prop => prop.trim()).filter(Boolean)
-    : []
+  // Determine if product is diesel or benzin for fixed characteristics
+  const productNameLower = entry.productName.toLowerCase()
+  const isDiesel = productNameLower.includes('dizel') ||
+                   productNameLower.includes('ulsd') ||
+                   productNameLower.startsWith('ed ') ||
+                   productNameLower === 'ed' ||
+                   productNameLower.includes('bas en 590')
+  const isBenzin = productNameLower.includes('benzin') ||
+                   productNameLower.includes('bmb') ||
+                   productNameLower.includes('bas en 228')
 
-  const propertiesHtml = properties.length > 0
-    ? properties.map(prop => `<div>-${prop}</div>`).join('')
-    : `-${detail.name}`
+  // Fixed characteristics based on fuel type
+  let propertiesHtml = ''
+  if (isDiesel) {
+    propertiesHtml = `
+      <div>- Poboljšana protočnost i funkcionalnost na niskim temperaturama</div>
+      <div>- Mirni rad motora</div>
+      <div>- Poboljšanje podmazivanja</div>
+      <div>- Obezbjeđena antikorozivna zaštita</div>
+      <div>- Antipenski efekat</div>
+    `
+  } else if (isBenzin) {
+    propertiesHtml = `
+      <div>- Održavanje čistoće motora</div>
+      <div>- Brže i lakše pokretanje motora</div>
+      <div>- Smanjenje potrošnje</div>
+      <div>- Smanjenje emisije štetnih gasova</div>
+    `
+  } else {
+    // Fallback to additive description if fuel type not recognized
+    const properties = additive?.description
+      ? additive.description.split('\n').map(prop => prop.trim()).filter(Boolean)
+      : []
+    propertiesHtml = properties.length > 0
+      ? properties.map(prop => `<div>- ${prop}</div>`).join('')
+      : `- ${detail.name}`
+  }
 
   return `
     <tr>
