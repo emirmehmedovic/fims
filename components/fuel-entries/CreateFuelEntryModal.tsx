@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import {
   X,
@@ -21,6 +21,7 @@ import {
   Fuel
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
 import CertificateSelector from '@/components/ui/CertificateSelector'
 
 interface Warehouse {
@@ -89,7 +90,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
   const [laboratories, setLaboratories] = useState<Laboratory[]>([])
-  const [clients, setClients] = useState<Client[]>([])
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
   // Lookup data
   const [products, setProducts] = useState<LookupItem[]>([])
@@ -149,18 +150,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
   // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
   useEffect(() => {
-    const selectedClient = clients.find(c => c.id === clientId)
     if (selectedClient && selectedClient.code !== '650') {
       setStationId('')
     }
-  }, [clientId, clients])
+  }, [selectedClient])
 
   useEffect(() => {
     fetchSuppliers()
     fetchTransporters()
     fetchLaboratories()
-    fetchClients()
     fetchLookupData()
+    // Auto-select HIFA-PETROL client on load
+    autoSelectHifaPetrol()
 
     // Set default warehouse
     if (warehouses.length === 1) {
@@ -300,24 +301,43 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     }
   }
 
-  const fetchClients = async () => {
+  // Auto-select HIFA-PETROL client on initial load
+  const autoSelectHifaPetrol = async () => {
     try {
-      const res = await fetch('/api/clients?pageSize=1000')
+      const res = await fetch('/api/clients?search=650&pageSize=10')
       const data = await res.json()
       if (data.success) {
         const clientsList = data.data.data || data.data
-        setClients(clientsList)
-
-        // Auto-select HIFA-PETROL client (code: 650) by default
         const hifaPetrolClient = clientsList.find((c: any) => c.code === '650')
         if (hifaPetrolClient) {
           setClientId(hifaPetrolClient.id)
+          setSelectedClient(hifaPetrolClient)
         }
       }
     } catch (error) {
-      console.error('Error fetching clients:', error)
+      console.error('Error auto-selecting HIFA-PETROL:', error)
     }
   }
+
+  // Async search for clients - used by AsyncSearchableSelect
+  const fetchClientsAsync = useCallback(async (search: string) => {
+    try {
+      const res = await fetch(`/api/clients?search=${encodeURIComponent(search)}&pageSize=50`)
+      const data = await res.json()
+      if (data.success) {
+        const clientsList = data.data.data || data.data
+        return clientsList.filter((c: Client) => c.isActive).map((c: Client) => ({
+          id: c.id,
+          label: c.name,
+          sublabel: c.code || undefined
+        }))
+      }
+      return []
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+      return []
+    }
+  }, [])
 
   const handleCharacteristicToggle = (char: string) => {
     setImprovedCharacteristics(prev => {
@@ -767,38 +787,54 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
             <FormField label="Odaberite klijenta (firmu)" icon={Users}>
               <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija.
+                  <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija. Pretražite po imenu ili šifri.
                 </p>
               </div>
-              <SearchableSelect
-                options={clients.filter(c => c.isActive).map(c => ({
-                  id: c.id,
-                  label: c.name,
-                  sublabel: [c.code && `Šifra: ${c.code}`, c.pib && `PIB: ${c.pib}`].filter(Boolean).join(' | ') || undefined
-                }))}
+              <AsyncSearchableSelect
+                fetchOptions={fetchClientsAsync}
                 value={clientId}
-                onChange={setClientId}
-                placeholder="Odaberite klijenta"
-                emptyMessage="Nema dostupnih klijenata"
+                onChange={(id) => {
+                  setClientId(id)
+                  // Fetch full client details when selected
+                  if (id) {
+                    fetch(`/api/clients/${id}`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.success) {
+                          setSelectedClient(data.data)
+                        }
+                      })
+                      .catch(console.error)
+                  } else {
+                    setSelectedClient(null)
+                  }
+                }}
+                placeholder="Pretražite klijenta po imenu ili šifri..."
+                emptyMessage="Nema rezultata. Pokušajte drugu pretragu."
+                selectedOption={selectedClient ? {
+                  id: selectedClient.id,
+                  label: selectedClient.name,
+                  sublabel: selectedClient.code || undefined
+                } : null}
               />
-              {clientId && (
+              {selectedClient && (
                 <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
                   <p className="text-dark-600">
-                    <span className="font-semibold">Naziv:</span> {clients.find(c => c.id === clientId)?.name}
+                    <span className="font-semibold">Naziv:</span> {selectedClient.name}
                   </p>
-                  {clients.find(c => c.id === clientId)?.code && (
+                  {selectedClient.code && (
                     <p className="text-dark-600">
-                      <span className="font-semibold">Šifra:</span> {clients.find(c => c.id === clientId)?.code}
+                      <span className="font-semibold">Šifra:</span> {selectedClient.code}
                     </p>
                   )}
-                  {clients.find(c => c.id === clientId)?.pib && (
+                  {selectedClient.pib && (
                     <p className="text-dark-600">
-                      <span className="font-semibold">PIB:</span> {clients.find(c => c.id === clientId)?.pib}
+                      <span className="font-semibold">PIB:</span> {selectedClient.pib}
                     </p>
                   )}
-                  {clients.find(c => c.id === clientId)?.idNumber && (
+                  {selectedClient.idNumber && (
                     <p className="text-dark-600">
-                      <span className="font-semibold">ID broj:</span> {clients.find(c => c.id === clientId)?.idNumber}
+                      <span className="font-semibold">ID broj:</span> {selectedClient.idNumber}
                     </p>
                   )}
                 </div>
@@ -807,7 +843,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           </FormSection>
 
           {/* Station Information - Only shown for HIFA-PETROL client (code: 650) */}
-          {clients.find(c => c.id === clientId)?.code === '650' && (
+          {selectedClient?.code === '650' && (
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 shadow-sm">
               <FormSection title="Poslovnica (benzinska pumpa)" icon={Fuel}>
                 <FormField label="Odaberite poslovnicu" icon={Fuel}>
