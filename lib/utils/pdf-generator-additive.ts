@@ -467,7 +467,7 @@ function generateAdditiveDeclarationTemplate(
       text-align: right;
     }
     .stamp-section img {
-      width: 45mm;
+      width: 60mm;
       height: auto;
     }
     .stamp-label {
