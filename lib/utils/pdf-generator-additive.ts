@@ -114,7 +114,6 @@ function generateAdditiveTableRows(
   console.log('[PDF Generator] Looking for:', detail.name, '-> Found:', additive?.name || 'NOT FOUND')
 
   const manufacturers = additive?.manufacturers?.join(', ') || '-'
-  const type = additive?.type || '-'
 
   // Determine if product is diesel or benzin for fixed characteristics
   const productNameLower = entry.productName.toLowerCase()
@@ -201,7 +200,7 @@ function generateAdditiveTableRows(
     <tr>
       <td class="row-number">9</td>
       <td class="row-label">VRSTA ADITIVA</td>
-      <td class="row-value">${type}</td>
+      <td class="row-value">${additive?.name || detail.name}</td>
     </tr>
     <tr>
       <td class="row-number">10</td>
