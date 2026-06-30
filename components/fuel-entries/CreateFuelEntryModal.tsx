@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
+import toast from 'react-hot-toast'
 import {
   X,
   Plus,
@@ -367,19 +368,58 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
     // Check for date validation errors
     if (entryDateError || deliveryNoteDateError || customsDeclarationDateError || testReportDateError) {
-      alert('Molimo ispravite greške u datumima prije slanja')
+      toast.error('Molimo ispravite greške u datumima prije slanja')
       return
     }
 
+    // Validate basic required fields
     if (!warehouseId || !productName || !quantity) {
-      alert('Molimo popunite sva obavezna polja')
+      toast.error('Molimo popunite sva obavezna polja (skladište, proizvod, količina)')
       return
     }
 
     // Validate quantity
     const numQuantity = parseInt(quantity)
     if (numQuantity > 50000) {
-      alert('Količina ne može biti veća od 50,000 litara')
+      toast.error('Količina ne može biti veća od 50,000 litara')
+      return
+    }
+
+    // Validate mandatory fields
+    const missingFields: string[] = []
+
+    if (!deliveryNoteNumber) {
+      missingFields.push('Broj otpremnice')
+    }
+    if (!deliveryNoteDate) {
+      missingFields.push('Datum otpremnice')
+    }
+    if (!countryOfOrigin) {
+      missingFields.push('Zemlja porijekla')
+    }
+    if (!laboratoryId) {
+      missingFields.push('Laboratorija')
+    }
+    if (!testReportNumber) {
+      missingFields.push('Broj izvještaja laboratorije')
+    }
+    if (!testReportDate) {
+      missingFields.push('Datum izvještaja laboratorije')
+    }
+    if (!clientId) {
+      missingFields.push('Klijent (firma)')
+    }
+    if (!certificateSelection || (!certificateSelection.file && !certificateSelection.path)) {
+      missingFields.push('Certifikat / Izvještaj')
+    }
+
+    if (missingFields.length > 0) {
+      toast.error(`Molimo popunite obavezna polja:\n• ${missingFields.join('\n• ')}`, {
+        duration: 5000,
+        style: {
+          whiteSpace: 'pre-line'
+        }
+      })
       return
     }
 
@@ -450,13 +490,13 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       const data = await res.json()
 
       if (data.success) {
-        alert(`Prijava uspješno kreirana! Registarski broj: ${data.data.registrationNumber}`)
+        toast.success(`Prijava uspješno kreirana! Registarski broj: ${data.data.registrationNumber}`)
         onSuccess()
       } else {
-        alert(data.error || 'Greška pri kreiranju prijave')
+        toast.error(data.error || 'Greška pri kreiranju prijave')
       }
     } catch (error) {
-      alert('Greška pri kreiranju prijave')
+      toast.error('Greška pri kreiranju prijave')
     } finally {
       setLoading(false)
     }
@@ -569,23 +609,25 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           </FormSection>
 
           {/* Delivery Information */}
-          <FormSection title="Informacije o isporuci" icon={Truck}>
+          <FormSection title="Informacije o isporuci" icon={Truck} required>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Broj otpremnice" icon={FileText}>
+              <FormField label="Broj otpremnice" icon={FileText} required>
                 <input
                   type="text"
                   value={deliveryNoteNumber}
                   onChange={(e) => setDeliveryNoteNumber(e.target.value)}
                   className="input w-full"
+                  required
                 />
               </FormField>
-              <FormField label="Datum otpremnice" icon={Calendar}>
+              <FormField label="Datum otpremnice" icon={Calendar} required>
                 <input
                   type="date"
                   value={deliveryNoteDate}
                   onChange={(e) => handleDeliveryNoteDateChange(e.target.value)}
                   max={maxDate}
                   className={`input w-full ${deliveryNoteDateError ? 'border-red-500 border-2' : ''}`}
+                  required
                 />
                 {deliveryNoteDateError && (
                   <p className="text-red-500 text-sm mt-1">{deliveryNoteDateError}</p>
@@ -611,11 +653,12 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                   <p className="text-red-500 text-sm mt-1">{customsDeclarationDateError}</p>
                 )}
               </FormField>
-              <FormField label="Zemlja porijekla" icon={Globe}>
+              <FormField label="Zemlja porijekla" icon={Globe} required>
                 <select
                   value={countryOfOrigin}
                   onChange={(e) => setCountryOfOrigin(e.target.value)}
                   className="input w-full"
+                  required
                 >
                   <option value="">Odaberite zemlju</option>
                   {countries.map(c => (
@@ -730,9 +773,9 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           </FormSection>
 
           {/* Laboratory Information */}
-          <FormSection title="Laboratorijske informacije" icon={FlaskConical}>
+          <FormSection title="Laboratorijske informacije" icon={FlaskConical} required>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Odaberite laboratoriju" icon={FlaskConical}>
+              <FormField label="Odaberite laboratoriju" icon={FlaskConical} required>
                 <SearchableSelect
                   options={laboratories.filter(l => l.isActive).map(l => ({
                     id: l.id,
@@ -758,21 +801,23 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 )}
               </FormField>
               <div className="space-y-4">
-                <FormField label="Broj izvještaja" icon={FileText}>
+                <FormField label="Broj izvještaja" icon={FileText} required>
                   <input
                     type="text"
                     value={testReportNumber}
                     onChange={(e) => setTestReportNumber(e.target.value)}
                     className="input w-full"
+                    required
                   />
                 </FormField>
-                <FormField label="Datum izvještaja" icon={Calendar}>
+                <FormField label="Datum izvještaja" icon={Calendar} required>
                   <input
                     type="date"
                     value={testReportDate}
                     onChange={(e) => handleTestReportDateChange(e.target.value)}
                     max={maxDate}
                     className={`input w-full ${testReportDateError ? 'border-red-500 border-2' : ''}`}
+                    required
                   />
                   {testReportDateError && (
                     <p className="text-red-500 text-sm mt-1">{testReportDateError}</p>
@@ -783,8 +828,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           </FormSection>
 
           {/* Client Information */}
-          <FormSection title="Informacije o klijentu" icon={Users}>
-            <FormField label="Odaberite klijenta (firmu)" icon={Users}>
+          <FormSection title="Informacije o klijentu" icon={Users} required>
+            <FormField label="Odaberite klijenta (firmu)" icon={Users} required>
               <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija. Pretražite po imenu ili šifri.
@@ -940,7 +985,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           </FormSection>
 
           {/* Certificate Upload */}
-          <FormSection title="Certifikat / Izvještaj" icon={Upload}>
+          <FormSection title="Certifikat / Izvještaj" icon={Upload} required>
             <CertificateSelector
               value={certificateSelection}
               onChange={setCertificateSelection}
