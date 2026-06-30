@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import FuelEntryTable from '@/components/fuel-entries/FuelEntryTable'
 import CreateFuelEntryModal from '@/components/fuel-entries/CreateFuelEntryModal'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
 
 interface Warehouse {
   id: string
@@ -63,7 +64,7 @@ export default function FuelEntriesPage() {
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [stations, setStations] = useState<Station[]>([])
-  const [clients, setClients] = useState<Client[]>([])
+  const [selectedClientFilter, setSelectedClientFilter] = useState<Client | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -93,7 +94,6 @@ export default function FuelEntriesPage() {
     if (session) {
       fetchWarehouses()
       fetchStations()
-      fetchClients()
       fetchEntries()
     }
   }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
@@ -153,17 +153,25 @@ export default function FuelEntriesPage() {
     }
   }
 
-  const fetchClients = async () => {
+  // Async search for clients - server-side search for 1000+ clients
+  const fetchClientsAsync = useCallback(async (search: string) => {
     try {
-      const res = await fetch('/api/clients?pageSize=1000')
+      const res = await fetch(`/api/clients?search=${encodeURIComponent(search)}&pageSize=50`)
       const data = await res.json()
       if (data.success) {
-        setClients(data.data.data || data.data)
+        const clientsList = data.data.data || data.data
+        return clientsList.filter((c: Client) => c.isActive).map((c: Client) => ({
+          id: c.id,
+          label: c.name,
+          sublabel: c.code ? `Šifra: ${c.code}` : undefined
+        }))
       }
+      return []
     } catch (error) {
       console.error('Error fetching clients:', error)
+      return []
     }
-  }
+  }, [])
 
   const fetchEntries = async () => {
     setLoading(true)
@@ -208,6 +216,7 @@ export default function FuelEntriesPage() {
     setWarehouseFilter('')
     setStationFilter('')
     setClientFilter('')
+    setSelectedClientFilter(null)
     setProductNameFilter('')
     setDeliveryNoteFilter('')
     setRegistrationNumberFilter('')
@@ -476,19 +485,33 @@ export default function FuelEntriesPage() {
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
               Firma (Klijent)
             </label>
-            <SearchableSelect
-              options={clients.filter(c => c.isActive).map(c => ({
-                id: c.id,
-                label: c.name,
-                sublabel: c.code ? `Šifra: ${c.code}` : undefined
-              }))}
+            <AsyncSearchableSelect
+              fetchOptions={fetchClientsAsync}
               value={clientFilter}
-              onChange={(value) => {
-                setClientFilter(value)
+              onChange={(id) => {
+                setClientFilter(id)
                 setPage(1)
+                // Fetch client details for display
+                if (id) {
+                  fetch(`/api/clients/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        setSelectedClientFilter(data.data)
+                      }
+                    })
+                    .catch(console.error)
+                } else {
+                  setSelectedClientFilter(null)
+                }
               }}
-              placeholder="Sve firme"
-              emptyMessage="Nema dostupnih klijenata"
+              placeholder="Pretraži firmu..."
+              emptyMessage="Nema rezultata"
+              selectedOption={selectedClientFilter ? {
+                id: selectedClientFilter.id,
+                label: selectedClientFilter.name,
+                sublabel: selectedClientFilter.code || undefined
+              } : null}
             />
           </div>
 
