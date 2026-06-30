@@ -267,7 +267,7 @@ export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string,
     }
 
     .signature-section img {
-      width: 50mm;
+      width: 60mm;
       height: auto;
       margin-bottom: 2mm;
     }
