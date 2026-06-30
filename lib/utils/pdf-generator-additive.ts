@@ -26,10 +26,12 @@ interface FuelCharacteristic {
 interface FuelEntryAdditiveData {
   id: string
   registrationNumber: number
+  declarationNumber?: string | null
   entryDate: Date
   productName: string
   quantity: number
   deliveryNoteNumber: string | null
+  deliveryNoteDate: Date | null
   vehicleRegistration: string | null
   additiveDetails: AdditiveDetail[]
   warehouse: {
@@ -223,7 +225,13 @@ function generateAdditiveDeclarationTemplate(
   stampBase64: string,
   footerBase64: string
 ): string {
-  const currentDate = formatDateSarajevo(new Date())
+  // Use delivery note date like regular declaration, fallback to current date
+  const declarationDate = entry.deliveryNoteDate
+    ? formatDateSarajevo(new Date(entry.deliveryNoteDate))
+    : formatDateSarajevo(new Date())
+
+  // Use declaration number like regular declaration
+  const prilogBroj = entry.declarationNumber || String(entry.registrationNumber)
 
   return `
 <!DOCTYPE html>
@@ -467,7 +475,7 @@ function generateAdditiveDeclarationTemplate(
     <div class="main-content">
       <!-- Prilog Broj -->
       <div class="prilog-broj">
-        PRILOG BROJ ${entry.registrationNumber}
+        PRILOG BROJ ${prilogBroj}
       </div>
 
       <!-- Table -->
@@ -489,7 +497,7 @@ function generateAdditiveDeclarationTemplate(
       <div class="signature-area">
         <div class="date-section">
           <div class="date-label">U Sarajevu,</div>
-          <div class="date-value">${currentDate}</div>
+          <div class="date-value">${declarationDate}</div>
         </div>
 
         <div class="stamp-section">
