@@ -56,15 +56,36 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('This entry has no additive information', 400)
     }
 
-    // Fetch additive master data for each additive in the entry
-    const additiveNames = (fuelEntry.additiveDetails as any[]).map((ad: any) => ad.name)
-    const additives = await prisma.fuelCharacteristic.findMany({
-      where: {
-        name: {
-          in: additiveNames
-        }
-      }
+    // Fetch ALL active fuel characteristics to match flexibly
+    // (names may have special characters like ® that don't match exactly)
+    const allAdditives = await prisma.fuelCharacteristic.findMany({
+      where: { isActive: true }
     })
+
+    // Normalize function to remove special characters for comparison
+    const normalizeName = (name: string) =>
+      name.replace(/[®™©]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
+
+    // Find matching additives for each additive detail
+    const additiveNames = (fuelEntry.additiveDetails as any[]).map((ad: any) => ad.name)
+    console.log('[Additive PDF] Additive names from entry:', additiveNames)
+
+    const additives = allAdditives.filter(a => {
+      const normalizedDbName = normalizeName(a.name)
+      return additiveNames.some(entryName => {
+        const normalizedEntryName = normalizeName(entryName)
+        // Check if names match after normalization
+        return normalizedDbName === normalizedEntryName ||
+               normalizedDbName.includes(normalizedEntryName) ||
+               normalizedEntryName.includes(normalizedDbName)
+      })
+    })
+
+    console.log('[Additive PDF] Found additives from DB:', additives.map(a => ({
+      name: a.name,
+      manufacturers: a.manufacturers,
+      type: a.type
+    })))
 
     // Generate PDF - cast types properly
     const entryData = {

@@ -91,13 +91,28 @@ function convertMgKgToMlM3(mgKg: number): number {
   return (mgKg * fuelDensity) / 1000
 }
 
+// Normalize function to remove special characters for comparison
+const normalizeName = (name: string) =>
+  name.replace(/[®™©]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
+
 function generateAdditiveTableRows(
   entry: FuelEntryAdditiveData,
   additives: FuelCharacteristic[]
 ): string {
   // For now, use the first additive detail (can be extended to handle multiple)
   const detail = entry.additiveDetails[0]
-  const additive = additives.find(a => a.name === detail.name)
+  const normalizedDetailName = normalizeName(detail.name)
+
+  // Find additive using normalized name comparison
+  const additive = additives.find(a => {
+    const normalizedDbName = normalizeName(a.name)
+    return normalizedDbName === normalizedDetailName ||
+           normalizedDbName.includes(normalizedDetailName) ||
+           normalizedDetailName.includes(normalizedDbName)
+  })
+
+  console.log('[PDF Generator] Looking for:', detail.name, '-> Found:', additive?.name || 'NOT FOUND')
+
   const manufacturers = additive?.manufacturers?.join(', ') || '-'
   const type = additive?.type || '-'
 
