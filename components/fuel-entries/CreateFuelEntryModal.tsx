@@ -490,7 +490,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       const data = await res.json()
 
       if (data.success) {
-        toast.success(`Prijava uspješno kreirana! Registarski broj: ${data.data.registrationNumber}`)
+        toast.success(`Prijava uspješno kreirana! Broj izjave: ${data.data.declarationNumber}`)
         onSuccess()
       } else {
         toast.error(data.error || 'Greška pri kreiranju prijave')
