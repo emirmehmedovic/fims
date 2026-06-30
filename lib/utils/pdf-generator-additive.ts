@@ -210,23 +210,58 @@ function generateAdditiveTableRows(
   `
 }
 
+// Fixed additive dosage values (ml/m³)
+const ADDITIVE_DOSAGES: Record<string, { mlM3: number }> = {
+  'hitec 46014 fuel additive': { mlM3: 0.000115 },
+  'hitec 66105 fuel additive': { mlM3: 0.000264 }
+}
+
+function convertMlM3ToMgKg(mlM3: number): number {
+  // Reverse formula: mg/kg = (ml/m³ × 1000) / fuel_density
+  const fuelDensity = 0.85
+  return (mlM3 * 1000) / fuelDensity
+}
+
 function generateAdditiveFormulas(
   entry: FuelEntryAdditiveData,
   additives: FuelCharacteristic[]
 ): string {
   // Use the first additive detail
   const detail = entry.additiveDetails[0]
-  const quantityMgKg = parseFloat(detail.quantity)
-  const quantityMlM3 = convertMgKgToMlM3(quantityMgKg)
-  const additive = additives.find(a => a.name === detail.name)
+  const normalizedDetailName = normalizeName(detail.name)
 
-  // Use additive name in the formula
+  // Find matching additive
+  const additive = additives.find(a => {
+    const normalizedDbName = normalizeName(a.name)
+    return normalizedDbName === normalizedDetailName ||
+           normalizedDbName.includes(normalizedDetailName) ||
+           normalizedDetailName.includes(normalizedDbName)
+  })
+
   const additiveName = additive?.name || detail.name
+
+  // Look up fixed dosage based on normalized name
+  const dosageKey = Object.keys(ADDITIVE_DOSAGES).find(key =>
+    normalizedDetailName.includes(key) || key.includes(normalizedDetailName)
+  )
+
+  let quantityMlM3: number
+  let quantityMgKg: number
+
+  if (dosageKey) {
+    // Use fixed values
+    quantityMlM3 = ADDITIVE_DOSAGES[dosageKey].mlM3
+    quantityMgKg = convertMlM3ToMgKg(quantityMlM3)
+  } else {
+    // Fallback to user-entered quantity
+    quantityMgKg = parseFloat(detail.quantity) || 0
+    quantityMlM3 = convertMgKgToMlM3(quantityMgKg)
+  }
 
   return `
     <p class="formula-text">
       Prema preporuci proizvođača aditiv <strong>${additiveName}</strong> dodaje se u omjeru
-      <strong>${detail.quantity} mg/kg</strong> ili <strong>${quantityMlM3.toFixed(6)}ml/m³</strong>.
+      <strong>${quantityMgKg.toFixed(6)} mg/kg</strong> ili <strong>${quantityMlM3.toFixed(6)} ml/m³</strong>.
     </p>
   `
 }
