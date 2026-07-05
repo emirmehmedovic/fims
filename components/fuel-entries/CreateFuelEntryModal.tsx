@@ -412,6 +412,20 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     if (!certificateSelection || (!certificateSelection.file && !certificateSelection.path)) {
       missingFields.push('Certifikat / Izvještaj')
     }
+    if (!vehicleRegistration) {
+      missingFields.push('Registarska oznaka vozila')
+    }
+
+    // Validate additive details when higher quality is selected
+    if (isHigherQuality && improvedCharacteristics.length > 0) {
+      const missingAdditiveDetails = improvedCharacteristics.filter(char => {
+        const details = additiveDetails[char]
+        return !details?.addedAt
+      })
+      if (missingAdditiveDetails.length > 0) {
+        missingFields.push('Datum i vrijeme aditiviranja za: ' + missingAdditiveDetails.join(', '))
+      }
+    }
 
     if (missingFields.length > 0) {
       toast.error(`Molimo popunite obavezna polja:\n• ${missingFields.join('\n• ')}`, {
@@ -732,7 +746,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-2">
-                                  Datum i vrijeme aditiviranja
+                                  Datum i vrijeme aditiviranja <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="datetime-local"
@@ -742,6 +756,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                                     [charName]: { ...prev[charName], addedAt: e.target.value }
                                   }))}
                                   className="input w-full text-sm"
+                                  required
                                 />
                               </div>
                               <div>
@@ -972,13 +987,14 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                   placeholder="Ime i prezime vozača"
                 />
               </FormField>
-              <FormField label="Registarska oznaka vozila" icon={Truck}>
+              <FormField label="Registarska oznaka vozila" icon={Truck} required>
                 <input
                   type="text"
                   value={vehicleRegistration}
                   onChange={(e) => setVehicleRegistration(e.target.value.toUpperCase())}
                   className="input w-full"
                   placeholder="npr. AA-123-BB"
+                  required
                 />
               </FormField>
             </div>
