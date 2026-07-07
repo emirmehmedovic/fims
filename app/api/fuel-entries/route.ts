@@ -78,7 +78,28 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     }
 
     if (registrationNumber) {
-      where.registrationNumber = parseInt(registrationNumber)
+      // Search both old registrationNumber and new declarationNumber format
+      const searchValue = registrationNumber.trim()
+
+      if (searchValue.includes('/')) {
+        // New format like "0100/26" - search by declarationNumber
+        where.declarationNumber = {
+          contains: searchValue,
+          mode: 'insensitive'
+        }
+      } else if (/^\d+$/.test(searchValue)) {
+        // Pure number - search both fields
+        where.OR = [
+          { registrationNumber: parseInt(searchValue) },
+          { declarationNumber: { contains: searchValue, mode: 'insensitive' } }
+        ]
+      } else {
+        // Other format - search by declarationNumber
+        where.declarationNumber = {
+          contains: searchValue,
+          mode: 'insensitive'
+        }
+      }
     }
 
     if (dateFrom || dateTo) {

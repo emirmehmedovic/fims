@@ -26,6 +26,7 @@ interface DashboardStats {
   recentActivity: Array<{
     id: string
     registrationNumber: number
+    declarationNumber?: string | null
     entryDate: string
     warehouse: string
     warehouseCode: string
@@ -284,7 +285,7 @@ export default function DashboardPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-dark-100">
-                  <th className="table-header">Reg. broj</th>
+                  <th className="table-header">Broj izjave</th>
                   <th className="table-header">Datum</th>
                   <th className="table-header">Skladište</th>
                   <th className="table-header">Proizvod</th>
@@ -296,8 +297,8 @@ export default function DashboardPage() {
                 {stats.recentActivity.map((entry) => (
                   <tr key={entry.id} className="table-row">
                     <td className="table-cell">
-                      <span className="font-mono font-bold text-primary-600">
-                        {entry.registrationNumber}
+                      <span className="font-mono font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-lg">
+                        {entry.declarationNumber || entry.registrationNumber}
                       </span>
                     </td>
                     <td className="table-cell">

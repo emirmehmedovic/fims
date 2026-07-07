@@ -141,6 +141,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const formattedRecentEntries = recentEntries.map(e => ({
       id: e.id,
       registrationNumber: e.registrationNumber,
+      declarationNumber: e.declarationNumber,
       entryDate: e.entryDate,
       warehouse: e.warehouse.name,
       warehouseCode: e.warehouse.code,

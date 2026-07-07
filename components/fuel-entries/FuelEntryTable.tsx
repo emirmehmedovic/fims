@@ -86,51 +86,65 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[800px] overflow-y-auto">
         <table className="w-full">
-          <thead className="bg-slate-50/80 border-b border-slate-200 backdrop-blur-sm">
+          <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
             <tr>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-center px-3 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50 w-12">
+                #
+              </th>
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Reg. broj
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Datum ulaza
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Skladište
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Firma (Klijent)
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Proizvod
               </th>
-              <th className="text-right px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-right px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Količina
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Otpremnica
               </th>
-              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Operator
               </th>
-              <th className="text-center px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-center px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Status
               </th>
-              <th className="text-right px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="text-right px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
                 Akcije
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-100">
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
               <tr
                 key={entry.id}
-                className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                className={`transition-all duration-200 cursor-pointer group ${
+                  entry.isActive
+                    ? `hover:bg-blue-50/50 hover:shadow-[inset_4px_0_0_0_rgb(59,130,246)] ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`
+                    : 'bg-rose-50/50 hover:bg-rose-100/50 opacity-60'
+                }`}
                 onClick={() => setViewingEntry(entry)}
               >
+                <td className="px-3 py-4 text-center">
+                  <span className="text-xs font-medium text-slate-400">{index + 1}</span>
+                </td>
                 <td className="px-6 py-4">
-                  <div className="font-mono font-bold text-slate-700 bg-slate-100 inline-block px-2 py-1 rounded text-sm">
+                  <div className={`font-mono font-bold inline-block px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 group-hover:scale-105 ${
+                    entry.isActive
+                      ? 'text-slate-700 bg-slate-100 group-hover:bg-blue-100 group-hover:text-blue-700'
+                      : 'text-rose-700 bg-rose-100 line-through'
+                  }`}>
                     {entry.declarationNumber || entry.registrationNumber}
                   </div>
                 </td>
@@ -237,13 +251,13 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex justify-end gap-1.5">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         setViewingEntry(entry)
                       }}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-110"
                       title="Pregled"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,7 +271,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                           e.stopPropagation()
                           setEditingEntry(entry)
                         }}
-                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200 hover:scale-110 opacity-0 group-hover:opacity-100"
                         title="Uredi"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -272,7 +286,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                           handleDelete(entry.id)
                         }}
                         disabled={deletingId === entry.id}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 opacity-0 group-hover:opacity-100"
                         title="Obriši"
                       >
                         {deletingId === entry.id ? (
