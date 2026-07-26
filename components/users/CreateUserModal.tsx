@@ -57,8 +57,13 @@ export default function CreateUserModal({ onClose, onSuccess }: CreateUserModalP
     e.preventDefault()
     setError('')
 
-    if (formData.warehouseIds.length === 0) {
+    // Role-specific validation
+    if (formData.role !== 'PUMPA' && formData.warehouseIds.length === 0) {
       setError('Morate dodijeliti najmanje jedno skladište')
+      return
+    }
+    if (formData.role === 'PUMPA' && formData.stationIds.length === 0) {
+      setError('Morate dodijeliti najmanje jednu poslovnicu za ulogu Pumpa')
       return
     }
 
@@ -190,18 +195,22 @@ export default function CreateUserModal({ onClose, onSuccess }: CreateUserModalP
             >
               <option value="OPERATOR">Operator</option>
               <option value="VIEWER">Preglednik</option>
+              <option value="PUMPA">Pumpa</option>
               <option value="ADMIN">Administrator</option>
               <option value="SUPER_ADMIN">Super Admin</option>
             </select>
           </div>
 
-          {/* Warehouses */}
+          {/* Warehouses - hidden for PUMPA role */}
+          {formData.role !== 'PUMPA' && (
           <div>
             <label className="block text-sm font-medium mb-2">
               Skladišta <span className="text-status-danger">*</span>
             </label>
             <div className="space-y-2 max-h-40 overflow-y-auto border border-bg-tertiary rounded-lg p-3">
-              {warehouses.map(warehouse => (
+              {warehouses
+                .filter(warehouse => warehouse.code !== 'DEF-001') // Hide DEFAULT warehouse for non-PUMPA users
+                .map(warehouse => (
                 <label key={warehouse.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -214,11 +223,12 @@ export default function CreateUserModal({ onClose, onSuccess }: CreateUserModalP
               ))}
             </div>
           </div>
+          )}
 
           {/* Stations */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Poslovnice (opciono)
+              Poslovnice {formData.role === 'PUMPA' ? <span className="text-status-danger">*</span> : '(opciono)'}
             </label>
             <div className="border border-bg-tertiary rounded-lg p-3">
               {/* Search and Select All */}

@@ -61,11 +61,19 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     console.log('[PDF EXPORT] Entry found:', fuelEntry.registrationNumber)
     console.log('[PDF EXPORT] certificatePath:', fuelEntry.certificatePath)
 
-    // Check if user has access to this warehouse (for non-admin users)
+    // Check if user has access to this entry
     if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
-      if (!userWarehouses.includes(fuelEntry.warehouseId)) {
-        return errorResponse('Access denied to this fuel entry', 403)
+      if (session.user.role === 'PUMPA') {
+        // PUMPA users can only access their own entries
+        if (fuelEntry.operatorId !== session.user.id) {
+          return errorResponse('Access denied to this fuel entry', 403)
+        }
+      } else {
+        // OPERATOR/VIEWER: check warehouse access
+        const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
+        if (!userWarehouses.includes(fuelEntry.warehouseId)) {
+          return errorResponse('Access denied to this fuel entry', 403)
+        }
       }
     }
 

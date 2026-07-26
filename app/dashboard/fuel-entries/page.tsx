@@ -21,6 +21,12 @@ interface Client {
   isActive: boolean
 }
 
+interface Operator {
+  id: string
+  name: string
+  email: string
+}
+
 interface FuelEntry {
   id: string
   registrationNumber: number
@@ -65,6 +71,7 @@ export default function FuelEntriesPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [stations, setStations] = useState<Station[]>([])
   const [selectedClientFilter, setSelectedClientFilter] = useState<Client | null>(null)
+  const [selectedOperatorFilter, setSelectedOperatorFilter] = useState<Operator | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -77,6 +84,7 @@ export default function FuelEntriesPage() {
   const [registrationNumberFilter, setRegistrationNumberFilter] = useState('')
   const [dateFromFilter, setDateFromFilter] = useState('')
   const [dateToFilter, setDateToFilter] = useState('')
+  const [operatorFilter, setOperatorFilter] = useState('')
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -88,7 +96,8 @@ export default function FuelEntriesPage() {
 
   const canCreateEntry = session?.user?.role === 'SUPER_ADMIN' ||
                          session?.user?.role === 'ADMIN' ||
-                         session?.user?.role === 'OPERATOR'
+                         session?.user?.role === 'OPERATOR' ||
+                         session?.user?.role === 'PUMPA'
 
   useEffect(() => {
     if (session) {
@@ -96,7 +105,7 @@ export default function FuelEntriesPage() {
       fetchStations()
       fetchEntries()
     }
-  }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter])
+  }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter, operatorFilter])
 
   const fetchWarehouses = async () => {
     try {
@@ -104,7 +113,10 @@ export default function FuelEntriesPage() {
       const userRole = session?.user?.role
       const userWarehouses = (session?.user as any)?.warehouses || []
 
-      if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      if (userRole === 'PUMPA') {
+        // PUMPA users don't use warehouses filter - they use DEFAULT terminal automatically
+        setWarehouses([])
+      } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
         // Use only assigned warehouses
         setWarehouses(userWarehouses.map((w: any) => ({
           id: w.id,
@@ -173,6 +185,26 @@ export default function FuelEntriesPage() {
     }
   }, [])
 
+  // Async search for operators/users
+  const fetchOperatorsAsync = useCallback(async (search: string) => {
+    try {
+      const res = await fetch(`/api/users?search=${encodeURIComponent(search)}&pageSize=50&isActive=true`)
+      const data = await res.json()
+      if (data.success) {
+        const usersList = data.data.items || data.data
+        return usersList.map((u: Operator) => ({
+          id: u.id,
+          label: u.name,
+          sublabel: u.email
+        }))
+      }
+      return []
+    } catch (error) {
+      console.error('Error fetching operators:', error)
+      return []
+    }
+  }, [])
+
   const fetchEntries = async () => {
     setLoading(true)
     try {
@@ -186,7 +218,8 @@ export default function FuelEntriesPage() {
         ...(deliveryNoteFilter && { deliveryNoteNumber: deliveryNoteFilter }),
         ...(registrationNumberFilter && { registrationNumber: registrationNumberFilter }),
         ...(dateFromFilter && { dateFrom: dateFromFilter }),
-        ...(dateToFilter && { dateTo: dateToFilter })
+        ...(dateToFilter && { dateTo: dateToFilter }),
+        ...(operatorFilter && { operatorId: operatorFilter })
       })
 
       const res = await fetch(`/api/fuel-entries?${params}`)
@@ -217,6 +250,8 @@ export default function FuelEntriesPage() {
     setStationFilter('')
     setClientFilter('')
     setSelectedClientFilter(null)
+    setOperatorFilter('')
+    setSelectedOperatorFilter(null)
     setProductNameFilter('')
     setDeliveryNoteFilter('')
     setRegistrationNumberFilter('')
@@ -489,7 +524,7 @@ export default function FuelEntriesPage() {
         </div>
 
         {/* Active Filter Chips */}
-        {(warehouseFilter || stationFilter || clientFilter || productNameFilter || deliveryNoteFilter || registrationNumberFilter || dateFromFilter || dateToFilter) && (
+        {(warehouseFilter || stationFilter || clientFilter || operatorFilter || productNameFilter || deliveryNoteFilter || registrationNumberFilter || dateFromFilter || dateToFilter) && (
           <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-100">
             <span className="text-xs font-medium text-slate-400 self-center mr-1">Aktivni filteri:</span>
             {warehouseFilter && (
@@ -512,6 +547,14 @@ export default function FuelEntriesPage() {
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
                 Firma: {selectedClientFilter.name}
                 <button onClick={() => { setClientFilter(''); setSelectedClientFilter(null); setPage(1) }} className="hover:bg-emerald-100 rounded-full p-0.5 transition-colors">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            )}
+            {operatorFilter && selectedOperatorFilter && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-cyan-50 text-cyan-700 text-xs font-medium rounded-full">
+                Operator: {selectedOperatorFilter.name}
+                <button onClick={() => { setOperatorFilter(''); setSelectedOperatorFilter(null); setPage(1) }} className="hover:bg-cyan-100 rounded-full p-0.5 transition-colors">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </span>
@@ -630,6 +673,40 @@ export default function FuelEntriesPage() {
                 id: selectedClientFilter.id,
                 label: selectedClientFilter.name,
                 sublabel: selectedClientFilter.code || undefined
+              } : null}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
+              Operator
+            </label>
+            <AsyncSearchableSelect
+              fetchOptions={fetchOperatorsAsync}
+              value={operatorFilter}
+              onChange={(id) => {
+                setOperatorFilter(id)
+                setPage(1)
+                // Fetch operator details for display
+                if (id) {
+                  fetch(`/api/users/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        setSelectedOperatorFilter(data.data)
+                      }
+                    })
+                    .catch(console.error)
+                } else {
+                  setSelectedOperatorFilter(null)
+                }
+              }}
+              placeholder="Pretraži operatora..."
+              emptyMessage="Nema rezultata"
+              selectedOption={selectedOperatorFilter ? {
+                id: selectedOperatorFilter.id,
+                label: selectedOperatorFilter.name,
+                sublabel: selectedOperatorFilter.email
               } : null}
             />
           </div>

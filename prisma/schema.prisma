@@ -19,6 +19,7 @@ enum Role {
   ADMIN
   OPERATOR
   VIEWER
+  PUMPA
 }
 
 model User {

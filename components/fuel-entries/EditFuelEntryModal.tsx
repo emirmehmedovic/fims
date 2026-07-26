@@ -74,8 +74,10 @@ interface Client {
 
 interface LookupItem {
   id: string
-  category: string
-  value: string
+  category?: string
+  value?: string
+  name: string
+  description?: string
   isActive: boolean
 }
 
@@ -204,24 +206,32 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
   const fetchData = async () => {
     setLoadingData(true)
     try {
-      const [entryRes, warehousesRes, suppliersRes, transportersRes, laboratoriesRes, stationsRes, lookupsRes] = await Promise.all([
+      const [entryRes, warehousesRes, suppliersRes, transportersRes, laboratoriesRes, stationsRes, lookupsRes, productsRes, countriesRes, locationsRes, characteristicsRes] = await Promise.all([
         fetch(`/api/fuel-entries/${entry.id}`),
         fetch('/api/warehouses'),
         fetch('/api/suppliers?pageSize=1000'),
         fetch('/api/transporters?pageSize=1000'),
         fetch('/api/laboratories?pageSize=1000'),
         fetch('/api/stations?pageSize=1000'),
-        fetch('/api/lookups?pageSize=1000')
+        fetch('/api/lookups?pageSize=1000'),
+        fetch('/api/lookups?type=products&pageSize=1000'),
+        fetch('/api/lookups?type=countries&pageSize=1000'),
+        fetch('/api/lookups?type=pickupLocations&pageSize=1000'),
+        fetch('/api/lookups?type=fuelCharacteristics&pageSize=1000')
       ])
 
-      const [entryData, warehousesData, suppliersData, transportersData, laboratoriesData, stationsData, lookupsData] = await Promise.all([
+      const [entryData, warehousesData, suppliersData, transportersData, laboratoriesData, stationsData, lookupsData, productsData, countriesData, locationsData, characteristicsData] = await Promise.all([
         entryRes.json(),
         warehousesRes.json(),
         suppliersRes.json(),
         transportersRes.json(),
         laboratoriesRes.json(),
         stationsRes.json(),
-        lookupsRes.json()
+        lookupsRes.json(),
+        productsRes.json(),
+        countriesRes.json(),
+        locationsRes.json(),
+        characteristicsRes.json()
       ])
 
       if (warehousesData.success) setWarehouses(warehousesData.data)
@@ -230,13 +240,11 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
       if (laboratoriesData.success) setLaboratories(laboratoriesData.data.data || laboratoriesData.data)
       if (stationsData.success) setStations(stationsData.data.data || stationsData.data)
 
-      if (lookupsData.success) {
-        const lookups = lookupsData.data.data || lookupsData.data
-        setProducts(lookups.filter((l: LookupItem) => l.category === 'product' && l.isActive))
-        setCountries(lookups.filter((l: LookupItem) => l.category === 'country' && l.isActive))
-        setPickupLocations(lookups.filter((l: LookupItem) => l.category === 'pickup_location' && l.isActive))
-        setFuelCharacteristics(lookups.filter((l: LookupItem) => l.category === 'fuel_characteristic' && l.isActive))
-      }
+      // Set lookup data from typed endpoints (same as Create modal)
+      if (productsData.success) setProducts(productsData.data.data || productsData.data)
+      if (countriesData.success) setCountries(countriesData.data.data || countriesData.data)
+      if (locationsData.success) setPickupLocations(locationsData.data.data || locationsData.data)
+      if (characteristicsData.success) setFuelCharacteristics(characteristicsData.data.data || characteristicsData.data)
 
       if (entryData.success) {
         const e = entryData.data
@@ -483,17 +491,6 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
     )
   }
 
-  const characteristicOptions = fuelCharacteristics.length > 0
-    ? fuelCharacteristics.map(fc => fc.value)
-    : [
-      'Niža gustina',
-      'Niža viskoznost',
-      'Niži sadržaj sumpora',
-      'Viša cetanska vrijednost',
-      'Bolji indeks viskoznosti',
-      'Niža tačka tečenja'
-    ]
-
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-3xl shadow-[var(--shadow-soft-xl)] max-w-4xl w-full my-8 relative overflow-hidden">
@@ -542,11 +539,13 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
               </FormField>
               <FormField label="Skladište" required icon={Building2}>
                 <SearchableSelect
-                  options={warehouses.filter(w => w.isActive).map(w => ({
-                    id: w.id,
-                    label: w.name,
-                    sublabel: `Šifra: ${w.code}`
-                  }))}
+                  options={warehouses
+                    .filter(w => w.isActive && w.code !== 'DEF-001') // Hide DEFAULT warehouse
+                    .map(w => ({
+                      id: w.id,
+                      label: w.name,
+                      sublabel: `Šifra: ${w.code}`
+                    }))}
                   value={warehouseId}
                   onChange={setWarehouseId}
                   placeholder="Odaberite skladište"
@@ -554,7 +553,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
               </FormField>
               <FormField label="Naziv proizvoda" required icon={FileText}>
                 <SearchableSelect
-                  options={products.map(p => ({ id: p.value, label: p.value }))}
+                  options={products.map(p => ({ id: p.name, label: p.name }))}
                   value={productName}
                   onChange={setProductName}
                   placeholder="Odaberite proizvod"
@@ -592,7 +591,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
               </FormField>
               <FormField label="Zemlja porijekla" icon={Globe}>
                 <SearchableSelect
-                  options={countries.map(c => ({ id: c.value, label: c.value }))}
+                  options={countries.map(c => ({ id: c.name, label: c.name }))}
                   value={countryOfOrigin}
                   onChange={setCountryOfOrigin}
                   placeholder="Odaberite zemlju"
@@ -600,7 +599,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
               </FormField>
               <FormField label="Lokacija preuzimanja" icon={MapPin}>
                 <SearchableSelect
-                  options={pickupLocations.map(l => ({ id: l.value, label: l.value }))}
+                  options={pickupLocations.map(l => ({ id: l.name, label: l.name }))}
                   value={pickupLocation}
                   onChange={setPickupLocation}
                   placeholder="Odaberite lokaciju"
@@ -613,29 +612,87 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
           <FormSection title="Informacije o kvaliteti" icon={CheckCircle}>
             <div className="mb-4">
               <label className="flex items-center gap-3 p-4 rounded-2xl bg-dark-50 border border-dark-100 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer">
-                <input type="checkbox" checked={isHigherQuality} onChange={(e) => setIsHigherQuality(e.target.checked)} className="w-5 h-5 rounded-lg border-dark-300 text-primary-600 focus:ring-primary-500" />
+                <input
+                  type="checkbox"
+                  checked={isHigherQuality}
+                  onChange={(e) => setIsHigherQuality(e.target.checked)}
+                  className="w-5 h-5 rounded-lg border-dark-300 text-primary-600 focus:ring-primary-500"
+                />
                 <span className="text-sm font-medium text-dark-900">Gorivo više kvalitete</span>
               </label>
             </div>
             {isHigherQuality && (
               <div>
-                <p className="text-xs font-semibold text-dark-400 uppercase tracking-wide mb-3">Poboljšane karakteristike (sa detaljima o aditivima)</p>
-                <div className="space-y-3">
-                  {characteristicOptions.map(char => (
-                    <div key={char} className={`rounded-xl border transition-all ${improvedCharacteristics.includes(char) ? 'bg-primary-50 border-primary-200' : 'bg-dark-50 border-dark-100'}`}>
-                      <label className="flex items-center gap-3 p-3 cursor-pointer">
-                        <input type="checkbox" checked={improvedCharacteristics.includes(char)} onChange={() => handleCharacteristicToggle(char)} className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500" />
-                        <span className="text-sm font-medium text-dark-700">{char}</span>
-                      </label>
-                      {improvedCharacteristics.includes(char) && (
-                        <div className="px-3 pb-3 grid grid-cols-2 gap-2">
-                          <input type="text" placeholder="Gdje je dodano" value={additiveDetails[char]?.addedAt || ''} onChange={(e) => handleAdditiveDetailChange(char, 'addedAt', e.target.value)} className="input text-sm" />
-                          <input type="text" placeholder="Količina (ppm)" value={additiveDetails[char]?.quantity || ''} onChange={(e) => handleAdditiveDetailChange(char, 'quantity', e.target.value)} className="input text-sm" />
-                        </div>
-                      )}
+                <p className="text-xs font-semibold text-dark-400 uppercase tracking-wide mb-3">Poboljšane karakteristike</p>
+                {fuelCharacteristics.length === 0 ? (
+                  <p className="text-sm text-dark-500">Nema definiranih karakteristika. Dodajte ih u Master Podacima.</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {fuelCharacteristics.map(char => (
+                        <label
+                          key={char.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                            improvedCharacteristics.includes(char.name)
+                              ? 'bg-primary-50 border-primary-200 text-primary-700'
+                              : 'bg-dark-50 border-dark-100 text-dark-700 hover:border-primary-200'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={improvedCharacteristics.includes(char.name)}
+                            onChange={() => handleCharacteristicToggle(char.name)}
+                            className="w-4 h-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm font-medium">{char.name}</span>
+                        </label>
+                      ))}
                     </div>
-                  ))}
-                </div>
+
+                    {/* Additive Details for Selected Characteristics */}
+                    {improvedCharacteristics.length > 0 && (
+                      <div className="space-y-4 pt-4 border-t border-dark-200">
+                        <p className="text-xs font-semibold text-dark-600 uppercase tracking-wide">Detalji o aditivima</p>
+                        {improvedCharacteristics.map(charName => (
+                          <div key={charName} className="bg-white p-4 rounded-xl border border-dark-200">
+                            <p className="text-sm font-semibold text-dark-900 mb-3">{charName}</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-2">
+                                  Datum i vrijeme aditiviranja <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="datetime-local"
+                                  value={additiveDetails[charName]?.addedAt || ''}
+                                  onChange={(e) => handleAdditiveDetailChange(charName, 'addedAt', e.target.value)}
+                                  className="input w-full text-sm"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-dark-500 uppercase tracking-wide mb-2">
+                                  Količina (mg/kg)
+                                </label>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  placeholder="npr. 250.50"
+                                  value={additiveDetails[charName]?.quantity || ''}
+                                  onChange={(e) => {
+                                    // Allow only numbers and decimal point
+                                    const value = e.target.value.replace(/[^0-9.]/g, '')
+                                    handleAdditiveDetailChange(charName, 'quantity', value)
+                                  }}
+                                  className="input w-full text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </FormSection>

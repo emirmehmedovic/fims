@@ -11,18 +11,18 @@ export const createUserSchema = z.object({
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER'], {
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'PUMPA'], {
     message: "Invalid role"
   }),
-  warehouseIds: z.array(z.string().cuid("Invalid warehouse ID")).min(1, "At least one warehouse must be assigned"),
+  warehouseIds: z.array(z.string().cuid("Invalid warehouse ID")).optional().default([]),
   stationIds: z.array(z.string().cuid("Invalid station ID")).optional().default([]),
 })
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER']).optional(),
-  warehouseIds: z.array(z.string().cuid()).min(1).optional(),
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'PUMPA']).optional(),
+  warehouseIds: z.array(z.string().cuid()).optional(),
   stationIds: z.array(z.string().cuid()).optional(),
   isActive: z.boolean().optional(),
 })

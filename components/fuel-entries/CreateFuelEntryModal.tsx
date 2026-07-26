@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import toast from 'react-hot-toast'
 import {
@@ -87,11 +88,16 @@ interface Props {
 }
 
 export default function CreateFuelEntryModal({ warehouses, stations, onClose, onSuccess }: Props) {
+  const { data: session } = useSession()
+  const userRole = session?.user?.role
+  const isPumpa = userRole === 'PUMPA'
+
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
   const [laboratories, setLaboratories] = useState<Laboratory[]>([])
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [selectedSupplierName, setSelectedSupplierName] = useState('')
 
   // Lookup data
   const [products, setProducts] = useState<LookupItem[]>([])
@@ -164,18 +170,24 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     // Auto-select HIFA-PETROL client on load
     autoSelectHifaPetrol()
 
-    // Set default warehouse
-    if (warehouses.length === 1) {
-      // If user has only one warehouse, select it by default
-      setWarehouseId(warehouses[0].id)
-    } else if (warehouses.length > 1) {
-      // If user has multiple warehouses, default to "TERMINAL TEŠANJ" (TR-004)
-      const tesanjTerminal = warehouses.find(w => w.code === 'TR-004')
-      if (tesanjTerminal) {
-        setWarehouseId(tesanjTerminal.id)
+    // PUMPA-specific auto-selections
+    if (isPumpa) {
+      autoSelectHifaPetrolSupplier()
+      autoSelectDefaultWarehouse()
+    } else {
+      // Set default warehouse for non-PUMPA users
+      if (warehouses.length === 1) {
+        // If user has only one warehouse, select it by default
+        setWarehouseId(warehouses[0].id)
+      } else if (warehouses.length > 1) {
+        // If user has multiple warehouses, default to "TERMINAL TEŠANJ" (TR-004)
+        const tesanjTerminal = warehouses.find(w => w.code === 'TR-004')
+        if (tesanjTerminal) {
+          setWarehouseId(tesanjTerminal.id)
+        }
       }
     }
-  }, [warehouses])
+  }, [warehouses, isPumpa])
 
   // Validate date - allow up to 30 days in the future
   const validateDate = (dateValue: string): string => {
@@ -320,6 +332,41 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     }
   }
 
+  // Auto-select HIFA-PETROL supplier for PUMPA users
+  const autoSelectHifaPetrolSupplier = async () => {
+    try {
+      const res = await fetch('/api/suppliers?search=650&pageSize=10')
+      const data = await res.json()
+      if (data.success) {
+        const suppliersList = data.data.data || data.data
+        const hifaPetrol = suppliersList.find((s: any) => s.code === '650')
+        if (hifaPetrol) {
+          setSupplierId(hifaPetrol.id)
+          setSelectedSupplierName(`${hifaPetrol.name} (${hifaPetrol.code})`)
+        }
+      }
+    } catch (error) {
+      console.error('Error auto-selecting HIFA-PETROL supplier:', error)
+    }
+  }
+
+  // Auto-select DEFAULT warehouse (DEF-001) for PUMPA users
+  const autoSelectDefaultWarehouse = async () => {
+    try {
+      const res = await fetch('/api/warehouses?pageSize=1000')
+      const data = await res.json()
+      if (data.success) {
+        const warehousesList = data.data.data || data.data
+        const defaultWarehouse = warehousesList.find((w: any) => w.code === 'DEF-001')
+        if (defaultWarehouse) {
+          setWarehouseId(defaultWarehouse.id)
+        }
+      }
+    } catch (error) {
+      console.error('Error auto-selecting DEFAULT warehouse:', error)
+    }
+  }
+
   // Async search for clients - used by AsyncSearchableSelect
   const fetchClientsAsync = useCallback(async (search: string) => {
     try {
@@ -374,7 +421,11 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
     // Validate basic required fields
     if (!warehouseId || !productName || !quantity) {
-      toast.error('Molimo popunite sva obavezna polja (skladište, proizvod, količina)')
+      const missing = []
+      if (!warehouseId) missing.push('skladište')
+      if (!productName) missing.push('proizvod')
+      if (!quantity) missing.push('količina')
+      toast.error(`Molimo popunite sva obavezna polja (${missing.join(', ')})`)
       return
     }
 
@@ -412,8 +463,13 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     if (!certificateSelection || (!certificateSelection.file && !certificateSelection.path)) {
       missingFields.push('Certifikat / Izvještaj')
     }
-    if (!vehicleRegistration) {
+    // Vehicle registration is mandatory only for PUMPA users
+    if (isPumpa && !vehicleRegistration) {
       missingFields.push('Registarska oznaka vozila')
+    }
+    // Station is mandatory for PUMPA users
+    if (isPumpa && !stationId) {
+      missingFields.push('Poslovnica')
     }
 
     // Validate additive details when higher quality is selected
@@ -562,19 +618,23 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                   <p className="text-red-500 text-sm mt-1">{entryDateError}</p>
                 )}
               </FormField>
+              {!isPumpa && (
               <FormField label="Skladište" required icon={Building2}>
                 <SearchableSelect
-                  options={warehouses.filter(w => w.isActive).map(w => ({
-                    id: w.id,
-                    label: w.name,
-                    sublabel: `Šifra: ${w.code}`
-                  }))}
+                  options={warehouses
+                    .filter(w => w.isActive && w.code !== 'DEF-001') // Hide DEFAULT warehouse for non-PUMPA users
+                    .map(w => ({
+                      id: w.id,
+                      label: w.name,
+                      sublabel: `Šifra: ${w.code}`
+                    }))}
                   value={warehouseId}
                   onChange={setWarehouseId}
                   placeholder="Odaberite skladište"
                   emptyMessage="Nema dostupnih skladišta"
                 />
               </FormField>
+              )}
               <FormField label="Naziv proizvoda" required icon={FileText}>
                 <SearchableSelect
                   options={products.map(p => ({
@@ -764,15 +824,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                                   Količina (mg/kg)
                                 </label>
                                 <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
+                                  type="text"
+                                  inputMode="decimal"
                                   placeholder="npr. 250.50"
                                   value={additiveDetails[charName]?.quantity || ''}
-                                  onChange={(e) => setAdditiveDetails(prev => ({
-                                    ...prev,
-                                    [charName]: { ...prev[charName], quantity: e.target.value }
-                                  }))}
+                                  onChange={(e) => {
+                                    // Allow only numbers and decimal point
+                                    const value = e.target.value.replace(/[^0-9.]/g, '')
+                                    setAdditiveDetails(prev => ({
+                                      ...prev,
+                                      [charName]: { ...prev[charName], quantity: value }
+                                    }))
+                                  }}
                                   className="input w-full text-sm"
                                 />
                               </div>
@@ -845,39 +908,48 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           {/* Client Information */}
           <FormSection title="Informacije o klijentu" icon={Users} required>
             <FormField label="Odaberite klijenta (firmu)" icon={Users} required>
-              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija. Pretražite po imenu ili šifri.
-                </p>
-              </div>
-              <AsyncSearchableSelect
-                fetchOptions={fetchClientsAsync}
-                value={clientId}
-                onChange={(id) => {
-                  setClientId(id)
-                  // Fetch full client details when selected
-                  if (id) {
-                    fetch(`/api/clients/${id}`)
-                      .then(res => res.json())
-                      .then(data => {
-                        if (data.success) {
-                          setSelectedClient(data.data)
-                        }
-                      })
-                      .catch(console.error)
-                  } else {
-                    setSelectedClient(null)
-                  }
-                }}
-                placeholder="Pretražite klijenta po imenu ili šifri..."
-                emptyMessage="Nema rezultata. Pokušajte drugu pretragu."
-                selectedOption={selectedClient ? {
-                  id: selectedClient.id,
-                  label: selectedClient.name,
-                  sublabel: selectedClient.code || undefined
-                } : null}
-              />
-              {selectedClient && (
+              {isPumpa ? (
+                // PUMPA users have fixed client: HIFA-PETROL (650)
+                <div className="input w-full bg-dark-50 text-dark-600 cursor-not-allowed">
+                  {selectedClient ? `${selectedClient.name} (${selectedClient.code})` : 'HIFA-PETROL D.O.O. SARAJEVO (650)'}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">ℹ️ Napomena:</span> Ukoliko je roba za drugog klijenta, potrebno odabrati iz padajućeg menija. Pretražite po imenu ili šifri.
+                    </p>
+                  </div>
+                  <AsyncSearchableSelect
+                    fetchOptions={fetchClientsAsync}
+                    value={clientId}
+                    onChange={(id) => {
+                      setClientId(id)
+                      // Fetch full client details when selected
+                      if (id) {
+                        fetch(`/api/clients/${id}`)
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.success) {
+                              setSelectedClient(data.data)
+                            }
+                          })
+                          .catch(console.error)
+                      } else {
+                        setSelectedClient(null)
+                      }
+                    }}
+                    placeholder="Pretražite klijenta po imenu ili šifri..."
+                    emptyMessage="Nema rezultata. Pokušajte drugu pretragu."
+                    selectedOption={selectedClient ? {
+                      id: selectedClient.id,
+                      label: selectedClient.name,
+                      sublabel: selectedClient.code || undefined
+                    } : null}
+                  />
+                </>
+              )}
+              {selectedClient && !isPumpa && (
                 <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
                   <p className="text-dark-600">
                     <span className="font-semibold">Naziv:</span> {selectedClient.name}
@@ -902,17 +974,29 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
             </FormField>
           </FormSection>
 
-          {/* Station Information - Only shown for HIFA-PETROL client (code: 650) */}
-          {selectedClient?.code === '650' && (
+          {/* Station Information - Shown for HIFA-PETROL client (code: 650) or always for PUMPA users */}
+          {(isPumpa || selectedClient?.code === '650') && (
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 shadow-sm">
               <FormSection title="Poslovnica (benzinska pumpa)" icon={Fuel}>
-                <FormField label="Odaberite poslovnicu" icon={Fuel}>
+                <FormField label="Odaberite poslovnicu" icon={Fuel} required={isPumpa}>
                 <SearchableSelect
-                  options={stations.filter(s => s.isActive).map(s => ({
-                    id: s.id,
-                    label: s.name,
-                    sublabel: [s.code && `Šifra: ${s.code}`, s.address && `Adresa: ${s.address}`].filter(Boolean).join(' | ') || undefined
-                  }))}
+                  options={(() => {
+                    // For PUMPA users, show only their assigned stations from session
+                    if (isPumpa) {
+                      const userStations = (session?.user as any)?.stations || []
+                      return userStations.map((s: any) => ({
+                        id: s.id,
+                        label: s.name,
+                        sublabel: [s.code && `Šifra: ${s.code}`, s.address && `Adresa: ${s.address}`].filter(Boolean).join(' | ') || undefined
+                      }))
+                    }
+                    // For other users, show all active stations
+                    return stations.filter(s => s.isActive).map(s => ({
+                      id: s.id,
+                      label: s.name,
+                      sublabel: [s.code && `Šifra: ${s.code}`, s.address && `Adresa: ${s.address}`].filter(Boolean).join(' | ') || undefined
+                    }))
+                  })()}
                   value={stationId}
                   onChange={setStationId}
                   placeholder="Odaberite poslovnicu"
@@ -921,16 +1005,16 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 {stationId && (
                   <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
                     <p className="text-dark-600">
-                      <span className="font-semibold">Naziv:</span> {stations.find(s => s.id === stationId)?.name}
+                      <span className="font-semibold">Naziv:</span> {stations.find(s => s.id === stationId)?.name || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.name}
                     </p>
-                    {stations.find(s => s.id === stationId)?.code && (
+                    {(stations.find(s => s.id === stationId)?.code || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.code) && (
                       <p className="text-dark-600">
-                        <span className="font-semibold">Šifra:</span> {stations.find(s => s.id === stationId)?.code}
+                        <span className="font-semibold">Šifra:</span> {stations.find(s => s.id === stationId)?.code || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.code}
                       </p>
                     )}
-                    {stations.find(s => s.id === stationId)?.address && (
+                    {(stations.find(s => s.id === stationId)?.address || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.address) && (
                       <p className="text-dark-600">
-                        <span className="font-semibold">Adresa:</span> {stations.find(s => s.id === stationId)?.address}
+                        <span className="font-semibold">Adresa:</span> {stations.find(s => s.id === stationId)?.address || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.address}
                       </p>
                     )}
                   </div>
@@ -953,17 +1037,23 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 />
               </FormField>
               <FormField label="Dobavljač" icon={Building2}>
-                <SearchableSelect
-                  options={suppliers.filter(s => s.isActive).map(s => ({
-                    id: s.id,
-                    label: s.name,
-                    sublabel: `Šifra: ${s.code}`
-                  }))}
-                  value={supplierId}
-                  onChange={setSupplierId}
-                  placeholder="Odaberite dobavljača"
-                  emptyMessage="Nema dostupnih dobavljača"
-                />
+                {isPumpa ? (
+                  <div className="input w-full bg-dark-50 text-dark-600 cursor-not-allowed">
+                    {selectedSupplierName || 'HIFA-PETROL D.O.O. SARAJEVO (650)'}
+                  </div>
+                ) : (
+                  <SearchableSelect
+                    options={suppliers.filter(s => s.isActive).map(s => ({
+                      id: s.id,
+                      label: s.name,
+                      sublabel: `Šifra: ${s.code}`
+                    }))}
+                    value={supplierId}
+                    onChange={setSupplierId}
+                    placeholder="Odaberite dobavljača"
+                    emptyMessage="Nema dostupnih dobavljača"
+                  />
+                )}
               </FormField>
               <FormField label="Prevoznik" icon={Truck}>
                 <SearchableSelect
@@ -987,14 +1077,14 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                   placeholder="Ime i prezime vozača"
                 />
               </FormField>
-              <FormField label="Registarska oznaka vozila" icon={Truck} required>
+              <FormField label="Registarska oznaka vozila" icon={Truck} required={isPumpa}>
                 <input
                   type="text"
                   value={vehicleRegistration}
                   onChange={(e) => setVehicleRegistration(e.target.value.toUpperCase())}
                   className="input w-full"
                   placeholder="npr. AA-123-BB"
-                  required
+                  required={isPumpa}
                 />
               </FormField>
             </div>

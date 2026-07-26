@@ -10,13 +10,17 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const params = await context.params
     const { id } = params
 
-    // OPTIMIZED: Build WHERE clause with authorization check for OPERATOR/VIEWER
+    // OPTIMIZED: Build WHERE clause with authorization check
     const userRole = session.user.role
     const userWarehouses = session.user.warehouses || []
     const where: any = { id }
 
-    // Add warehouse access restriction in WHERE clause (performance optimization)
-    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+    // Add access restrictions based on role
+    if (userRole === 'PUMPA') {
+      // PUMPA users can only access their own entries
+      where.operatorId = session.user.id
+    } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      // OPERATOR/VIEWER: check warehouse access
       const warehouseIds = userWarehouses.map((w: any) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
@@ -111,8 +115,12 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const userWarehouses = session.user.warehouses || []
     const where: any = { id }
 
-    // Add warehouse access restriction in WHERE clause (performance optimization)
-    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+    // Add access restrictions based on role
+    if (userRole === 'PUMPA') {
+      // PUMPA users can only update their own entries
+      where.operatorId = session.user.id
+    } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      // OPERATOR/VIEWER: check warehouse access
       const warehouseIds = userWarehouses.map((w: any) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
@@ -150,6 +158,11 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const supplierId = formData.get('supplierId') as string | null
     const transporterId = formData.get('transporterId') as string | null
     const driverName = formData.get('driverName') as string | null
+    const clientId = formData.get('clientId') as string | null
+    const stationId = formData.get('stationId') as string | null
+    const laboratoryId = formData.get('laboratoryId') as string | null
+    const vehicleRegistration = formData.get('vehicleRegistration') as string | null
+    const additiveDetailsStr = formData.get('additiveDetails') as string | null
     const certificate = formData.get('certificate') as File | null
     const existingCertificatePath = formData.get('existingCertificatePath') as string | null
 
@@ -185,6 +198,17 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     if (supplierId !== null) updateData.supplierId = supplierId || null
     if (transporterId !== null) updateData.transporterId = transporterId || null
     if (driverName !== null) updateData.driverName = driverName || null
+    if (clientId !== null) updateData.clientId = clientId || null
+    if (stationId !== null) updateData.stationId = stationId || null
+    if (laboratoryId !== null) updateData.laboratoryId = laboratoryId || null
+    if (vehicleRegistration !== null) updateData.vehicleRegistration = vehicleRegistration || null
+    if (additiveDetailsStr) {
+      try {
+        updateData.additiveDetails = JSON.parse(additiveDetailsStr)
+      } catch (e) {
+        console.error('Error parsing additiveDetails:', e)
+      }
+    }
 
     // Handle certificate (upload new OR use existing)
     if (certificate && certificate.size > 0) {
@@ -261,7 +285,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     console.error('Error updating fuel entry:', error)
     return errorResponse('Failed to update fuel entry', 500)
   }
-}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'])
+}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'PUMPA'])
 
 // DELETE /api/fuel-entries/:id - Soft delete fuel entry
 export const DELETE = withAuth(async (req: NextRequest, context, session) => {

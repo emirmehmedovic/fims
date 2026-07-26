@@ -22,6 +22,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const registrationNumber = searchParams.get('registrationNumber')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
+    const operatorId = searchParams.get('operatorId')
     const sortBy = searchParams.get('sortBy') || 'registrationNumber'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
@@ -30,11 +31,15 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Build where clause
     const where: any = {}
 
-    // For OPERATOR role, filter by assigned warehouses only
+    // For role-based filtering
     const userRole = session.user.role
     const userWarehouses = session.user.warehouses || []
-    
-    if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+
+    if (userRole === 'PUMPA') {
+      // PUMPA users see only their own entries
+      where.operatorId = session.user.id
+    } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+      // OPERATOR/VIEWER see entries from their assigned warehouses
       const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
       if (assignedWarehouseIds.length === 0) {
         // User has no warehouses assigned, return empty result
@@ -61,6 +66,11 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 
     if (clientId) {
       where.clientId = clientId
+    }
+
+    // Operator filter (only for admins, not for PUMPA users who already filter by their own ID)
+    if (operatorId && userRole !== 'PUMPA') {
+      where.operatorId = operatorId
     }
 
     if (productName) {
@@ -384,4 +394,4 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     logger.error('Error creating fuel entry:', error)
     return errorResponse('Failed to create fuel entry', 500)
   }
-}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'])
+}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'PUMPA'])

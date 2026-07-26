@@ -109,7 +109,15 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Validation failed', 400, errors)
     }
 
-    const { name, email, password, role, warehouseIds, stationIds = [] } = validation.data
+    const { name, email, password, role, warehouseIds = [], stationIds = [] } = validation.data
+
+    // Role-specific validation
+    if (role !== 'PUMPA' && warehouseIds.length === 0) {
+      return errorResponse('At least one warehouse must be assigned for this role', 400)
+    }
+    if (role === 'PUMPA' && stationIds.length === 0) {
+      return errorResponse('At least one station must be assigned for PUMPA role', 400)
+    }
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
