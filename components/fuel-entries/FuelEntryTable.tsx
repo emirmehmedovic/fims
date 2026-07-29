@@ -246,7 +246,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   <div
-                    className="text-sm text-slate-700 font-medium max-w-[120px] truncate cursor-default"
+                    className="text-sm text-slate-700 font-medium max-w-[200px] truncate cursor-default"
                     title={entry.productName}
                   >
                     {entry.productName}
