@@ -120,6 +120,12 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     return formatDateTimeSarajevo(dateString)
   }
 
+  // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
+  const getSanitizedDeclarationNum = () => {
+    const declarationNum = details?.declarationNumber || String(details?.registrationNumber || '')
+    return declarationNum.replace(/\//g, '-')
+  }
+
   // Sanitize client name for filename
   const getClientNameForFilename = () => {
     if (!details?.client?.name) return 'Nepoznat'
@@ -144,7 +150,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Izjava_${details.registrationNumber}_${getClientNameForFilename()}.pdf`
+      a.download = `Izjava_${getSanitizedDeclarationNum()}_${getClientNameForFilename()}.pdf`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -173,7 +179,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Izjava_O_Aditiviranju_${details.registrationNumber}_${getClientNameForFilename()}.pdf`
+      a.download = `Izjava_O_Aditiviranju_${getSanitizedDeclarationNum()}_${getClientNameForFilename()}.pdf`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)

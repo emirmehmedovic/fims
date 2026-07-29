@@ -107,11 +107,14 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     })
 
     // Return PDF as download
+    // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
+    const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)
+    const sanitizedDeclarationNum = declarationNum.replace(/\//g, '-')
     // Sanitize client name for filename (remove special characters, replace spaces with underscores)
     const clientName = fuelEntry.client?.name
       ? fuelEntry.client.name.replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '').replace(/\s+/g, '_').substring(0, 50)
       : 'Nepoznat'
-    const filename = `Izjava_${fuelEntry.registrationNumber}_${clientName}.pdf`
+    const filename = `Izjava_${sanitizedDeclarationNum}_${clientName}.pdf`
     
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,

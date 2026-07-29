@@ -94,6 +94,9 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     }
     const pdfBuffer = await generateAdditiveDeclarationPDF(entryData as any, additives)
 
+    // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
+    const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)
+    const sanitizedDeclarationNum = declarationNum.replace(/\//g, '-')
     // Sanitize client name for filename
     const clientName = fuelEntry.client?.name
       ? fuelEntry.client.name.replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '').replace(/\s+/g, '_').substring(0, 50)
@@ -103,7 +106,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Izjava_O_Aditiviranju_${fuelEntry.registrationNumber}_${clientName}.pdf"`
+        'Content-Disposition': `attachment; filename="Izjava_O_Aditiviranju_${sanitizedDeclarationNum}_${clientName}.pdf"`
       }
     })
   } catch (error) {
