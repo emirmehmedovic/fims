@@ -39,60 +39,48 @@ interface FuelEntry {
   createdAt: string
 }
 
-// Role styling configuration
+// Role styling configuration - subtle colors
 const getRoleConfig = (role: string) => {
   switch (role) {
     case 'PUMPA':
       return {
-        bgColor: 'bg-orange-100',
-        textColor: 'text-orange-600',
-        borderColor: 'border-orange-200',
-        avatarBg: 'bg-orange-500',
+        bgColor: 'bg-amber-50',
+        textColor: 'text-amber-700',
         label: 'Pumpa',
         Icon: Fuel
       }
     case 'OPERATOR':
       return {
-        bgColor: 'bg-blue-100',
-        textColor: 'text-blue-600',
-        borderColor: 'border-blue-200',
-        avatarBg: 'bg-blue-500',
+        bgColor: 'bg-sky-50',
+        textColor: 'text-sky-700',
         label: 'Operator',
         Icon: Warehouse
       }
     case 'ADMIN':
       return {
-        bgColor: 'bg-purple-100',
-        textColor: 'text-purple-600',
-        borderColor: 'border-purple-200',
-        avatarBg: 'bg-purple-500',
+        bgColor: 'bg-violet-50',
+        textColor: 'text-violet-700',
         label: 'Admin',
         Icon: Shield
       }
     case 'SUPER_ADMIN':
       return {
-        bgColor: 'bg-rose-100',
-        textColor: 'text-rose-600',
-        borderColor: 'border-rose-200',
-        avatarBg: 'bg-rose-500',
-        label: 'Super Admin',
+        bgColor: 'bg-fuchsia-50',
+        textColor: 'text-fuchsia-700',
+        label: 'S. Admin',
         Icon: Shield
       }
     case 'VIEWER':
       return {
-        bgColor: 'bg-slate-100',
+        bgColor: 'bg-slate-50',
         textColor: 'text-slate-600',
-        borderColor: 'border-slate-200',
-        avatarBg: 'bg-slate-500',
         label: 'Viewer',
         Icon: Eye
       }
     default:
       return {
-        bgColor: 'bg-slate-100',
+        bgColor: 'bg-slate-50',
         textColor: 'text-slate-600',
-        borderColor: 'border-slate-200',
-        avatarBg: 'bg-slate-500',
         label: role,
         Icon: User
       }
@@ -295,16 +283,16 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                     const RoleIcon = roleConfig.Icon
                     return (
                       <div className="flex items-center gap-2">
-                        <div className={`w-7 h-7 rounded-full ${roleConfig.avatarBg} flex items-center justify-center text-xs font-bold text-white shadow-sm`}>
+                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
                           {entry.operator.name.charAt(0)}
                         </div>
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <span className="text-sm text-slate-700">
                               {entry.operator.name}
                             </span>
-                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor} border ${roleConfig.borderColor}`}>
-                              <RoleIcon className="w-2.5 h-2.5" />
+                            <span className={`inline-flex items-center gap-0.5 px-1 py-px rounded text-[9px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor}`}>
+                              <RoleIcon className="w-2 h-2" />
                               {roleConfig.label}
                             </span>
                           </div>
