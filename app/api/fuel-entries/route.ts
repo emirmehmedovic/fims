@@ -142,7 +142,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            role: true
           }
         },
         client: {
@@ -286,7 +287,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            role: true
           }
         },
         client: {

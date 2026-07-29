@@ -46,6 +46,7 @@ interface FuelEntry {
     id: string
     name: string
     email: string
+    role: string
   }
   client?: {
     id: string

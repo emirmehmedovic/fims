@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
+import { Fuel, Warehouse, Shield, User, Eye } from 'lucide-react'
 import EditFuelEntryModal from './EditFuelEntryModal'
 import ViewFuelEntryModal from './ViewFuelEntryModal'
 
@@ -26,6 +27,7 @@ interface FuelEntry {
     id: string
     name: string
     email: string
+    role: string
   }
   client?: {
     id: string
@@ -35,6 +37,66 @@ interface FuelEntry {
   certificatePath: string | null
   certificateFileName: string | null
   createdAt: string
+}
+
+// Role styling configuration
+const getRoleConfig = (role: string) => {
+  switch (role) {
+    case 'PUMPA':
+      return {
+        bgColor: 'bg-orange-100',
+        textColor: 'text-orange-600',
+        borderColor: 'border-orange-200',
+        avatarBg: 'bg-orange-500',
+        label: 'Pumpa',
+        Icon: Fuel
+      }
+    case 'OPERATOR':
+      return {
+        bgColor: 'bg-blue-100',
+        textColor: 'text-blue-600',
+        borderColor: 'border-blue-200',
+        avatarBg: 'bg-blue-500',
+        label: 'Operator',
+        Icon: Warehouse
+      }
+    case 'ADMIN':
+      return {
+        bgColor: 'bg-purple-100',
+        textColor: 'text-purple-600',
+        borderColor: 'border-purple-200',
+        avatarBg: 'bg-purple-500',
+        label: 'Admin',
+        Icon: Shield
+      }
+    case 'SUPER_ADMIN':
+      return {
+        bgColor: 'bg-rose-100',
+        textColor: 'text-rose-600',
+        borderColor: 'border-rose-200',
+        avatarBg: 'bg-rose-500',
+        label: 'Super Admin',
+        Icon: Shield
+      }
+    case 'VIEWER':
+      return {
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-600',
+        borderColor: 'border-slate-200',
+        avatarBg: 'bg-slate-500',
+        label: 'Viewer',
+        Icon: Eye
+      }
+    default:
+      return {
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-600',
+        borderColor: 'border-slate-200',
+        avatarBg: 'bg-slate-500',
+        label: role,
+        Icon: User
+      }
+  }
 }
 
 interface Props {
@@ -228,19 +290,31 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                      {entry.operator.name.charAt(0)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-slate-700">
-                        {entry.operator.name}
-                      </span>
-                      <span className="text-[10px] text-slate-400 uppercase">
-                        {formatDateTime(entry.createdAt)}
-                      </span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const roleConfig = getRoleConfig(entry.operator.role)
+                    const RoleIcon = roleConfig.Icon
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-full ${roleConfig.avatarBg} flex items-center justify-center text-xs font-bold text-white shadow-sm`}>
+                          {entry.operator.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm text-slate-700">
+                              {entry.operator.name}
+                            </span>
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor} border ${roleConfig.borderColor}`}>
+                              <RoleIcon className="w-2.5 h-2.5" />
+                              {roleConfig.label}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {formatDateTime(entry.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <div className="flex items-center justify-center gap-2">
