@@ -219,14 +219,9 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                   {formatDate(entry.entryDate)}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-700">
-                      {entry.warehouse.code}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {entry.warehouse.name}
-                    </span>
-                  </div>
+                  <span className="text-sm font-medium text-slate-700">
+                    {entry.warehouse.name}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   {entry.client ? (
