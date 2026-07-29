@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { formatDateTimeSecondsSarajevo } from '@/lib/utils/date'
 import { useSession } from 'next-auth/react'
+import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
 
 interface AuditLog {
   id: string
@@ -30,12 +31,12 @@ interface User {
 export default function AuditLogsPage() {
   const { data: session } = useSession()
   const [logs, setLogs] = useState<AuditLog[]>([])
-  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
   // Filters
   const [userFilter, setUserFilter] = useState('')
+  const [selectedUserFilter, setSelectedUserFilter] = useState<User | null>(null)
   const [actionFilter, setActionFilter] = useState('')
   const [entityTypeFilter, setEntityTypeFilter] = useState('')
   const [dateFromFilter, setDateFromFilter] = useState('')
@@ -69,24 +70,28 @@ export default function AuditLogsPage() {
   }
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchUsers()
-    }
     fetchLogs()
   }, [page, userFilter, actionFilter, entityTypeFilter, dateFromFilter, dateToFilter])
 
-  const fetchUsers = async () => {
+  // Async search for users
+  const fetchUsersAsync = useCallback(async (search: string) => {
     try {
-      const res = await fetch('/api/users')
+      const res = await fetch(`/api/users?search=${encodeURIComponent(search)}&pageSize=50`)
       const data = await res.json()
       if (data.success) {
-        // Handle paginated response - users are in data.data.items
-        setUsers(data.data.items || data.data.users || data.data || [])
+        const usersList = data.data.items || data.data
+        return usersList.map((u: User) => ({
+          id: u.id,
+          label: u.name,
+          sublabel: u.email
+        }))
       }
+      return []
     } catch (error) {
       console.error('Error fetching users:', error)
+      return []
     }
-  }
+  }, [])
 
   const fetchLogs = async () => {
     setLoading(true)
@@ -117,6 +122,7 @@ export default function AuditLogsPage() {
 
   const clearFilters = () => {
     setUserFilter('')
+    setSelectedUserFilter(null)
     setActionFilter('')
     setEntityTypeFilter('')
     setDateFromFilter('')
@@ -168,21 +174,32 @@ export default function AuditLogsPage() {
               <label className="block text-sm font-medium text-text-secondary mb-2">
                 Korisnik
               </label>
-              <select
+              <AsyncSearchableSelect
+                fetchOptions={fetchUsersAsync}
                 value={userFilter}
-                onChange={(e) => {
-                  setUserFilter(e.target.value)
+                onChange={(id) => {
+                  setUserFilter(id)
                   setPage(1)
+                  if (id) {
+                    fetch(`/api/users/${id}`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.success) {
+                          setSelectedUserFilter(data.data)
+                        }
+                      })
+                      .catch(console.error)
+                  } else {
+                    setSelectedUserFilter(null)
+                  }
                 }}
-                className="input w-full"
-              >
-                <option value="">Svi korisnici</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Pretraži korisnike..."
+                selectedOption={selectedUserFilter ? {
+                  id: selectedUserFilter.id,
+                  label: selectedUserFilter.name,
+                  sublabel: selectedUserFilter.email
+                } : null}
+              />
             </div>
           )}
 
