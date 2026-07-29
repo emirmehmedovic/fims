@@ -34,4 +34,4 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     console.error('Error updating profile:', error)
     return errorResponse('Neuspješno ažuriranje profila', 500)
   }
-}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER'])
+}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'PUMPA'])

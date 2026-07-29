@@ -70,4 +70,4 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     console.error('Error changing password:', error)
     return errorResponse('Neuspješno mijenjanje lozinke', 500)
   }
-}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER'])
+}, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'PUMPA'])
