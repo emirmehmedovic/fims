@@ -50,6 +50,13 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             address: true,
             accreditationNumber: true
           }
+        },
+        client: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
         }
       }
     })
@@ -100,7 +107,11 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     })
 
     // Return PDF as download
-    const filename = `Izjava_${fuelEntry.registrationNumber}.pdf`
+    // Sanitize client name for filename (remove special characters, replace spaces with underscores)
+    const clientName = fuelEntry.client?.name
+      ? fuelEntry.client.name.replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '').replace(/\s+/g, '_').substring(0, 50)
+      : 'Nepoznat'
+    const filename = `Izjava_${fuelEntry.registrationNumber}_${clientName}.pdf`
     
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,

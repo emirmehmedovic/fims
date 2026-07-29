@@ -71,6 +71,11 @@ interface FuelEntryDetail {
     contactPerson: string | null
     phone: string | null
   } | null
+  client?: {
+    id: string
+    name: string
+    code: string | null
+  } | null
   createdAt: string
   updatedAt: string
 }
@@ -115,6 +120,15 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     return formatDateTimeSarajevo(dateString)
   }
 
+  // Sanitize client name for filename
+  const getClientNameForFilename = () => {
+    if (!details?.client?.name) return 'Nepoznat'
+    return details.client.name
+      .replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50)
+  }
+
   const handleExportPdf = async () => {
     if (!details) return
 
@@ -130,7 +144,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Izjava_${details.registrationNumber}.pdf`
+      a.download = `Izjava_${details.registrationNumber}_${getClientNameForFilename()}.pdf`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -159,7 +173,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Izjava_O_Aditiviranju_${details.registrationNumber}.pdf`
+      a.download = `Izjava_O_Aditiviranju_${details.registrationNumber}_${getClientNameForFilename()}.pdf`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
