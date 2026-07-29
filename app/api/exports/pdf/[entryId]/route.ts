@@ -110,17 +110,31 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
     const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)
     const sanitizedDeclarationNum = declarationNum.replace(/\//g, '-')
-    // Sanitize client name for filename (remove special characters, replace spaces with underscores)
+    // Sanitize client name for filename - remove ALL special characters except letters, numbers, spaces
+    // Then replace spaces with underscores and convert to ASCII-safe characters
+    const sanitizeForFilename = (str: string): string => {
+      return str
+        .replace(/[„""''«»]/g, '')           // Remove special quotes
+        .replace(/[\/\\:*?"<>|]/g, '')       // Remove filesystem-unsafe chars
+        .replace(/[^\w\s\-čćžšđČĆŽŠĐáéíóúÁÉÍÓÚäöüÄÖÜ]/g, '') // Keep only word chars, spaces, dashes, and common accented letters
+        .replace(/\s+/g, '_')                 // Replace spaces with underscores
+        .replace(/_+/g, '_')                  // Collapse multiple underscores
+        .replace(/^_|_$/g, '')                // Trim underscores from start/end
+        .substring(0, 50)
+    }
     const clientName = fuelEntry.client?.name
-      ? fuelEntry.client.name.replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '').replace(/\s+/g, '_').substring(0, 50)
+      ? sanitizeForFilename(fuelEntry.client.name)
       : 'Nepoznat'
     const filename = `Izjava_${sanitizedDeclarationNum}_${clientName}.pdf`
-    
+
+    // Use encodeURIComponent for the filename to handle any remaining special chars
+    const safeFilename = encodeURIComponent(filename).replace(/%20/g, '_')
+
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         'Content-Length': pdfBuffer.length.toString()
       }
     })

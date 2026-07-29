@@ -126,12 +126,16 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     return declarationNum.replace(/\//g, '-')
   }
 
-  // Sanitize client name for filename
+  // Sanitize client name for filename - remove ALL special characters
   const getClientNameForFilename = () => {
     if (!details?.client?.name) return 'Nepoznat'
     return details.client.name
-      .replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '')
-      .replace(/\s+/g, '_')
+      .replace(/[„""''«»]/g, '')           // Remove special quotes
+      .replace(/[\/\\:*?"<>|]/g, '')       // Remove filesystem-unsafe chars
+      .replace(/[^\w\s\-čćžšđČĆŽŠĐáéíóúÁÉÍÓÚäöüÄÖÜ]/g, '') // Keep only word chars, spaces, dashes
+      .replace(/\s+/g, '_')                 // Replace spaces with underscores
+      .replace(/_+/g, '_')                  // Collapse multiple underscores
+      .replace(/^_|_$/g, '')                // Trim underscores from start/end
       .substring(0, 50)
   }
 

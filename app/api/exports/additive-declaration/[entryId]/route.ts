@@ -97,16 +97,30 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
     const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)
     const sanitizedDeclarationNum = declarationNum.replace(/\//g, '-')
-    // Sanitize client name for filename
+    // Sanitize client name for filename - remove ALL special characters except letters, numbers, spaces
+    const sanitizeForFilename = (str: string): string => {
+      return str
+        .replace(/[„""''«»]/g, '')           // Remove special quotes
+        .replace(/[\/\\:*?"<>|]/g, '')       // Remove filesystem-unsafe chars
+        .replace(/[^\w\s\-čćžšđČĆŽŠĐáéíóúÁÉÍÓÚäöüÄÖÜ]/g, '') // Keep only word chars, spaces, dashes, and common accented letters
+        .replace(/\s+/g, '_')                 // Replace spaces with underscores
+        .replace(/_+/g, '_')                  // Collapse multiple underscores
+        .replace(/^_|_$/g, '')                // Trim underscores from start/end
+        .substring(0, 50)
+    }
     const clientName = fuelEntry.client?.name
-      ? fuelEntry.client.name.replace(/[^a-zA-Z0-9\s\-čćžšđČĆŽŠĐ]/g, '').replace(/\s+/g, '_').substring(0, 50)
+      ? sanitizeForFilename(fuelEntry.client.name)
       : 'Nepoznat'
+    const filename = `Izjava_O_Aditiviranju_${sanitizedDeclarationNum}_${clientName}.pdf`
+
+    // Use encodeURIComponent for the filename to handle any remaining special chars
+    const safeFilename = encodeURIComponent(filename).replace(/%20/g, '_')
 
     // Return PDF
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Izjava_O_Aditiviranju_${sanitizedDeclarationNum}_${clientName}.pdf"`
+        'Content-Disposition': `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`
       }
     })
   } catch (error) {
