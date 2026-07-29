@@ -48,12 +48,29 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
   const [viewingEntry, setViewingEntry] = useState<FuelEntry | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const canEdit = session?.user?.role === 'SUPER_ADMIN' ||
-                  session?.user?.role === 'ADMIN' ||
-                  session?.user?.role === 'OPERATOR'
+  const userRole = session?.user?.role
+  const userId = session?.user?.id
 
-  const canDelete = session?.user?.role === 'SUPER_ADMIN' ||
-                    session?.user?.role === 'ADMIN'
+  // Check if user can edit/delete - for PUMPA, only their own entries
+  const canEditEntry = (entry: FuelEntry) => {
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'OPERATOR') {
+      return true
+    }
+    if (userRole === 'PUMPA' && entry.operator.id === userId) {
+      return true
+    }
+    return false
+  }
+
+  const canDeleteEntry = (entry: FuelEntry) => {
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') {
+      return true
+    }
+    if (userRole === 'PUMPA' && entry.operator.id === userId) {
+      return true
+    }
+    return false
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Da li ste sigurni da želite obrisati ovu prijavu?')) {
@@ -265,7 +282,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </button>
-                    {canEdit && entry.isActive && (
+                    {canEditEntry(entry) && entry.isActive && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -279,7 +296,7 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                         </svg>
                       </button>
                     )}
-                    {canDelete && entry.isActive && (
+                    {canDeleteEntry(entry) && entry.isActive && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()

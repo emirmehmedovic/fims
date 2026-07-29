@@ -298,8 +298,11 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     const userWarehouses = session.user.warehouses || []
     const where: any = { id }
 
-    // Add warehouse access restriction in WHERE clause (performance optimization)
-    if (userRole === 'OPERATOR') {
+    // Add access restrictions based on role
+    if (userRole === 'PUMPA') {
+      // PUMPA users can only delete their own entries
+      where.operatorId = session.user.id
+    } else if (userRole === 'OPERATOR') {
       const warehouseIds = userWarehouses.map((w: any) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
@@ -351,4 +354,4 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     console.error('Error deleting fuel entry:', error)
     return errorResponse('Failed to delete fuel entry', 500)
   }
-}, ['SUPER_ADMIN', 'ADMIN'])
+}, ['SUPER_ADMIN', 'ADMIN', 'PUMPA'])
