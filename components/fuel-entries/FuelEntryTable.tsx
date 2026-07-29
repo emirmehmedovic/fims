@@ -283,19 +283,13 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                     const RoleIcon = roleConfig.Icon
                     return (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                          {entry.operator.name.charAt(0)}
+                        <div className={`w-6 h-6 rounded-full ${roleConfig.bgColor} flex items-center justify-center`} title={roleConfig.label}>
+                          <RoleIcon className={`w-3.5 h-3.5 ${roleConfig.textColor}`} />
                         </div>
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm text-slate-700">
-                              {entry.operator.name}
-                            </span>
-                            <span className={`inline-flex items-center gap-0.5 px-1 py-px rounded text-[9px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor}`}>
-                              <RoleIcon className="w-2 h-2" />
-                              {roleConfig.label}
-                            </span>
-                          </div>
+                          <span className="text-sm text-slate-700">
+                            {entry.operator.name}
+                          </span>
                           <span className="text-[10px] text-slate-400">
                             {formatDateTime(entry.createdAt)}
                           </span>
