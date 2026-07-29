@@ -245,11 +245,13 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <div
-                    className="text-sm text-slate-700 font-medium max-w-[200px] truncate cursor-default"
-                    title={entry.productName}
-                  >
-                    {entry.productName}
+                  <div className="relative group/tooltip">
+                    <div className="text-sm text-slate-700 font-medium max-w-[200px] truncate cursor-default">
+                      {entry.productName}
+                    </div>
+                    <div className="absolute left-0 bottom-full mb-1 px-2 py-1 bg-slate-800 text-white text-xs rounded shadow-lg whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-opacity z-50">
+                      {entry.productName}
+                    </div>
                   </div>
                   {entry.isHigherQuality && (
                     <img
