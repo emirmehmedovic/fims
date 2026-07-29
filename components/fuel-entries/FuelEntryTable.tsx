@@ -225,16 +225,9 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   {entry.client ? (
-                    <div className="flex flex-col">
-                      {entry.client.code && (
-                        <span className="text-xs text-slate-500 font-mono">
-                          {entry.client.code}
-                        </span>
-                      )}
-                      <span className="text-sm text-slate-700">
-                        {entry.client.name}
-                      </span>
-                    </div>
+                    <span className="text-sm text-slate-700">
+                      {entry.client.name}
+                    </span>
                   ) : (
                     <span className="text-xs text-slate-400 italic">—</span>
                   )}
