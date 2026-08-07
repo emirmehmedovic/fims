@@ -409,8 +409,19 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         const additiveMap: Record<string, { addedAt: string; quantity: string }> = {}
         entry.additiveDetails.forEach((ad: any) => {
           if (ad.name) {
+            // Format datetime for datetime-local input (YYYY-MM-DDTHH:MM)
+            let formattedDateTime = ''
+            if (ad.addedAt) {
+              const date = new Date(ad.addedAt)
+              const year = date.getFullYear()
+              const month = String(date.getMonth() + 1).padStart(2, '0')
+              const day = String(date.getDate()).padStart(2, '0')
+              const hours = String(date.getHours()).padStart(2, '0')
+              const minutes = String(date.getMinutes()).padStart(2, '0')
+              formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
+            }
             additiveMap[ad.name] = {
-              addedAt: ad.addedAt ? formatDateInputValueSarajevo(new Date(ad.addedAt)) : formatDateInputValueSarajevo(new Date()),
+              addedAt: formattedDateTime,
               quantity: ad.quantity || ''
             }
           }
