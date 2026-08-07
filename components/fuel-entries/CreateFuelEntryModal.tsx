@@ -20,7 +20,9 @@ import {
   Globe,
   FileCheck,
   Users,
-  Fuel
+  Fuel,
+  Download,
+  AlertTriangle
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
@@ -154,6 +156,10 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     file?: File
     path?: string
   } | null>(null)
+
+  // Import from last entry state
+  const [importedFromLast, setImportedFromLast] = useState(false)
+  const [importingLastEntry, setImportingLastEntry] = useState(false)
 
   // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
   useEffect(() => {
@@ -364,6 +370,91 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       }
     } catch (error) {
       console.error('Error auto-selecting DEFAULT warehouse:', error)
+    }
+  }
+
+  // Import data from last fuel entry created by this user
+  const importFromLastEntry = async () => {
+    setImportingLastEntry(true)
+    try {
+      const res = await fetch('/api/fuel-entries/last')
+      const data = await res.json()
+
+      if (!data.success) {
+        toast.error('Nemate prethodnih prijava za uvoz')
+        return
+      }
+
+      const entry = data.data
+
+      // Import basic data (but not the entry date - that should be today)
+      if (entry.warehouseId && !isPumpa) setWarehouseId(entry.warehouseId)
+      if (entry.productName) setProductName(entry.productName)
+      // Don't import quantity - user said this often changes
+
+      // Import delivery info
+      if (entry.deliveryNoteNumber) setDeliveryNoteNumber(entry.deliveryNoteNumber)
+      // Don't import dates - they should be new
+      if (entry.customsDeclarationNumber) setCustomsDeclarationNumber(entry.customsDeclarationNumber)
+
+      // Import quality
+      setIsHigherQuality(entry.isHigherQuality || false)
+      if (entry.improvedCharacteristics) setImprovedCharacteristics(entry.improvedCharacteristics)
+      if (entry.countryOfOrigin) setCountryOfOrigin(entry.countryOfOrigin)
+
+      // Import additive details
+      if (entry.additiveDetails && Array.isArray(entry.additiveDetails)) {
+        const additiveMap: Record<string, { addedAt: string; quantity: string }> = {}
+        entry.additiveDetails.forEach((ad: any) => {
+          if (ad.name) {
+            additiveMap[ad.name] = {
+              addedAt: formatDateInputValueSarajevo(new Date()), // Use today's date
+              quantity: ad.quantity || ''
+            }
+          }
+        })
+        setAdditiveDetails(additiveMap)
+      }
+
+      // Import laboratory
+      if (entry.laboratoryId) setLaboratoryId(entry.laboratoryId)
+      if (entry.testReportNumber) setTestReportNumber(entry.testReportNumber)
+
+      // Import supplier & transport
+      if (entry.orderOpenedBy) setOrderOpenedBy(entry.orderOpenedBy)
+      if (entry.pickupLocation) setPickupLocation(entry.pickupLocation)
+      if (entry.supplierId && !isPumpa) {
+        setSupplierId(entry.supplierId)
+        if (entry.supplier) {
+          setSelectedSupplierName(`${entry.supplier.name} (${entry.supplier.code})`)
+        }
+      }
+      if (entry.transporterId) setTransporterId(entry.transporterId)
+      if (entry.driverName) setDriverName(entry.driverName)
+      if (entry.vehicleRegistration) setVehicleRegistration(entry.vehicleRegistration)
+
+      // Import client
+      if (entry.clientId && !isPumpa) {
+        setClientId(entry.clientId)
+        if (entry.client) setSelectedClient(entry.client)
+      }
+      if (entry.stationId) setStationId(entry.stationId)
+
+      // Import certificate if exists
+      if (entry.certificatePath) {
+        setCertificateSelection({
+          type: 'existing',
+          path: entry.certificatePath
+        })
+      }
+
+      setImportedFromLast(true)
+      toast.success('Podaci su uvezeni s prošle prijave')
+    } catch (error) {
+      console.error('Error importing from last entry:', error)
+      toast.error('Greška pri uvozu podataka')
+    } finally {
+      setImportingLastEntry(false)
     }
   }
 
@@ -602,6 +693,48 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
         {/* Form */}
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
+          {/* Import from last entry button */}
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={importFromLastEntry}
+              disabled={importingLastEntry}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {importingLastEntry ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  Uvozim...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Uvezi podatke s prošle prijave
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Warning message after import */}
+          {importedFromLast && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-800 font-medium">Podaci su uvezeni s prošle prijave</p>
+                <p className="text-amber-700 text-sm mt-1">
+                  Molimo pregledajte sve podatke prije spremanja. Količina i datumi nisu uvezeni jer se obično razlikuju.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImportedFromLast(false)}
+                className="ml-auto p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Basic Information */}
           <FormSection title="Osnovne informacije" icon={Droplets} required>
             <div className="grid grid-cols-2 gap-4">
