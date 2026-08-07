@@ -387,28 +387,30 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
       const entry = data.data
 
-      // Import basic data (but not the entry date - that should be today)
+      // Import basic data
+      if (entry.entryDate) setEntryDate(formatDateInputValueSarajevo(new Date(entry.entryDate)))
       if (entry.warehouseId && !isPumpa) setWarehouseId(entry.warehouseId)
       if (entry.productName) setProductName(entry.productName)
-      // Don't import quantity - user said this often changes
+      // Don't import quantity - this often changes
 
-      // Import delivery info
+      // Import delivery info with dates
       if (entry.deliveryNoteNumber) setDeliveryNoteNumber(entry.deliveryNoteNumber)
-      // Don't import dates - they should be new
+      if (entry.deliveryNoteDate) setDeliveryNoteDate(formatDateInputValueSarajevo(new Date(entry.deliveryNoteDate)))
       if (entry.customsDeclarationNumber) setCustomsDeclarationNumber(entry.customsDeclarationNumber)
+      if (entry.customsDeclarationDate) setCustomsDeclarationDate(formatDateInputValueSarajevo(new Date(entry.customsDeclarationDate)))
 
       // Import quality
       setIsHigherQuality(entry.isHigherQuality || false)
       if (entry.improvedCharacteristics) setImprovedCharacteristics(entry.improvedCharacteristics)
       if (entry.countryOfOrigin) setCountryOfOrigin(entry.countryOfOrigin)
 
-      // Import additive details
+      // Import additive details with their original dates
       if (entry.additiveDetails && Array.isArray(entry.additiveDetails)) {
         const additiveMap: Record<string, { addedAt: string; quantity: string }> = {}
         entry.additiveDetails.forEach((ad: any) => {
           if (ad.name) {
             additiveMap[ad.name] = {
-              addedAt: formatDateInputValueSarajevo(new Date()), // Use today's date
+              addedAt: ad.addedAt ? formatDateInputValueSarajevo(new Date(ad.addedAt)) : formatDateInputValueSarajevo(new Date()),
               quantity: ad.quantity || ''
             }
           }
@@ -416,9 +418,10 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         setAdditiveDetails(additiveMap)
       }
 
-      // Import laboratory
+      // Import laboratory with date
       if (entry.laboratoryId) setLaboratoryId(entry.laboratoryId)
       if (entry.testReportNumber) setTestReportNumber(entry.testReportNumber)
+      if (entry.testReportDate) setTestReportDate(formatDateInputValueSarajevo(new Date(entry.testReportDate)))
 
       // Import supplier & transport
       if (entry.orderOpenedBy) setOrderOpenedBy(entry.orderOpenedBy)
@@ -722,7 +725,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
               <div>
                 <p className="text-amber-800 font-medium">Podaci su uvezeni s prošle prijave</p>
                 <p className="text-amber-700 text-sm mt-1">
-                  Molimo pregledajte sve podatke prije spremanja. Količina i datumi nisu uvezeni jer se obično razlikuju.
+                  Molimo pregledajte sve podatke prije spremanja. Količina nije uvezena jer se obično razlikuje.
                 </p>
               </div>
               <button
