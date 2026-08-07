@@ -713,7 +713,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
               type="button"
               onClick={importFromLastEntry}
               disabled={importingLastEntry}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {importingLastEntry ? (
                 <>
