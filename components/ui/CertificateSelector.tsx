@@ -39,6 +39,13 @@ export default function CertificateSelector({
     fetchCertificates()
   }, [])
 
+  // Auto-switch to select tab when existing certificate is set (e.g., from import)
+  useEffect(() => {
+    if (value?.type === 'existing' && value.path) {
+      setActiveTab('select')
+    }
+  }, [value])
+
   const fetchCertificates = async () => {
     setLoading(true)
     try {
