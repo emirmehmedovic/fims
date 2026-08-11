@@ -220,8 +220,8 @@ export default function FuelEntryTable({ entries, onEntryDeleted }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   {entry.warehouse.code === 'DEF-001' ? (
-                    <div className="flex items-center justify-center" title="Benzinska pumpa">
-                      <svg className="w-6 h-6" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <div className="flex items-center" title="Benzinska pumpa">
+                      <svg className="w-10 h-10" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M59.733 227.135H34.133C29.414 227.135 25.6 223.321 25.6 218.602C25.6 213.883 29.414 210.069 34.133 210.069H59.733C64.452 210.069 68.267 213.883 68.267 218.602C68.267 223.321 64.452 227.135 59.733 227.135Z" fill="#ef4444"/>
                         <path d="M153.6 227.135H128C123.281 227.135 119.467 223.321 119.467 218.602C119.467 213.883 123.281 210.069 128 210.069H153.6C158.319 210.069 162.133 213.883 162.133 218.602C162.133 223.321 158.319 227.135 153.6 227.135Z" fill="#ef4444"/>
                         <polygon points="247.467,397.799 384,397.799 384,252.732 247.467,252.732" fill="#dc2626"/>
