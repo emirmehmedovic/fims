@@ -37,6 +37,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       registrationNumber,
       dateFrom,
       dateTo,
+      dateField = 'entryDate',
       entryIds,
       includeCertificates = true
     } = body
@@ -58,9 +59,10 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       if (deliveryNoteNumber) where.deliveryNoteNumber = { contains: deliveryNoteNumber, mode: 'insensitive' }
       if (registrationNumber) where.registrationNumber = parseInt(registrationNumber)
       if (dateFrom || dateTo) {
-        where.entryDate = {}
-        if (dateFrom) where.entryDate.gte = startOfDaySarajevo(dateFrom)
-        if (dateTo) where.entryDate.lt = startOfNextDaySarajevo(dateTo)
+        const fieldName = dateField === 'createdAt' ? 'createdAt' : 'entryDate'
+        where[fieldName] = {}
+        if (dateFrom) where[fieldName].gte = startOfDaySarajevo(dateFrom)
+        if (dateTo) where[fieldName].lt = startOfNextDaySarajevo(dateTo)
       }
     }
 
@@ -223,6 +225,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const registrationNumber = url.searchParams.get('registrationNumber')
     const dateFrom = url.searchParams.get('dateFrom')
     const dateTo = url.searchParams.get('dateTo')
+    const dateField = url.searchParams.get('dateField') || 'entryDate'
 
     // Build filter conditions
     const where: any = {
@@ -235,9 +238,10 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     if (deliveryNoteNumber) where.deliveryNoteNumber = { contains: deliveryNoteNumber, mode: 'insensitive' }
     if (registrationNumber) where.registrationNumber = parseInt(registrationNumber)
     if (dateFrom || dateTo) {
-      where.entryDate = {}
-      if (dateFrom) where.entryDate.gte = startOfDaySarajevo(dateFrom)
-      if (dateTo) where.entryDate.lt = startOfNextDaySarajevo(dateTo)
+      const fieldName = dateField === 'createdAt' ? 'createdAt' : 'entryDate'
+      where[fieldName] = {}
+      if (dateFrom) where[fieldName].gte = startOfDaySarajevo(dateFrom)
+      if (dateTo) where[fieldName].lt = startOfNextDaySarajevo(dateTo)
     }
 
     // Check warehouse access for non-admin users

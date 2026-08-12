@@ -85,6 +85,7 @@ export default function FuelEntriesPage() {
   const [registrationNumberFilter, setRegistrationNumberFilter] = useState('')
   const [dateFromFilter, setDateFromFilter] = useState('')
   const [dateToFilter, setDateToFilter] = useState('')
+  const [dateFieldFilter, setDateFieldFilter] = useState<'entryDate' | 'createdAt'>('entryDate')
   const [operatorFilter, setOperatorFilter] = useState('')
 
   // Pagination
@@ -106,7 +107,7 @@ export default function FuelEntriesPage() {
       fetchStations()
       fetchEntries()
     }
-  }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter, operatorFilter])
+  }, [session, page, warehouseFilter, stationFilter, clientFilter, productNameFilter, deliveryNoteFilter, registrationNumberFilter, dateFromFilter, dateToFilter, dateFieldFilter, operatorFilter])
 
   const fetchWarehouses = async () => {
     try {
@@ -220,6 +221,7 @@ export default function FuelEntriesPage() {
         ...(registrationNumberFilter && { registrationNumber: registrationNumberFilter }),
         ...(dateFromFilter && { dateFrom: dateFromFilter }),
         ...(dateToFilter && { dateTo: dateToFilter }),
+        ...((dateFromFilter || dateToFilter) && { dateField: dateFieldFilter }),
         ...(operatorFilter && { operatorId: operatorFilter })
       })
 
@@ -258,6 +260,7 @@ export default function FuelEntriesPage() {
     setRegistrationNumberFilter('')
     setDateFromFilter('')
     setDateToFilter('')
+    setDateFieldFilter('entryDate')
     setPage(1)
   }
 
@@ -286,6 +289,7 @@ export default function FuelEntriesPage() {
           registrationNumber: registrationNumberFilter || undefined,
           dateFrom: dateFromFilter || undefined,
           dateTo: dateToFilter || undefined,
+          dateField: (dateFromFilter || dateToFilter) ? dateFieldFilter : undefined,
           includeCertificates: true
         })
       })
@@ -586,7 +590,7 @@ export default function FuelEntriesPage() {
             )}
             {(dateFromFilter || dateToFilter) && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full">
-                Datum: {dateFromFilter || '...'} → {dateToFilter || '...'}
+                {dateFieldFilter === 'entryDate' ? 'Datum ulaza' : 'Datum kreiranja'}: {dateFromFilter || '...'} → {dateToFilter || '...'}
                 <button onClick={() => { setDateFromFilter(''); setDateToFilter(''); setPage(1) }} className="hover:bg-indigo-100 rounded-full p-0.5 transition-colors">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -782,9 +786,41 @@ export default function FuelEntriesPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
-              Datum od
-            </label>
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Datum od
+              </label>
+              <div className="flex bg-indigo-100 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFieldFilter('entryDate')
+                    if (dateFromFilter || dateToFilter) setPage(1)
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-all ${
+                    dateFieldFilter === 'entryDate'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-indigo-600 hover:text-indigo-800'
+                  }`}
+                >
+                  Ulaza
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFieldFilter('createdAt')
+                    if (dateFromFilter || dateToFilter) setPage(1)
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-all ${
+                    dateFieldFilter === 'createdAt'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-indigo-600 hover:text-indigo-800'
+                  }`}
+                >
+                  Kreiranja
+                </button>
+              </div>
+            </div>
             <div className="relative">
               <input
                 type="date"

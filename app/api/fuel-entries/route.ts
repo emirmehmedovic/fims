@@ -22,6 +22,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const registrationNumber = searchParams.get('registrationNumber')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
+    const dateField = searchParams.get('dateField') || 'entryDate' // 'entryDate' or 'createdAt'
     const operatorId = searchParams.get('operatorId')
     const sortBy = searchParams.get('sortBy') || 'registrationNumber'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
@@ -113,12 +114,13 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     }
 
     if (dateFrom || dateTo) {
-      where.entryDate = {}
+      const fieldName = dateField === 'createdAt' ? 'createdAt' : 'entryDate'
+      where[fieldName] = {}
       if (dateFrom) {
-        where.entryDate.gte = startOfDaySarajevo(dateFrom)
+        where[fieldName].gte = startOfDaySarajevo(dateFrom)
       }
       if (dateTo) {
-        where.entryDate.lt = startOfNextDaySarajevo(dateTo)
+        where[fieldName].lt = startOfNextDaySarajevo(dateTo)
       }
     }
 
