@@ -5,35 +5,27 @@ import { prisma } from '@/lib/prisma'
  * Example: 0001/26 (first declaration of 2026)
  *
  * The number resets to 0001 each year.
+ * Supports numbers beyond 9999 (e.g., 10000/26, 10001/26, etc.)
  */
 export async function generateDeclarationNumber(): Promise<string> {
   const currentYear = new Date().getFullYear()
   const yearSuffix = String(currentYear).slice(-2) // "2026" -> "26"
 
-  // Find the highest declaration number for the current year
-  const latestEntry = await prisma.fuelEntry.findFirst({
-    where: {
-      declarationNumber: {
-        endsWith: `/${yearSuffix}`
-      }
-    },
-    orderBy: {
-      declarationNumber: 'desc'
-    },
-    select: {
-      declarationNumber: true
-    }
-  })
+  // Find the highest declaration number for the current year using numeric sorting
+  // We use raw SQL to extract the numeric part and sort properly
+  const result = await prisma.$queryRaw<{ max_num: number | null }[]>`
+    SELECT MAX(CAST(SPLIT_PART("declarationNumber", '/', 1) AS INTEGER)) as max_num
+    FROM "FuelEntry"
+    WHERE "declarationNumber" LIKE ${'%/' + yearSuffix}
+  `
 
   let nextNumber = 1
 
-  if (latestEntry?.declarationNumber) {
-    // Extract the number part from "0001/26" -> 1
-    const numberPart = latestEntry.declarationNumber.split('/')[0]
-    nextNumber = parseInt(numberPart, 10) + 1
+  if (result[0]?.max_num !== null && result[0]?.max_num !== undefined) {
+    nextNumber = result[0].max_num + 1
   }
 
-  // Format: pad to 4 digits
+  // Format: pad to minimum 4 digits (allows 5+ digits for numbers > 9999)
   const paddedNumber = String(nextNumber).padStart(4, '0')
 
   return `${paddedNumber}/${yearSuffix}`
