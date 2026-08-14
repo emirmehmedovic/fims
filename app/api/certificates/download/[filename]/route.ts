@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth } from '@/lib/api/withAuth'
 import { errorResponse } from '@/lib/api/response'
+import { prisma } from '@/lib/prisma'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
@@ -10,7 +11,8 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads/certificates'
 // GET /api/certificates/download/[filename] - Download certificate file
 export const GET = withAuth(async (
   req: NextRequest,
-  context: { params: Promise<{ filename: string }> }
+  context: { params: Promise<{ filename: string }> },
+  session
 ) => {
   try {
     const { filename } = await context.params
@@ -22,6 +24,42 @@ export const GET = withAuth(async (
     if (!sanitizedFilename.match(/^cert_\d+_\d+\.(pdf|jpg|jpeg|png)$/i)) {
       return errorResponse('Invalid filename format', 400)
     }
+
+    // Security: Verify user has access to this certificate (IDOR prevention)
+    const userRole = session.user.role
+    const userWarehouses = session.user.warehouses || []
+
+    // Find the fuel entry that has this certificate
+    const fuelEntry = await prisma.fuelEntry.findFirst({
+      where: {
+        certificatePath: {
+          contains: sanitizedFilename
+        }
+      },
+      select: {
+        id: true,
+        warehouseId: true,
+        operatorId: true
+      }
+    })
+
+    if (fuelEntry) {
+      // Check access based on role
+      if (userRole === 'PUMPA') {
+        // PUMPA users can only access their own certificates
+        if (fuelEntry.operatorId !== session.user.id) {
+          return errorResponse('Access denied', 403)
+        }
+      } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
+        // OPERATOR/VIEWER can only access certificates from their warehouses
+        const hasAccess = userWarehouses.some((w: any) => w.id === fuelEntry.warehouseId)
+        if (!hasAccess) {
+          return errorResponse('Access denied', 403)
+        }
+      }
+      // ADMIN and SUPER_ADMIN can access all certificates
+    }
+    // If no fuel entry found, allow download (orphaned file or shared certificate)
 
     // Try multiple possible locations
     const possiblePaths = [

@@ -11,8 +11,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
     const { searchParams } = new URL(req.url)
 
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20') || 20), 200)
     const search = searchParams.get('search') || ''
     const role = searchParams.get('role') || ''
     const isActive = searchParams.get('isActive')
@@ -117,6 +117,28 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     }
     if (role === 'PUMPA' && stationIds.length === 0) {
       return errorResponse('At least one station must be assigned for PUMPA role', 400)
+    }
+
+    // Validate that all warehouse IDs exist
+    if (warehouseIds.length > 0) {
+      const existingWarehouses = await prisma.warehouse.findMany({
+        where: { id: { in: warehouseIds } },
+        select: { id: true }
+      })
+      if (existingWarehouses.length !== warehouseIds.length) {
+        return errorResponse('One or more warehouses do not exist', 400)
+      }
+    }
+
+    // Validate that all station IDs exist
+    if (stationIds.length > 0) {
+      const existingStations = await prisma.station.findMany({
+        where: { id: { in: stationIds } },
+        select: { id: true }
+      })
+      if (existingStations.length !== stationIds.length) {
+        return errorResponse('One or more stations do not exist', 400)
+      }
     }
 
     // Check if email already exists

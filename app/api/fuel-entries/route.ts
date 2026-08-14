@@ -12,8 +12,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
     const { searchParams } = new URL(req.url)
 
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50') || 50), 500)
     const warehouseId = searchParams.get('warehouseId')
     const stationId = searchParams.get('stationId')
     const clientId = searchParams.get('clientId')
@@ -200,7 +200,14 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const isHigherQuality = formData.get('isHigherQuality') === 'true'
     const improvedCharacteristics = formData.getAll('improvedCharacteristics[]') as string[]
     const additiveDetailsStr = formData.get('additiveDetails') as string | null
-    const additiveDetails = additiveDetailsStr ? JSON.parse(additiveDetailsStr) : null
+    let additiveDetails = null
+    if (additiveDetailsStr) {
+      try {
+        additiveDetails = JSON.parse(additiveDetailsStr)
+      } catch {
+        return errorResponse('Invalid additiveDetails format', 400)
+      }
+    }
     const countryOfOrigin = formData.get('countryOfOrigin') as string | null
     const laboratoryName = formData.get('laboratoryName') as string | null
     const labAccreditationNumber = formData.get('labAccreditationNumber') as string | null

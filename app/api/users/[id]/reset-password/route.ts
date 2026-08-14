@@ -16,8 +16,18 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('New password is required', 400)
     }
 
+    // Password complexity validation (same rules as user creation)
     if (newPassword.length < 8) {
-      return errorResponse('Password must be at least 8 characters', 400)
+      return errorResponse('Lozinka mora imati najmanje 8 karaktera', 400)
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return errorResponse('Lozinka mora sadržavati najmanje jedno veliko slovo', 400)
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      return errorResponse('Lozinka mora sadržavati najmanje jedno malo slovo', 400)
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return errorResponse('Lozinka mora sadržavati najmanje jedan broj', 400)
     }
 
     // Check if user exists

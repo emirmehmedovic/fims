@@ -58,16 +58,17 @@ export function validateCSRF(req: NextRequest): { valid: boolean; error?: string
     }
   }
 
-  // No origin or referer header - reject for safety
-  // (Exception: Some API clients don't send these headers)
-  // For production, consider requiring a custom header like X-Requested-With: XMLHttpRequest
-  const userAgent = req.headers.get('user-agent') || ''
-  const isApiClient = userAgent.includes('axios') ||
-                      userAgent.includes('fetch') ||
-                      userAgent.includes('node-fetch')
+  // No origin or referer header
+  // Allow if X-Requested-With header is present (XMLHttpRequest / fetch with custom headers)
+  // This is safe because custom headers require CORS preflight which validates origin
+  const xRequestedWith = req.headers.get('x-requested-with')
+  if (xRequestedWith === 'XMLHttpRequest' || xRequestedWith === 'fetch') {
+    return { valid: true }
+  }
 
-  if (isApiClient && process.env.NODE_ENV === 'development') {
-    // Allow in development for API testing
+  // Check for Authorization header (API key / Bearer token requests are inherently CSRF-safe)
+  const authorization = req.headers.get('authorization')
+  if (authorization && authorization.startsWith('Bearer ')) {
     return { valid: true }
   }
 
