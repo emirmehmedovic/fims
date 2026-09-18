@@ -199,7 +199,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     }
   }
 
-  // Direct print function - opens PDF in hidden iframe and triggers print dialog
+  // Direct print function - opens PDF in new window and triggers print dialog
   const handlePrintPdf = async () => {
     if (!details) return
 
@@ -214,28 +214,29 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
 
-      // Create hidden iframe for printing
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
-      iframe.style.width = '0'
-      iframe.style.height = '0'
-      iframe.style.border = 'none'
-      iframe.src = url
-
-      document.body.appendChild(iframe)
-
-      iframe.onload = () => {
+      // Open PDF in new window and trigger print
+      const printWindow = window.open(url, '_blank')
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print()
+        }
+        // Fallback: if onload doesn't fire (some browsers), try after delay
         setTimeout(() => {
-          iframe.contentWindow?.print()
-          // Cleanup after print dialog closes
-          setTimeout(() => {
-            document.body.removeChild(iframe)
-            window.URL.revokeObjectURL(url)
-          }, 1000)
-        }, 500)
+          try {
+            printWindow.print()
+          } catch {
+            // Print may have already been triggered
+          }
+        }, 1000)
+      } else {
+        // Popup blocked - fallback to download
+        alert('Popup je blokiran. Molimo dozvolite popup-e ili koristite dugme za preuzimanje.')
       }
+
+      // Cleanup blob URL after some time
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url)
+      }, 60000)
     } catch (error) {
       console.error('Error printing PDF:', error)
       alert('Greška pri printanju PDF-a')
@@ -259,28 +260,29 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
 
-      // Create hidden iframe for printing
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
-      iframe.style.width = '0'
-      iframe.style.height = '0'
-      iframe.style.border = 'none'
-      iframe.src = url
-
-      document.body.appendChild(iframe)
-
-      iframe.onload = () => {
+      // Open PDF in new window and trigger print
+      const printWindow = window.open(url, '_blank')
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print()
+        }
+        // Fallback: if onload doesn't fire (some browsers), try after delay
         setTimeout(() => {
-          iframe.contentWindow?.print()
-          // Cleanup after print dialog closes
-          setTimeout(() => {
-            document.body.removeChild(iframe)
-            window.URL.revokeObjectURL(url)
-          }, 1000)
-        }, 500)
+          try {
+            printWindow.print()
+          } catch {
+            // Print may have already been triggered
+          }
+        }, 1000)
+      } else {
+        // Popup blocked - fallback to download
+        alert('Popup je blokiran. Molimo dozvolite popup-e ili koristite dugme za preuzimanje.')
       }
+
+      // Cleanup blob URL after some time
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url)
+      }, 60000)
     } catch (error) {
       console.error('Error printing additive PDF:', error)
       alert('Greška pri printanju izjave o aditiviranju')
