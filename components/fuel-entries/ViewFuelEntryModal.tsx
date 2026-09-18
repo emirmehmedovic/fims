@@ -77,6 +77,31 @@ interface FuelEntryDetail {
     name: string
     code: string | null
   } | null
+  station?: {
+    id: string
+    name: string
+    code: string
+    address: string
+  } | null
+  receiptRecord?: {
+    id: string
+    tankMeasurements: any[]
+    announcedQuantity: number | null
+    dischargedQuantity: number | null
+    differenceQuantity: number | null
+    meterReading: number | null
+    deliveryNoteQuantity: number | null
+    finalDifference: number | null
+    hasDeliveryNote: boolean
+    hasQualityCertificate: boolean
+    hasComplianceDeclaration: boolean
+    isWaterMeasured: boolean
+    hasWaterInTank: boolean
+    isVisualInspectionDone: boolean
+    hasAdditives: boolean
+    isLastUnload: boolean
+    isTankCheckedAfterLastUnload: boolean
+  } | null
   createdAt: string
   updatedAt: string
 }
@@ -93,6 +118,8 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   const [printingPdf, setPrintingPdf] = useState(false)
   const [exportingAdditivePdf, setExportingAdditivePdf] = useState(false)
   const [printingAdditivePdf, setPrintingAdditivePdf] = useState(false)
+  const [exportingZapisnikPdf, setExportingZapisnikPdf] = useState(false)
+  const [printingZapisnikPdf, setPrintingZapisnikPdf] = useState(false)
 
   useEffect(() => {
     fetchDetails()
@@ -199,7 +226,55 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     }
   }
 
-  // Direct print function - opens PDF in new window and triggers print dialog
+  // Helper function to print PDF using hidden iframe (no popup blocker issues)
+  const printPdfWithIframe = (blob: Blob): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const url = window.URL.createObjectURL(blob)
+
+      // Create hidden iframe
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = 'none'
+      iframe.src = url
+
+      iframe.onload = () => {
+        try {
+          // Small delay to ensure PDF is fully loaded
+          setTimeout(() => {
+            try {
+              iframe.contentWindow?.focus()
+              iframe.contentWindow?.print()
+            } catch (e) {
+              // Fallback: if iframe print fails, try opening in new tab
+              window.open(url, '_blank')
+            }
+
+            // Cleanup after print dialog closes (or after timeout)
+            setTimeout(() => {
+              document.body.removeChild(iframe)
+              window.URL.revokeObjectURL(url)
+              resolve()
+            }, 1000)
+          }, 500)
+        } catch (error) {
+          reject(error)
+        }
+      }
+
+      iframe.onerror = () => {
+        window.URL.revokeObjectURL(url)
+        reject(new Error('Failed to load PDF in iframe'))
+      }
+
+      document.body.appendChild(iframe)
+    })
+  }
+
+  // Direct print function - uses hidden iframe (no popup blockers)
   const handlePrintPdf = async () => {
     if (!details) return
 
@@ -212,31 +287,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       }
 
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-
-      // Open PDF in new window and trigger print
-      const printWindow = window.open(url, '_blank')
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print()
-        }
-        // Fallback: if onload doesn't fire (some browsers), try after delay
-        setTimeout(() => {
-          try {
-            printWindow.print()
-          } catch {
-            // Print may have already been triggered
-          }
-        }, 1000)
-      } else {
-        // Popup blocked - fallback to download
-        alert('Popup je blokiran. Molimo dozvolite popup-e ili koristite dugme za preuzimanje.')
-      }
-
-      // Cleanup blob URL after some time
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url)
-      }, 60000)
+      await printPdfWithIframe(blob)
     } catch (error) {
       console.error('Error printing PDF:', error)
       alert('Greška pri printanju PDF-a')
@@ -258,36 +309,66 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       }
 
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-
-      // Open PDF in new window and trigger print
-      const printWindow = window.open(url, '_blank')
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print()
-        }
-        // Fallback: if onload doesn't fire (some browsers), try after delay
-        setTimeout(() => {
-          try {
-            printWindow.print()
-          } catch {
-            // Print may have already been triggered
-          }
-        }, 1000)
-      } else {
-        // Popup blocked - fallback to download
-        alert('Popup je blokiran. Molimo dozvolite popup-e ili koristite dugme za preuzimanje.')
-      }
-
-      // Cleanup blob URL after some time
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url)
-      }, 60000)
+      await printPdfWithIframe(blob)
     } catch (error) {
       console.error('Error printing additive PDF:', error)
       alert('Greška pri printanju izjave o aditiviranju')
     } finally {
       setPrintingAdditivePdf(false)
+    }
+  }
+
+  // Zapisnik o prijemu goriva PDF handlers
+  const handleExportZapisnikPdf = async () => {
+    if (!details || !details.receiptRecord) return
+
+    setExportingZapisnikPdf(true)
+    try {
+      const response = await fetch(`/api/exports/receipt-record/${details.id}`)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to generate receipt record PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const declarationNum = details.declarationNumber || String(details.registrationNumber)
+      const sanitizedDeclarationNum = declarationNum.replace(/\//g, '-')
+      a.href = url
+      a.download = `Zapisnik_${sanitizedDeclarationNum}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error exporting receipt record PDF:', error)
+      alert('Greška pri exportu zapisnika o prijemu goriva')
+    } finally {
+      setExportingZapisnikPdf(false)
+    }
+  }
+
+  const handlePrintZapisnikPdf = async () => {
+    if (!details || !details.receiptRecord) return
+
+    setPrintingZapisnikPdf(true)
+    try {
+      const response = await fetch(`/api/exports/receipt-record/${details.id}`)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to generate receipt record PDF')
+      }
+
+      const blob = await response.blob()
+      await printPdfWithIframe(blob)
+    } catch (error) {
+      console.error('Error printing receipt record PDF:', error)
+      alert('Greška pri printanju zapisnika o prijemu goriva')
+    } finally {
+      setPrintingZapisnikPdf(false)
     }
   }
 
@@ -494,6 +575,113 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                 </div>
               </Section>
             )}
+
+            {/* Zapisnik o prijemu goriva - Receipt Record */}
+            {details.receiptRecord && (
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 p-5">
+                <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <FileCheck className="w-5 h-5" />
+                  Zapisnik o prijemu goriva
+                </h3>
+
+                {/* Tank Measurements Summary */}
+                {details.receiptRecord.tankMeasurements && details.receiptRecord.tankMeasurements.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-indigo-600 uppercase mb-2">Mjerenja rezervoara</p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-indigo-100">
+                            <th className="p-2 text-left">Rezervoar</th>
+                            <th className="p-2 text-right">Početno (L)</th>
+                            <th className="p-2 text-right">Završno (L)</th>
+                            <th className="p-2 text-right">Istočeno (L)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(details.receiptRecord.tankMeasurements as any[]).map((m: any, i: number) => (
+                            <tr key={i} className="border-b border-indigo-100">
+                              <td className="p-2 font-semibold">{m.tankNumber}</td>
+                              <td className="p-2 text-right">{m.initialLiters15 || '-'}</td>
+                              <td className="p-2 text-right">{m.finalLiters15 || '-'}</td>
+                              <td className="p-2 text-right font-semibold text-indigo-700">
+                                {m.initialLiters15 && m.finalLiters15
+                                  ? (parseInt(m.finalLiters15) - parseInt(m.initialLiters15)).toLocaleString()
+                                  : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Calculations */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs text-indigo-500 mb-1">Najavljena količina</p>
+                    <p className="font-bold text-indigo-900">
+                      {details.receiptRecord.announcedQuantity?.toLocaleString() || '-'} L
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs text-indigo-500 mb-1">Količina istočenog</p>
+                    <p className="font-bold text-indigo-900">
+                      {details.receiptRecord.dischargedQuantity?.toLocaleString() || '-'} L
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded-xl border ${
+                    (details.receiptRecord.finalDifference || 0) >= 0
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-red-50 border-red-200'
+                  }`}>
+                    <p className="text-xs text-slate-500 mb-1">
+                      Konačni {(details.receiptRecord.finalDifference || 0) >= 0 ? 'višak' : 'manjak'}
+                    </p>
+                    <p className={`font-bold ${
+                      (details.receiptRecord.finalDifference || 0) >= 0
+                        ? 'text-green-700'
+                        : 'text-red-700'
+                    }`}>
+                      {Math.abs(details.receiptRecord.finalDifference || 0).toLocaleString()} L
+                    </p>
+                  </div>
+                </div>
+
+                {/* Documentation Checklist */}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'hasDeliveryNote', label: 'Otpremnica' },
+                    { key: 'hasQualityCertificate', label: 'Certifikat' },
+                    { key: 'hasComplianceDeclaration', label: 'Izjava' },
+                    { key: 'isWaterMeasured', label: 'Voda mjerena' },
+                    { key: 'hasWaterInTank', label: 'Voda u cisterni', warning: true },
+                    { key: 'isVisualInspectionDone', label: 'Vizuelno' },
+                    { key: 'hasAdditives', label: 'Aditiv' },
+                    { key: 'isLastUnload', label: 'Zadnji' },
+                    { key: 'isTankCheckedAfterLastUnload', label: 'Provjera' }
+                  ].map(item => {
+                    const isChecked = (details.receiptRecord as any)[item.key]
+                    const isWarning = (item as any).warning && isChecked
+                    return (
+                      <span
+                        key={item.key}
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          isWarning
+                            ? 'bg-red-100 text-red-700'
+                            : isChecked
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {isChecked ? '✓' : '✗'} {item.label}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -561,6 +749,41 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                     title="Direktno printanje"
                   >
                     {printingAdditivePdf ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <Printer className="w-5 h-5 group-hover:animate-pulse" />
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Zapisnik o prijemu goriva buttons */}
+              {details.receiptRecord && (
+                <div className="flex">
+                  <button
+                    onClick={handleExportZapisnikPdf}
+                    disabled={exportingZapisnikPdf}
+                    className="px-4 py-3 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white font-semibold rounded-l-2xl hover:from-indigo-500 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
+                  >
+                    {exportingZapisnikPdf ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        Generiranje...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-5 h-5" />
+                        Zapisnik o prijemu
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handlePrintZapisnikPdf}
+                    disabled={printingZapisnikPdf}
+                    className="group px-3 py-3 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white font-semibold rounded-r-2xl hover:from-indigo-600 hover:to-indigo-700 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l-2 border-indigo-400/50 transition-all duration-200"
+                    title="Direktno printanje"
+                  >
+                    {printingZapisnikPdf ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                     ) : (
                       <Printer className="w-5 h-5 group-hover:animate-pulse" />
