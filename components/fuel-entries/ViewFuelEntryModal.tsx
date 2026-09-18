@@ -7,6 +7,7 @@ import {
   X,
   FileText,
   Download,
+  Printer,
   Building2,
   Droplets,
   Calendar,
@@ -89,7 +90,9 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   const [details, setDetails] = useState<FuelEntryDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exportingPdf, setExportingPdf] = useState(false)
+  const [printingPdf, setPrintingPdf] = useState(false)
   const [exportingAdditivePdf, setExportingAdditivePdf] = useState(false)
+  const [printingAdditivePdf, setPrintingAdditivePdf] = useState(false)
 
   useEffect(() => {
     fetchDetails()
@@ -193,6 +196,96 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       alert('Greška pri generiranju izjave o aditiviranju')
     } finally {
       setExportingAdditivePdf(false)
+    }
+  }
+
+  // Direct print function - opens PDF in hidden iframe and triggers print dialog
+  const handlePrintPdf = async () => {
+    if (!details) return
+
+    setPrintingPdf(true)
+    try {
+      const response = await fetch(`/api/exports/pdf/${details.id}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      // Create hidden iframe for printing
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = 'none'
+      iframe.src = url
+
+      document.body.appendChild(iframe)
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print()
+          // Cleanup after print dialog closes
+          setTimeout(() => {
+            document.body.removeChild(iframe)
+            window.URL.revokeObjectURL(url)
+          }, 1000)
+        }, 500)
+      }
+    } catch (error) {
+      console.error('Error printing PDF:', error)
+      alert('Greška pri printanju PDF-a')
+    } finally {
+      setPrintingPdf(false)
+    }
+  }
+
+  const handlePrintAdditivePdf = async () => {
+    if (!details) return
+
+    setPrintingAdditivePdf(true)
+    try {
+      const response = await fetch(`/api/exports/additive-declaration/${details.id}`)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to generate additive declaration PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      // Create hidden iframe for printing
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = 'none'
+      iframe.src = url
+
+      document.body.appendChild(iframe)
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print()
+          // Cleanup after print dialog closes
+          setTimeout(() => {
+            document.body.removeChild(iframe)
+            window.URL.revokeObjectURL(url)
+          }, 1000)
+        }, 500)
+      }
+    } catch (error) {
+      console.error('Error printing additive PDF:', error)
+      alert('Greška pri printanju izjave o aditiviranju')
+    } finally {
+      setPrintingAdditivePdf(false)
     }
   }
 
@@ -405,42 +498,73 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
         {/* Footer */}
         <div className="relative z-10 px-8 py-6 border-t border-dark-100 bg-dark-50/50">
           <div className="flex justify-between items-center">
-            <div className="flex gap-3">
-              <button
-                onClick={handleExportPdf}
-                disabled={exportingPdf}
-                className="px-6 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-semibold rounded-2xl hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
-              >
-                {exportingPdf ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    Generiranje PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    Preuzmi Izjavu
-                  </>
-                )}
-              </button>
-              {details.additiveDetails && details.additiveDetails.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {/* Izjava buttons */}
+              <div className="flex">
                 <button
-                  onClick={handleExportAdditivePdf}
-                  disabled={exportingAdditivePdf}
-                  className="px-6 py-3 bg-gradient-to-br from-primary-600 to-primary-700 text-white font-semibold rounded-2xl hover:from-primary-500 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
+                  onClick={handleExportPdf}
+                  disabled={exportingPdf}
+                  className="px-4 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-semibold rounded-l-2xl hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
                 >
-                  {exportingAdditivePdf ? (
+                  {exportingPdf ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                      Generiranje PDF...
+                      Generiranje...
                     </>
                   ) : (
                     <>
                       <Download className="w-5 h-5" />
-                      Izjava o aditiviranju
+                      Preuzmi Izjavu
                     </>
                   )}
                 </button>
+                <button
+                  onClick={handlePrintPdf}
+                  disabled={printingPdf}
+                  className="px-3 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 text-white font-semibold rounded-r-2xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l border-emerald-500/30 transition-all"
+                  title="Direktan print"
+                >
+                  {printingPdf ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <Printer className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Aditiviranje buttons */}
+              {details.additiveDetails && details.additiveDetails.length > 0 && (
+                <div className="flex">
+                  <button
+                    onClick={handleExportAdditivePdf}
+                    disabled={exportingAdditivePdf}
+                    className="px-4 py-3 bg-gradient-to-br from-primary-600 to-primary-700 text-white font-semibold rounded-l-2xl hover:from-primary-500 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[var(--shadow-soft)] transition-all"
+                  >
+                    {exportingAdditivePdf ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        Generiranje...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-5 h-5" />
+                        Izjava o aditiviranju
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handlePrintAdditivePdf}
+                    disabled={printingAdditivePdf}
+                    className="px-3 py-3 bg-gradient-to-br from-primary-700 to-primary-800 text-white font-semibold rounded-r-2xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l border-primary-500/30 transition-all"
+                    title="Direktan print"
+                  >
+                    {printingAdditivePdf ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <Printer className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               )}
             </div>
             <button
