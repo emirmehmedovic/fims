@@ -4,13 +4,24 @@ import { withAuth } from "@/lib/api/withAuth"
 import { successResponse, errorResponse } from "@/lib/api/response"
 
 // GET /api/fuel-entries/last - Get the last fuel entry created by the current user
+// Optional query param: productName - filter by specific product type
 export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
+    const { searchParams } = new URL(req.url)
+    const productName = searchParams.get('productName')
+
+    const where: any = {
+      operatorId: session.user.id,
+      isActive: true
+    }
+
+    // Filter by product name if provided
+    if (productName) {
+      where.productName = productName
+    }
+
     const lastEntry = await prisma.fuelEntry.findFirst({
-      where: {
-        operatorId: session.user.id,
-        isActive: true
-      },
+      where,
       orderBy: {
         createdAt: 'desc'
       },

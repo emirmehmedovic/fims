@@ -22,7 +22,8 @@ import {
   Users,
   Fuel,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
@@ -160,6 +161,9 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   // Import from last entry state
   const [importedFromLast, setImportedFromLast] = useState(false)
   const [importingLastEntry, setImportingLastEntry] = useState(false)
+  const [showProductMenu, setShowProductMenu] = useState(false)
+  const [userProducts, setUserProducts] = useState<string[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
 
   // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
   useEffect(() => {
@@ -167,6 +171,20 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       setStationId('')
     }
   }, [selectedClient])
+
+  // Close product menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showProductMenu) {
+        const target = event.target as HTMLElement
+        if (!target.closest('.product-menu-container')) {
+          setShowProductMenu(false)
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showProductMenu])
 
   useEffect(() => {
     fetchSuppliers()
@@ -373,15 +391,46 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     }
   }
 
-  // Import data from last fuel entry created by this user
-  const importFromLastEntry = async () => {
-    setImportingLastEntry(true)
+  // Fetch user's unique product names for the dropdown
+  const fetchUserProducts = async () => {
+    setLoadingProducts(true)
     try {
-      const res = await fetch('/api/fuel-entries/last')
+      const res = await fetch('/api/fuel-entries/products')
+      const data = await res.json()
+      if (data.success) {
+        setUserProducts(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching user products:', error)
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
+
+  // Toggle product menu and fetch products if needed
+  const handleShowProductMenu = () => {
+    if (!showProductMenu && userProducts.length === 0) {
+      fetchUserProducts()
+    }
+    setShowProductMenu(!showProductMenu)
+  }
+
+  // Import data from last fuel entry created by this user
+  // Optional: filter by productName to get last entry for specific fuel type
+  const importFromLastEntry = async (productNameFilter?: string) => {
+    setImportingLastEntry(true)
+    setShowProductMenu(false)
+    try {
+      const url = productNameFilter
+        ? `/api/fuel-entries/last?productName=${encodeURIComponent(productNameFilter)}`
+        : '/api/fuel-entries/last'
+      const res = await fetch(url)
       const data = await res.json()
 
       if (!data.success) {
-        toast.error('Nemate prethodnih prijava za uvoz')
+        toast.error(productNameFilter
+          ? `Nemate prethodnih prijava za ${productNameFilter}`
+          : 'Nemate prethodnih prijava za uvoz')
         return
       }
 
@@ -707,26 +756,72 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
         {/* Form */}
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
-          {/* Import from last entry button */}
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={importFromLastEntry}
-              disabled={importingLastEntry}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {importingLastEntry ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                  Uvozim...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Uvezi podatke s prošle prijave
-                </>
-              )}
-            </button>
+          {/* Import from last entry button with fuel type dropdown */}
+          <div className="mb-6 relative product-menu-container">
+            <div className="inline-flex">
+              {/* Main import button */}
+              <button
+                type="button"
+                onClick={() => importFromLastEntry()}
+                disabled={importingLastEntry}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-l-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {importingLastEntry ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    Uvozim...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Uvezi s prošle prijave
+                  </>
+                )}
+              </button>
+              {/* Dropdown toggle for fuel type */}
+              <button
+                type="button"
+                onClick={handleShowProductMenu}
+                disabled={importingLastEntry}
+                className="inline-flex items-center px-2.5 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-l-0 border-blue-200 rounded-r-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Uvezi po tipu goriva"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${showProductMenu ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {/* Product dropdown menu */}
+            {showProductMenu && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500 uppercase">Uvezi po tipu goriva</p>
+                </div>
+                {loadingProducts ? (
+                  <div className="px-4 py-6 text-center">
+                    <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-sm text-slate-500 mt-2">Učitavam...</p>
+                  </div>
+                ) : userProducts.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-slate-500 text-sm">
+                    Nemate prethodnih prijava
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto">
+                    {userProducts.map((product) => (
+                      <button
+                        key={product}
+                        type="button"
+                        onClick={() => importFromLastEntry(product)}
+                        className="w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2 border-b border-slate-100 last:border-b-0"
+                      >
+                        <Fuel className="w-4 h-4 text-slate-400" />
+                        <span className="font-medium">{product}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Warning message after import */}
