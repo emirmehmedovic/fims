@@ -226,57 +226,19 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
     }
   }
 
-  // Helper function to print PDF using hidden iframe (no popup blocker issues)
-  const printPdfWithIframe = (blob: Blob): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const url = window.URL.createObjectURL(blob)
-
-      // Create hidden iframe
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
-      iframe.style.width = '0'
-      iframe.style.height = '0'
-      iframe.style.border = 'none'
-      iframe.src = url
-
-      iframe.onload = () => {
-        try {
-          // Small delay to ensure PDF is fully loaded
-          setTimeout(() => {
-            try {
-              iframe.contentWindow?.focus()
-              iframe.contentWindow?.print()
-            } catch (e) {
-              // Fallback: if iframe print fails, try opening in new tab
-              window.open(url, '_blank')
-            }
-
-            // Cleanup after print dialog closes (or after timeout)
-            setTimeout(() => {
-              document.body.removeChild(iframe)
-              window.URL.revokeObjectURL(url)
-              resolve()
-            }, 1000)
-          }, 500)
-        } catch (error) {
-          reject(error)
-        }
-      }
-
-      iframe.onerror = () => {
-        window.URL.revokeObjectURL(url)
-        reject(new Error('Failed to load PDF in iframe'))
-      }
-
-      document.body.appendChild(iframe)
-    })
-  }
-
-  // Direct print function - uses hidden iframe (no popup blockers)
+  // Direct print function - opens window synchronously to avoid popup blocker
   const handlePrintPdf = async () => {
     if (!details) return
+
+    // Open window immediately (synchronously) to avoid popup blocker
+    const printWindow = window.open('about:blank', '_blank')
+    if (!printWindow) {
+      alert('Molimo dozvolite popup prozore za ovu stranicu kako biste mogli printati.')
+      return
+    }
+
+    // Show loading message in the new window
+    printWindow.document.write('<html><body><h2 style="font-family: Arial; text-align: center; margin-top: 50px;">Učitavanje dokumenta...</h2></body></html>')
 
     setPrintingPdf(true)
     try {
@@ -287,9 +249,27 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       }
 
       const blob = await response.blob()
-      await printPdfWithIframe(blob)
+      const url = window.URL.createObjectURL(blob)
+
+      // Navigate the already-open window to the PDF
+      printWindow.location.href = url
+
+      // Wait for PDF to load, then trigger print
+      setTimeout(() => {
+        try {
+          printWindow.focus()
+          printWindow.print()
+        } catch (e) {
+          // Print may fail silently, that's ok
+        }
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+        }, 60000)
+      }, 1500)
     } catch (error) {
       console.error('Error printing PDF:', error)
+      printWindow.close()
       alert('Greška pri printanju PDF-a')
     } finally {
       setPrintingPdf(false)
@@ -298,6 +278,15 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
 
   const handlePrintAdditivePdf = async () => {
     if (!details) return
+
+    // Open window immediately (synchronously) to avoid popup blocker
+    const printWindow = window.open('about:blank', '_blank')
+    if (!printWindow) {
+      alert('Molimo dozvolite popup prozore za ovu stranicu kako biste mogli printati.')
+      return
+    }
+
+    printWindow.document.write('<html><body><h2 style="font-family: Arial; text-align: center; margin-top: 50px;">Učitavanje dokumenta...</h2></body></html>')
 
     setPrintingAdditivePdf(true)
     try {
@@ -309,9 +298,24 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       }
 
       const blob = await response.blob()
-      await printPdfWithIframe(blob)
+      const url = window.URL.createObjectURL(blob)
+
+      printWindow.location.href = url
+
+      setTimeout(() => {
+        try {
+          printWindow.focus()
+          printWindow.print()
+        } catch (e) {
+          // Print may fail silently
+        }
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+        }, 60000)
+      }, 1500)
     } catch (error) {
       console.error('Error printing additive PDF:', error)
+      printWindow.close()
       alert('Greška pri printanju izjave o aditiviranju')
     } finally {
       setPrintingAdditivePdf(false)
@@ -353,6 +357,15 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   const handlePrintZapisnikPdf = async () => {
     if (!details || !details.receiptRecord) return
 
+    // Open window immediately (synchronously) to avoid popup blocker
+    const printWindow = window.open('about:blank', '_blank')
+    if (!printWindow) {
+      alert('Molimo dozvolite popup prozore za ovu stranicu kako biste mogli printati.')
+      return
+    }
+
+    printWindow.document.write('<html><body><h2 style="font-family: Arial; text-align: center; margin-top: 50px;">Učitavanje dokumenta...</h2></body></html>')
+
     setPrintingZapisnikPdf(true)
     try {
       const response = await fetch(`/api/exports/receipt-record/${details.id}`)
@@ -363,9 +376,24 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
       }
 
       const blob = await response.blob()
-      await printPdfWithIframe(blob)
+      const url = window.URL.createObjectURL(blob)
+
+      printWindow.location.href = url
+
+      setTimeout(() => {
+        try {
+          printWindow.focus()
+          printWindow.print()
+        } catch (e) {
+          // Print may fail silently
+        }
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+        }, 60000)
+      }, 1500)
     } catch (error) {
       console.error('Error printing receipt record PDF:', error)
+      printWindow.close()
       alert('Greška pri printanju zapisnika o prijemu goriva')
     } finally {
       setPrintingZapisnikPdf(false)
