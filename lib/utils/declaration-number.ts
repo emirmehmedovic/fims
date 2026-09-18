@@ -13,10 +13,11 @@ export async function generateDeclarationNumber(): Promise<string> {
 
   // Find the highest declaration number for the current year using numeric sorting
   // We use raw SQL to extract the numeric part and sort properly
+  // Note: Table name is "fuel_entries" and column is "declaration_number" (snake_case in DB)
   const result = await prisma.$queryRaw<{ max_num: number | null }[]>`
-    SELECT MAX(CAST(SPLIT_PART("declarationNumber", '/', 1) AS INTEGER)) as max_num
-    FROM "FuelEntry"
-    WHERE "declarationNumber" LIKE ${'%/' + yearSuffix}
+    SELECT MAX(CAST(SPLIT_PART("declaration_number", '/', 1) AS INTEGER)) as max_num
+    FROM "fuel_entries"
+    WHERE "declaration_number" LIKE ${'%/' + yearSuffix}
   `
 
   let nextNumber = 1
