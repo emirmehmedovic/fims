@@ -523,13 +523,13 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                 <button
                   onClick={handlePrintPdf}
                   disabled={printingPdf}
-                  className="px-3 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 text-white font-semibold rounded-r-2xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l border-emerald-500/30 transition-all"
-                  title="Direktan print"
+                  className="group px-3 py-3 bg-gradient-to-br from-emerald-800 to-emerald-900 text-white font-semibold rounded-r-2xl hover:from-emerald-600 hover:to-emerald-700 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l-2 border-emerald-400/50 transition-all duration-200"
+                  title="Direktno printanje"
                 >
                   {printingPdf ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                   ) : (
-                    <Printer className="w-5 h-5" />
+                    <Printer className="w-5 h-5 group-hover:animate-pulse" />
                   )}
                 </button>
               </div>
@@ -557,13 +557,13 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                   <button
                     onClick={handlePrintAdditivePdf}
                     disabled={printingAdditivePdf}
-                    className="px-3 py-3 bg-gradient-to-br from-primary-700 to-primary-800 text-white font-semibold rounded-r-2xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l border-primary-500/30 transition-all"
-                    title="Direktan print"
+                    className="group px-3 py-3 bg-gradient-to-br from-primary-800 to-primary-900 text-white font-semibold rounded-r-2xl hover:from-primary-600 hover:to-primary-700 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l-2 border-primary-400/50 transition-all duration-200"
+                    title="Direktno printanje"
                   >
                     {printingAdditivePdf ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                     ) : (
-                      <Printer className="w-5 h-5" />
+                      <Printer className="w-5 h-5 group-hover:animate-pulse" />
                     )}
                   </button>
                 </div>
