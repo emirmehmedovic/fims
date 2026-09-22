@@ -13,6 +13,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const search = searchParams.get('search') || ''
 
     // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = includeInactive ? {} : { isActive: true }
 
     // Add search filter
@@ -55,7 +56,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 export const POST = withAuth(async (req: NextRequest, context, session) => {
   try {
     const body = await req.json()
-    const { name, code, address, contactPerson, phone, email } = body
+    const { name, code, address, city, contactPerson, phone, email } = body
 
     if (!name) {
       return errorResponse('Name is required', 400)
@@ -83,6 +84,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         name,
         code,
         address,
+        city,
         contactPerson,
         phone,
         email

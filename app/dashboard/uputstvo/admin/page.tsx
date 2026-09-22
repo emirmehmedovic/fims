@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { LucideIcon } from 'lucide-react'
 import {
   Shield,
   Database,
@@ -552,7 +553,7 @@ export default function UputstvoAdminPage() {
 
 function Section({ title, icon: Icon, description, children }: {
   title: string
-  icon: any
+  icon: LucideIcon
   description: string
   children: React.ReactNode
 }) {
@@ -597,7 +598,7 @@ function Step({ number, title, children }: {
 }
 
 function MasterDataCard({ icon: Icon, title, description }: {
-  icon: any
+  icon: LucideIcon
   title: string
   description: string
 }) {
@@ -646,7 +647,7 @@ function RoleCard({ role, description, permissions, color }: {
 }
 
 function AdminTipCard({ icon: Icon, title, color, children }: {
-  icon: any
+  icon: LucideIcon
   title: string
   color: 'blue' | 'green' | 'amber' | 'purple' | 'red'
   children: React.ReactNode

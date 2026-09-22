@@ -7,8 +7,8 @@ export function successResponse<T>(data: T, status: number = 200) {
   }, { status })
 }
 
-export function errorResponse(error: string, status: number = 400, details?: any) {
-  const response: any = {
+export function errorResponse(error: string, status: number = 400, details?: unknown) {
+  const response: { success: false; error: string; details?: unknown } = {
     success: false,
     error
   }

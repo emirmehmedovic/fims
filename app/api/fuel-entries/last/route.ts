@@ -10,6 +10,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const { searchParams } = new URL(req.url)
     const productName = searchParams.get('productName')
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       operatorId: session.user.id,
       isActive: true

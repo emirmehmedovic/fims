@@ -331,8 +331,8 @@ export default function AutoSendPage() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (error: any) {
-      setResultMessage(error.message || 'Greška pri preuzimanju')
+    } catch (error) {
+      setResultMessage(error instanceof Error ? error.message : 'Greška pri preuzimanju')
     }
   }
 

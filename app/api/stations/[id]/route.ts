@@ -28,7 +28,7 @@ export const PATCH = withAuth(async (req: NextRequest, context) => {
   try {
     const { id } = await context.params
     const body = await req.json()
-    const { name, code, address, contactPerson, phone, email, isActive } = body
+    const { name, code, address, city, contactPerson, phone, email, isActive } = body
 
     const existing = await prisma.station.findUnique({
       where: { id }
@@ -54,6 +54,7 @@ export const PATCH = withAuth(async (req: NextRequest, context) => {
         ...(name !== undefined && { name }),
         ...(code !== undefined && { code }),
         ...(address !== undefined && { address }),
+        ...(city !== undefined && { city }),
         ...(contactPerson !== undefined && { contactPerson }),
         ...(phone !== undefined && { phone }),
         ...(email !== undefined && { email }),

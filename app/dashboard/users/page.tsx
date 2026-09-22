@@ -7,9 +7,32 @@ import UserTable from '@/components/users/UserTable'
 import CreateUserModal from '@/components/users/CreateUserModal'
 import EditUserModal from '@/components/users/EditUserModal'
 
+interface UserWarehouse {
+  id: string
+  name: string
+  code: string
+}
+
+interface UserStation {
+  id: string
+  name: string
+  code: string
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  isActive: boolean
+  lastLogin: string | null
+  warehouses: UserWarehouse[]
+  stations?: UserStation[]
+}
+
 export default function UsersPage() {
   const router = useRouter()
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -26,7 +49,7 @@ export default function UsersPage() {
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   const fetchUsers = async () => {
     try {
@@ -61,7 +84,7 @@ export default function UsersPage() {
     fetchUsers()
   }, [pagination.page, search, roleFilter, statusFilter])
 
-  const handleEdit = (user: any) => {
+  const handleEdit = (user: User) => {
     setSelectedUser(user)
     setShowEditModal(true)
   }

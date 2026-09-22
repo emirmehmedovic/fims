@@ -41,6 +41,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Check if item exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existing = await (model as any).findUnique({
       where: { id }
     })
@@ -51,6 +52,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
 
     // If name is being changed, check uniqueness
     if (name && name.trim() !== existing.name) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nameExists = await (model as any).findUnique({
         where: { name: name.trim() }
       })
@@ -61,6 +63,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Build update data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {}
     if (name !== undefined) updateData.name = name.trim()
     if (isActive !== undefined) updateData.isActive = isActive
@@ -82,6 +85,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
       if (address !== undefined) updateData.address = address || null
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const item = await (model as any).update({
       where: { id },
       data: updateData
@@ -112,6 +116,7 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Check if item exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existing = await (model as any).findUnique({
       where: { id }
     })
@@ -121,6 +126,7 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Soft delete (set isActive to false)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (model as any).update({
       where: { id },
       data: { isActive: false }

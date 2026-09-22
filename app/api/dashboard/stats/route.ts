@@ -11,6 +11,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const warehouseId = url.searchParams.get('warehouseId')
 
     // Build base filter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseWhere: any = {
       isActive: true
     }
@@ -18,7 +19,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // Check warehouse access for non-admin users
     let accessibleWarehouses: string[] = []
     if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      accessibleWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
+      accessibleWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
       baseWhere.warehouseId = { in: accessibleWarehouses }
     }
 

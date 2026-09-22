@@ -126,6 +126,22 @@ export const createAutoSendBatch = async ({
           address: true,
           accreditationNumber: true
         }
+      },
+      client: {
+        select: {
+          id: true,
+          name: true,
+          code: true
+        }
+      },
+      station: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          address: true,
+          city: true
+        }
       }
     },
     orderBy: { entryDate: 'asc' },
@@ -234,6 +250,22 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
           address: true,
           accreditationNumber: true
         }
+      },
+      client: {
+        select: {
+          id: true,
+          name: true,
+          code: true
+        }
+      },
+      station: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          address: true,
+          city: true
+        }
       }
     }
   })
@@ -250,13 +282,15 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
 
       try {
         // Use pre-fetched entries from global map
-        const orderedEntries = item.entryIds.map(entryId => globalEntryMap.get(entryId)).filter(Boolean)
+        const orderedEntries = item.entryIds
+          .map(entryId => globalEntryMap.get(entryId))
+          .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
         const totalQuantity = orderedEntries.reduce((sum, entry) => sum + (entry?.quantity || 0), 0)
 
         const attachments = []
         for (const entry of orderedEntries) {
           // Reuse browser instance
-          const pdfBuffer = await generateFuelEntryPDF(entry as any, item.includeCertificates, browser)
+          const pdfBuffer = await generateFuelEntryPDF(entry, item.includeCertificates, browser)
           attachments.push({
             filename: `Izjava_${entry?.registrationNumber}.pdf`,
             content: pdfBuffer,
@@ -299,10 +333,11 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
         where: { id: item.id },
         data: { status: 'SENT', sentAt: new Date(), errorMessage: null }
       })
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Slanje nije uspjelo'
       await prisma.autoSendBatchItem.update({
         where: { id: item.id },
-        data: { status: 'FAILED', errorMessage: error?.message || 'Slanje nije uspjelo' }
+        data: { status: 'FAILED', errorMessage }
       })
     }
   }

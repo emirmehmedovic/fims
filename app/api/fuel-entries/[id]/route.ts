@@ -13,6 +13,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     // OPTIMIZED: Build WHERE clause with authorization check
     const userRole = session.user.role
     const userWarehouses = session.user.warehouses || []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = { id }
 
     // Add access restrictions based on role
@@ -21,7 +22,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       where.operatorId = session.user.id
     } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
       // OPERATOR/VIEWER: check warehouse access
-      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
 
@@ -88,7 +89,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             code: true,
             address: true
           }
-        }
+        },
+        receiptRecord: true
       }
     })
 
@@ -113,6 +115,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     // OPTIMIZED: Build WHERE clause with authorization check
     const userRole = session.user.role
     const userWarehouses = session.user.warehouses || []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = { id }
 
     // Add access restrictions based on role
@@ -121,7 +124,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
       where.operatorId = session.user.id
     } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
       // OPERATOR/VIEWER: check warehouse access
-      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
 
@@ -167,6 +170,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const existingCertificatePath = formData.get('existingCertificatePath') as string | null
 
     // Build update data object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {}
 
     if (entryDate) updateData.entryDate = new Date(entryDate)
@@ -296,6 +300,7 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     // OPTIMIZED: Build WHERE clause with authorization check
     const userRole = session.user.role
     const userWarehouses = session.user.warehouses || []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = { id }
 
     // Add access restrictions based on role
@@ -303,7 +308,7 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
       // PUMPA users can only delete their own entries
       where.operatorId = session.user.id
     } else if (userRole === 'OPERATOR') {
-      const warehouseIds = userWarehouses.map((w: any) => w.id)
+      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       where.warehouseId = { in: warehouseIds }
     }
 

@@ -24,16 +24,20 @@ export const GET = withAuth(async (req: NextRequest, context) => {
         operator: { select: { id: true, name: true, email: true } },
         supplier: { select: { id: true, name: true, code: true } },
         transporter: { select: { id: true, name: true, code: true } },
-        laboratory: { select: { id: true, name: true, address: true, accreditationNumber: true } }
+        laboratory: { select: { id: true, name: true, address: true, accreditationNumber: true } },
+        client: { select: { id: true, name: true, code: true } },
+        station: { select: { id: true, name: true, code: true, address: true, city: true } }
       }
     })
 
     const entryMap = new Map(entries.map(entry => [entry.id, entry]))
-    const orderedEntries = item.entryIds.map(entryId => entryMap.get(entryId)).filter(Boolean)
+    const orderedEntries = item.entryIds
+      .map(entryId => entryMap.get(entryId))
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
 
     const mergedPdf = await PDFDocument.create()
     for (const entry of orderedEntries) {
-      const pdfBuffer = await generateFuelEntryPDF(entry as any, item.includeCertificates)
+      const pdfBuffer = await generateFuelEntryPDF(entry, item.includeCertificates)
       const pdf = await PDFDocument.load(pdfBuffer)
       const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices())
       pages.forEach(page => mergedPdf.addPage(page))

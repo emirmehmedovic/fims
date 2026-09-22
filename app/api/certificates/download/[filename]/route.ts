@@ -52,7 +52,7 @@ export const GET = withAuth(async (
         }
       } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
         // OPERATOR/VIEWER can only access certificates from their warehouses
-        const hasAccess = userWarehouses.some((w: any) => w.id === fuelEntry.warehouseId)
+        const hasAccess = userWarehouses.some((w: { id: string }) => w.id === fuelEntry.warehouseId)
         if (!hasAccess) {
           return errorResponse('Access denied', 403)
         }

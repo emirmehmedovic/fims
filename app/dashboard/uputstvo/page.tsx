@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
   Plus,
@@ -951,7 +952,7 @@ export default function UputstvoOperativnoPage() {
 interface SectionProps {
   id?: string
   title: string
-  icon: any
+  icon: LucideIcon
   description: string
   children: React.ReactNode
 }
@@ -1003,7 +1004,7 @@ function Step({ number, title, children }: {
 function FieldExample({ name, required, icon: Icon, example, children }: {
   name: string
   required?: boolean
-  icon: any
+  icon: LucideIcon
   example: string
   children: React.ReactNode
 }) {
@@ -1066,7 +1067,7 @@ function ExampleData({ good, goodNote, bad, badNote }: {
 }
 
 function InfoBox({ icon: Icon, type, children }: {
-  icon: any
+  icon: LucideIcon
   type: 'tip' | 'warning' | 'info'
   children: React.ReactNode
 }) {
@@ -1137,7 +1138,7 @@ function VideoPlaceholder({ title, duration, description }: {
 }
 
 function FeatureCard({ icon: Icon, title, description }: {
-  icon: any
+  icon: LucideIcon
   title: string
   description: string
 }) {
@@ -1224,7 +1225,7 @@ function SearchExample({ query, description }: { query: string; description: str
 
 function FilterExample({ name, icon: Icon, example }: {
   name: string
-  icon: any
+  icon: LucideIcon
   example: string
 }) {
   return (
@@ -1240,7 +1241,7 @@ function FilterExample({ name, icon: Icon, example }: {
 
 function RealWorldScenario({ title, icon: Icon, children }: {
   title: string
-  icon: any
+  icon: LucideIcon
   children: React.ReactNode
 }) {
   return (
@@ -1314,7 +1315,7 @@ function FAQItem({ question, answer, expanded, onToggle }: {
 }
 
 function TipCard({ icon: Icon, title, color, children }: {
-  icon: any
+  icon: LucideIcon
   title: string
   color: 'blue' | 'green' | 'amber' | 'purple'
   children: React.ReactNode

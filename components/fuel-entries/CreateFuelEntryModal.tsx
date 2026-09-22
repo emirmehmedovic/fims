@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import toast from 'react-hot-toast'
+import { LucideIcon } from 'lucide-react'
 import {
   X,
   Plus,
@@ -23,11 +24,15 @@ import {
   Fuel,
   Download,
   AlertTriangle,
-  ChevronDown
+  ChevronDown,
+  ClipboardList
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
 import CertificateSelector from '@/components/ui/CertificateSelector'
+import TankMeasurementsForm, { TankMeasurement } from './TankMeasurementsForm'
+import ReceiptCalculations from './ReceiptCalculations'
+import DocumentationChecklist, { DocumentationValues } from './DocumentationChecklist'
 
 interface Warehouse {
   id: string
@@ -70,7 +75,7 @@ interface Station {
   id: string
   name: string
   code: string
-  address: string
+  address: string | null
   isActive: boolean
 }
 
@@ -94,6 +99,13 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const { data: session } = useSession()
   const userRole = session?.user?.role
   const isPumpa = userRole === 'PUMPA'
+  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
+
+  // For ADMIN users - optional receipt record
+  const [includeReceiptRecord, setIncludeReceiptRecord] = useState(false)
+
+  // Show receipt record section if PUMPA (always) or ADMIN with option enabled
+  const showReceiptRecord = isPumpa || (isAdmin && includeReceiptRecord)
 
   const [loading, setLoading] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -164,6 +176,51 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [showProductMenu, setShowProductMenu] = useState(false)
   const [userProducts, setUserProducts] = useState<string[]>([])
   const [loadingProducts, setLoadingProducts] = useState(false)
+
+  // Receipt Record state (PUMPA only - Zapisnik o prijemu goriva)
+  const [tankMeasurements, setTankMeasurements] = useState<TankMeasurement[]>([
+    {
+      tankNumber: 'R1',
+      initialSonde: '',
+      finalSonde: '',
+      initialLetva: '',
+      finalLetva: '',
+      initialTemp: '',
+      finalTemp: '',
+      initialFactor: '',
+      finalFactor: '',
+      initialLiters15Sonde: '',
+      finalLiters15Sonde: '',
+      initialLiters15Letva: '',
+      finalLiters15Letva: ''
+    }
+  ])
+  const [announcedQuantity, setAnnouncedQuantity] = useState('')
+  const [meterReading, setMeterReading] = useState('')
+  const [deliveryNoteQuantity, setDeliveryNoteQuantity] = useState('')
+  const [documentation, setDocumentation] = useState<DocumentationValues>({
+    hasDeliveryNote: false,
+    hasQualityCertificate: false,
+    hasComplianceDeclaration: false,
+    isWaterMeasured: false,
+    hasWaterInTank: false,
+    isVisualInspectionDone: false,
+    hasAdditives: false,
+    isLastUnload: false,
+    isTankCheckedAfterLastUnload: false,
+    fuelFoundOnLastUnload: '',
+    hasWeighing: false,
+    weighingData: {
+      tara: '',
+      neto: '',
+      bruto: '',
+      specificWeight: '',
+      tempOnTanker: '',
+      litersWithCorrection: '',
+      deliveryNoteWeight: '',
+      weightDifference: ''
+    }
+  })
 
   // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
   useEffect(() => {
@@ -363,7 +420,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       const data = await res.json()
       if (data.success) {
         const suppliersList = data.data.data || data.data
-        const hifaPetrol = suppliersList.find((s: any) => s.code === '650')
+        const hifaPetrol = suppliersList.find((s: { id: string; code: string; name: string }) => s.code === '650')
         if (hifaPetrol) {
           setSupplierId(hifaPetrol.id)
           setSelectedSupplierName(`${hifaPetrol.name} (${hifaPetrol.code})`)
@@ -381,7 +438,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       const data = await res.json()
       if (data.success) {
         const warehousesList = data.data.data || data.data
-        const defaultWarehouse = warehousesList.find((w: any) => w.code === 'DEF-001')
+        const defaultWarehouse = warehousesList.find((w: { id: string; code: string }) => w.code === 'DEF-001')
         if (defaultWarehouse) {
           setWarehouseId(defaultWarehouse.id)
         }
@@ -704,6 +761,29 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         } else if (certificateSelection.type === 'existing' && certificateSelection.path) {
           formData.append('existingCertificatePath', certificateSelection.path)
         }
+      }
+
+      // Send receipt record data for PUMPA users or ADMIN with option enabled
+      if (showReceiptRecord) {
+        // Calculate discharged quantity (using Letva on 15°C as primary)
+        let dischargedQty = 0
+        for (const m of tankMeasurements) {
+          const initial = parseInt(m.initialLiters15Letva) || parseInt(m.initialLiters15Sonde) || 0
+          const final = parseInt(m.finalLiters15Letva) || parseInt(m.finalLiters15Sonde) || 0
+          dischargedQty += final - initial
+        }
+
+        const receiptRecordData = {
+          tankMeasurements: tankMeasurements.filter(m => m.tankNumber), // Only include tanks with numbers
+          announcedQuantity: parseInt(announcedQuantity) || null,
+          dischargedQuantity: dischargedQty || null,
+          differenceQuantity: (parseInt(announcedQuantity) || 0) - dischargedQty,
+          meterReading: parseInt(meterReading) || null,
+          deliveryNoteQuantity: parseInt(deliveryNoteQuantity) || null,
+          finalDifference: (parseInt(deliveryNoteQuantity) || 0) - dischargedQty,
+          ...documentation
+        }
+        formData.append('receiptRecord', JSON.stringify(receiptRecordData))
       }
 
       const res = await fetch('/api/fuel-entries', {
@@ -1225,8 +1305,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                   options={(() => {
                     // For PUMPA users, show only their assigned stations from session
                     if (isPumpa) {
-                      const userStations = (session?.user as any)?.stations || []
-                      return userStations.map((s: any) => ({
+                      const userStations = session?.user?.stations || []
+                      return userStations.map((s) => ({
                         id: s.id,
                         label: s.name,
                         sublabel: [s.code && `Šifra: ${s.code}`, s.address && `Adresa: ${s.address}`].filter(Boolean).join(' | ') || undefined
@@ -1247,16 +1327,16 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 {stationId && (
                   <div className="mt-2 p-3 bg-dark-50 rounded-xl text-sm space-y-1">
                     <p className="text-dark-600">
-                      <span className="font-semibold">Naziv:</span> {stations.find(s => s.id === stationId)?.name || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.name}
+                      <span className="font-semibold">Naziv:</span> {stations.find(s => s.id === stationId)?.name || session?.user?.stations?.find((s) => s.id === stationId)?.name}
                     </p>
-                    {(stations.find(s => s.id === stationId)?.code || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.code) && (
+                    {(stations.find(s => s.id === stationId)?.code || session?.user?.stations?.find((s) => s.id === stationId)?.code) && (
                       <p className="text-dark-600">
-                        <span className="font-semibold">Šifra:</span> {stations.find(s => s.id === stationId)?.code || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.code}
+                        <span className="font-semibold">Šifra:</span> {stations.find(s => s.id === stationId)?.code || session?.user?.stations?.find((s) => s.id === stationId)?.code}
                       </p>
                     )}
-                    {(stations.find(s => s.id === stationId)?.address || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.address) && (
+                    {(stations.find(s => s.id === stationId)?.address || session?.user?.stations?.find((s) => s.id === stationId)?.address) && (
                       <p className="text-dark-600">
-                        <span className="font-semibold">Adresa:</span> {stations.find(s => s.id === stationId)?.address || (session?.user as any)?.stations?.find((s: any) => s.id === stationId)?.address}
+                        <span className="font-semibold">Adresa:</span> {stations.find(s => s.id === stationId)?.address || session?.user?.stations?.find((s) => s.id === stationId)?.address}
                       </p>
                     )}
                   </div>
@@ -1339,6 +1419,62 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
               onChange={setCertificateSelection}
             />
           </FormSection>
+
+          {/* Zapisnik o prijemu goriva - Always for PUMPA, optional for ADMIN */}
+          {(isPumpa || isAdmin) && (
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-6 shadow-sm">
+              {/* Toggle for ADMIN users */}
+              {isAdmin && !isPumpa && (
+                <label className="flex items-center gap-3 mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeReceiptRecord}
+                    onChange={(e) => setIncludeReceiptRecord(e.target.checked)}
+                    className="w-5 h-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm font-semibold text-indigo-700">
+                    Dodaj zapisnik o prijemu goriva
+                  </span>
+                </label>
+              )}
+
+              {showReceiptRecord && (
+                <FormSection title="Zapisnik o prijemu goriva" icon={ClipboardList}>
+                  <div className="space-y-6">
+                    {/* Tank Measurements */}
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 mb-3">Mjerenja rezervoara</h4>
+                      <TankMeasurementsForm
+                        measurements={tankMeasurements}
+                        onChange={setTankMeasurements}
+                        productName={productName}
+                      />
+                    </div>
+
+                    {/* Calculations */}
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 mb-3">Količine i izračuni</h4>
+                      <ReceiptCalculations
+                        measurements={tankMeasurements}
+                        announcedQuantity={announcedQuantity}
+                        meterReading={meterReading}
+                        deliveryNoteQuantity={deliveryNoteQuantity}
+                        onAnnouncedQuantityChange={setAnnouncedQuantity}
+                        onMeterReadingChange={setMeterReading}
+                        onDeliveryNoteQuantityChange={setDeliveryNoteQuantity}
+                      />
+                    </div>
+
+                    {/* Documentation Checklist */}
+                    <DocumentationChecklist
+                      values={documentation}
+                      onChange={setDocumentation}
+                    />
+                  </div>
+                </FormSection>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Footer */}
@@ -1376,7 +1512,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   )
 }
 
-function FormSection({ title, icon: Icon, required, children }: { title: string; icon: any; required?: boolean; children: React.ReactNode }) {
+function FormSection({ title, icon: Icon, required, children }: { title: string; icon: LucideIcon; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="mb-6 bg-white rounded-2xl border border-dark-100 overflow-hidden">
       <div className="px-5 py-4 bg-dark-50 border-b border-dark-100 flex items-center gap-3">
@@ -1391,7 +1527,7 @@ function FormSection({ title, icon: Icon, required, children }: { title: string;
   )
 }
 
-function FormField({ label, required, icon: Icon, children }: { label: string; required?: boolean; icon?: any; children: React.ReactNode }) {
+function FormField({ label, required, icon: Icon, children }: { label: string; required?: boolean; icon?: LucideIcon; children: React.ReactNode }) {
   return (
     <div>
       <label className="flex items-center gap-2 text-sm font-semibold text-dark-600 mb-2">

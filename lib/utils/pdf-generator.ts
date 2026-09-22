@@ -1,15 +1,18 @@
-import puppeteer from 'puppeteer'
+import puppeteer, { Browser } from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium-min'
 import QRCode from 'qrcode'
 import { PDFDocument } from 'pdf-lib'
 import fs from 'fs/promises'
 import path from 'path'
-import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
+import { formatDateSarajevo } from '@/lib/utils/date'
+import { getDocumentLocation } from '@/lib/utils/pdf-helpers'
 
 // Detect if running on Vercel/serverless
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
+// Interface for fuel entry data used in PDF generation
+// Compatible with Prisma query results (includes optional id fields on relations)
 interface FuelEntryData {
   id: string
   registrationNumber: number
@@ -33,19 +36,23 @@ interface FuelEntryData {
   driverName: string | null
   certificatePath: string | null
   warehouse: {
+    id?: string
     name: string
     code: string
     location: string | null
   }
   operator: {
+    id?: string
     name: string
     email: string
   }
   supplier: {
+    id?: string
     name: string
     code: string
   } | null
   transporter: {
+    id?: string
     name: string
     code: string
   } | null
@@ -55,17 +62,26 @@ interface FuelEntryData {
     address: string | null
     accreditationNumber: string | null
   } | null
+  client?: {
+    id?: string
+    name: string
+    code: string | null
+  } | null
+  station: {
+    id?: string
+    name: string
+    code: string
+    address: string
+    city?: string | null
+  } | null
   createdAt: Date
+  // Allow additional fields from Prisma that we don't use
+  [key: string]: unknown
 }
 
 const formatDate = (date: Date | null): string => {
   if (!date) return '-'
   return formatDateSarajevo(date)
-}
-
-const formatDateTime = (date: Date | null): string => {
-  if (!date) return '-'
-  return formatDateTimeSarajevo(date)
 }
 
 export async function generateQRCode(data: string): Promise<string> {
@@ -85,11 +101,14 @@ export async function generateQRCode(data: string): Promise<string> {
   }
 }
 
-export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string, footerBase64: string): string {
+export function generatePDFTemplate(entry: FuelEntryData, qrCodeDataUrl: string, headerBase64: string, stampBase64: string): string {
   // Use delivery note date as the declaration date, fallback to today
   const declarationDate = entry.deliveryNoteDate
     ? formatDateSarajevo(entry.deliveryNoteDate)
     : formatDateSarajevo(new Date())
+
+  // Dynamic location based on warehouse/station
+  const documentLocation = getDocumentLocation(entry.warehouse, entry.station)
 
   // Format customs declaration or delivery note info (priority: customs first)
   let documentInfo = ''
@@ -386,7 +405,7 @@ ${entry.isHigherQuality ? `
       <!-- Signature Area -->
       <div class="signature-area">
         <div class="date-section">
-          <div>U Sarajevu</div>
+          <div>${documentLocation}</div>
           <div>Dana ${declarationDate}</div>
         </div>
 
@@ -438,20 +457,19 @@ async function createBrowser() {
 // OPTIMIZED: Accepts optional browser instance for reuse
 export async function generatePDF(
   entry: FuelEntryData,
-  browserInstance?: any
+  browserInstance?: Browser
 ): Promise<Buffer> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
   const verificationUrl = `${baseUrl}/verify/${entry.id}`
 
   // Load images as base64
-  const [qrCodeDataUrl, headerBase64, stampBase64, footerBase64] = await Promise.all([
+  const [qrCodeDataUrl, headerBase64, stampBase64] = await Promise.all([
     generateQRCode(verificationUrl),
     loadImageAsBase64('hifa-header.png'),
-    loadImageAsBase64('pecat.png'),
-    loadImageAsBase64('Screenshot_8.png')
+    loadImageAsBase64('pecat.png')
   ])
 
-  const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64, footerBase64)
+  const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64)
 
   // Use provided browser or create new one
   const browser = browserInstance || await createBrowser()
@@ -616,7 +634,7 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
 export async function generateFuelEntryPDF(
   entry: FuelEntryData,
   includeCertificate: boolean = true,
-  browserInstance?: any
+  browserInstance?: Browser
 ): Promise<Buffer> {
   console.log('[PDF] generateFuelEntryPDF called for entry:', entry.registrationNumber)
   console.log('[PDF] includeCertificate:', includeCertificate)

@@ -16,6 +16,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const skip = (page - 1) * pageSize
 
     // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       certificatePath: { not: null }
     }
@@ -25,7 +26,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const userWarehouses = session.user.warehouses || []
 
     if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
+      const assignedWarehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       if (assignedWarehouseIds.length === 0) {
         // User has no warehouses assigned, return empty result
         return paginatedResponse([], { total: 0, page, limit: pageSize })

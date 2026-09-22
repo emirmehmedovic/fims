@@ -61,9 +61,9 @@ async function importCountries(data: CountryData[]) {
       })
       successCount++
       process.stdout.write('.')
-    } catch (error: any) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
       errorCount++
-      errors.push({ item: item.name, error: error.message })
+      errors.push({ item: item.name, error: (error instanceof Error ? error.message : String(error)) })
       process.stdout.write('x')
     }
   }
@@ -99,9 +99,9 @@ async function importProducts(data: ProductData[]) {
       })
       successCount++
       process.stdout.write('.')
-    } catch (error: any) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
       errorCount++
-      errors.push({ item: item.name, error: error.message })
+      errors.push({ item: item.name, error: (error instanceof Error ? error.message : String(error)) })
       process.stdout.write('x')
     }
   }
@@ -147,9 +147,9 @@ async function importSuppliers(data: SupplierData[]) {
       })
       successCount++
       process.stdout.write('.')
-    } catch (error: any) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
       errorCount++
-      errors.push({ item: item.name, error: error.message })
+      errors.push({ item: item.name, error: (error instanceof Error ? error.message : String(error)) })
       process.stdout.write('x')
     }
   }
@@ -195,9 +195,9 @@ async function importTransporters(data: TransporterData[]) {
       })
       successCount++
       process.stdout.write('.')
-    } catch (error: any) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
       errorCount++
-      errors.push({ item: item.name, error: error.message })
+      errors.push({ item: item.name, error: (error instanceof Error ? error.message : String(error)) })
       process.stdout.write('x')
     }
   }
@@ -253,9 +253,9 @@ async function importLaboratories(data: LaboratoryData[]) {
       }
       successCount++
       process.stdout.write('.')
-    } catch (error: any) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
       errorCount++
-      errors.push({ item: item.name, error: error.message })
+      errors.push({ item: item.name, error: (error instanceof Error ? error.message : String(error)) })
       process.stdout.write('x')
     }
   }
@@ -309,8 +309,8 @@ async function main() {
     console.log('\n\n✨ Import complete!')
     console.log('\n💡 Check the Master Data page to verify the imports.')
     console.log('   http://localhost:3000/dashboard/master-data')
-  } catch (error: any) {
-    console.error('\n❌ Fatal error:', error.message)
+  } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    console.error('\n❌ Fatal error:', (error instanceof Error ? error.message : String(error)))
     process.exit(1)
   } finally {
     await prisma.$disconnect()

@@ -100,6 +100,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Prepare update data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (email !== undefined) updateData.email = email

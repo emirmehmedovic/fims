@@ -9,6 +9,7 @@ interface LookupItem {
   description?: string
   code?: string
   address?: string
+  city?: string
   contactPerson?: string
   phone?: string
   email?: string
@@ -136,6 +137,7 @@ const TABS: TabConfig[] = [
       { key: 'name', label: 'Naziv', placeholder: 'npr. Benzinska pumpa Centar', required: true },
       { key: 'code', label: 'Šifra', placeholder: 'npr. BP-001', required: true },
       { key: 'address', label: 'Adresa', placeholder: 'Ulica i broj, Grad', required: true },
+      { key: 'city', label: 'Grad', placeholder: 'npr. Banja Luka (za dokumente)' },
       { key: 'contactPerson', label: 'Kontakt osoba', placeholder: 'Ime i prezime' },
       { key: 'phone', label: 'Telefon', placeholder: '+387 33 123 456' },
       { key: 'email', label: 'Email', placeholder: 'info@example.com' }
@@ -372,6 +374,7 @@ export default function MasterDataManager() {
       description: item.description || '',
       code: item.code || '',
       address: item.address || '',
+      city: item.city || '',
       contactPerson: item.contactPerson || '',
       phone: item.phone || '',
       email: item.email || '',
@@ -636,10 +639,12 @@ export default function MasterDataManager() {
                             </span>
                           )}
                         </div>
-                        {(item.description || item.address || item.contactPerson || item.phone || item.email ||
+                        {(item.description || item.address || item.city || item.contactPerson || item.phone || item.email ||
                           item.accreditationNumber || item.pib || item.idNumber || item.additiveType || item.manufacturers) && (
                           <div className="text-xs sm:text-sm text-dark-500 truncate mt-0.5">
-                            {item.description || item.address || item.accreditationNumber || item.additiveType ||
+                            {item.description ||
+                              (item.address && item.city ? `${item.address} • ${item.city}` : item.address) ||
+                              item.accreditationNumber || item.additiveType ||
                               [item.manufacturers && `Proizvođači: ${item.manufacturers.join(', ')}`,
                                item.pib && `PIB: ${item.pib}`, item.idNumber && `ID: ${item.idNumber}`,
                                item.contactPerson, item.phone, item.email].filter(Boolean).join(' • ')}

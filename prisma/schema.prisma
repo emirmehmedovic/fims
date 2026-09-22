@@ -149,13 +149,14 @@ model FuelEntry {
   certificateUploadedAt DateTime? @map("certificate_uploaded_at")
 
   // Relations
-  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
-  operator    User         @relation("CreatedBy", fields: [operatorId], references: [id])
-  supplier    Supplier?    @relation(fields: [supplierId], references: [id])
-  transporter Transporter? @relation(fields: [transporterId], references: [id])
-  client      Client?      @relation(fields: [clientId], references: [id])
-  laboratory  Laboratory?  @relation(fields: [laboratoryId], references: [id])
-  station     Station?     @relation(fields: [stationId], references: [id])
+  warehouse     Warehouse          @relation(fields: [warehouseId], references: [id])
+  operator      User               @relation("CreatedBy", fields: [operatorId], references: [id])
+  supplier      Supplier?          @relation(fields: [supplierId], references: [id])
+  transporter   Transporter?       @relation(fields: [transporterId], references: [id])
+  client        Client?            @relation(fields: [clientId], references: [id])
+  laboratory    Laboratory?        @relation(fields: [laboratoryId], references: [id])
+  station       Station?           @relation(fields: [stationId], references: [id])
+  receiptRecord FuelReceiptRecord? // Zapisnik o prijemu goriva (samo za PUMPA)
 
   // Status
   isActive Boolean @default(true) @map("is_active")
@@ -325,6 +326,7 @@ model Station {
   name          String
   code          String  @unique
   address       String // Lokacija/adresa benzinske pumpe
+  city          String? // Grad poslovnice (za dokumente)
   contactPerson String? @map("contact_person")
   phone         String?
   email         String?
@@ -441,4 +443,71 @@ model AutoSendBatchItem {
   @@index([batchId])
   @@index([sequence])
   @@map("auto_send_batch_items")
+}
+
+// ============================================
+// CORRECTION FACTORS (FAKTORI KOREKCIJE)
+// ============================================
+
+model CorrectionFactor {
+  id          String   @id @default(cuid())
+  productName String   @map("product_name") // npr. "EURODIESEL BAS EN 590"
+  temperature Decimal  @db.Decimal(5, 2)    // Temperatura (npr. 15.0, 20.0, -5.0)
+  factor      Decimal  @db.Decimal(10, 6)   // Faktor (npr. 1.000000, 0.998500)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([productName, temperature])
+  @@index([productName])
+  @@index([temperature])
+  @@map("correction_factors")
+}
+
+// ============================================
+// FUEL RECEIPT RECORDS (ZAPISNICI O PRIJEMU)
+// ============================================
+
+model FuelReceiptRecord {
+  id          String @id @default(cuid())
+  fuelEntryId String @unique @map("fuel_entry_id")
+
+  // Podaci o mjerenjima - JSON struktura za fleksibilnost
+  // Svaki tank ima: tankNumber (R1-R10), initialSonde, finalSonde, initialLetva, finalLetva,
+  //                 initialTemp, finalTemp, initialFactor, finalFactor,
+  //                 initialLiters15Sonde, finalLiters15Sonde, initialLiters15Letva, finalLiters15Letva
+  tankMeasurements Json @map("tank_measurements")
+
+  // Izračuni
+  announcedQuantity    Int? @map("announced_quantity")     // Najavljena količina
+  dischargedQuantity   Int? @map("discharged_quantity")    // Količina istočenog goriva (izračunato)
+  differenceQuantity   Int? @map("difference_quantity")    // RAZLIKE (najavljena - istočena)
+  meterReading         Int? @map("meter_reading")          // istočeno po brojčanicima cisterne
+  deliveryNoteQuantity Int? @map("delivery_note_quantity") // ISTOVARENO (OTPREMNICA)
+  finalDifference      Int? @map("final_difference")       // KONAČNI MANJAK/VIŠAK
+
+  // Checkbox polja za dokumentaciju
+  hasDeliveryNote              Boolean @default(false) @map("has_delivery_note")               // Otpremnica
+  hasQualityCertificate        Boolean @default(false) @map("has_quality_certificate")         // Certifikat o kvalitetu
+  hasComplianceDeclaration     Boolean @default(false) @map("has_compliance_declaration")      // Izjava o usklađenosti
+  isWaterMeasured              Boolean @default(false) @map("is_water_measured")               // Voda mjerena u cisterni
+  hasWaterInTank               Boolean @default(false) @map("has_water_in_tank")               // Voda u cisterni (STOP!)
+  isVisualInspectionDone       Boolean @default(false) @map("is_visual_inspection_done")       // Vizuelni pregled komore
+  hasAdditives                 Boolean @default(false) @map("has_additives")                   // Aditiviranje
+  isLastUnload                 Boolean @default(false) @map("is_last_unload")                  // Posljednji istovar
+  isTankCheckedAfterLastUnload Boolean @default(false) @map("is_tank_checked_after_last_unload") // Provjera cisterne na zadnjem istovaru
+  fuelFoundOnLastUnload        String? @map("fuel_found_on_last_unload") // Količina goriva uočenog na zadnjem istovaru (L)
+
+  // Vaganje cisterne (opcionalno)
+  hasWeighing   Boolean @default(false) @map("has_weighing") // Da li je izvršeno vaganje
+  weighingData  Json?   @map("weighing_data") // { tara, neto, bruto, specificWeight, tempOnTanker, litersWithCorrection, deliveryNoteWeight, weightDifference }
+
+  // Metadata
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relacija
+  fuelEntry FuelEntry @relation(fields: [fuelEntryId], references: [id], onDelete: Cascade)
+
+  @@map("fuel_receipt_records")
 }

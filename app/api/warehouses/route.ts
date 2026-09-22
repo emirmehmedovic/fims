@@ -9,6 +9,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const { searchParams } = new URL(req.url)
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {}
     if (!includeInactive) {
       where.isActive = true
@@ -19,7 +20,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const userWarehouses = session.user.warehouses || []
     
     if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
+      const assignedWarehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       if (assignedWarehouseIds.length === 0) {
         return successResponse([])
       }

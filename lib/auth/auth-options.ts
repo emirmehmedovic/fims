@@ -129,7 +129,8 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         // Store ONLY essential data in JWT to keep it minimal
         token.id = user.id
@@ -137,7 +138,8 @@ export const authOptions = {
       }
       return token
     },
-    async session({ session, token }: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: { session: any; token: any }) {
       try {
         if (session.user) {
           session.user.id = token.id

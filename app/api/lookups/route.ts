@@ -42,6 +42,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       return errorResponse('Invalid lookup type', 400)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {}
     if (!includeInactive) {
       where.isActive = true
@@ -53,9 +54,11 @@ export const GET = withAuth(async (req: NextRequest) => {
     }
 
     // Get total count
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalCount = await (model as any).count({ where })
 
     // Get paginated results
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const items = await (model as any).findMany({
       where,
       orderBy: { name: 'asc' },
@@ -100,6 +103,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Check if name already exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existing = await (model as any).findUnique({
       where: { name: name.trim() }
     })
@@ -109,6 +113,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Build data object based on type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = { name: name.trim() }
 
     if (type === 'products' || type === 'fuelCharacteristics') {
@@ -128,6 +133,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       if (address) data.address = address
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const item = await (model as any).create({ data })
 
     return successResponse(item)

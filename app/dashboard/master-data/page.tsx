@@ -1,6 +1,7 @@
 'use client'
 
-import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck, FlaskConical, Users, Fuel } from 'lucide-react'
+import { Database, Package, Globe, MapPin, Sparkles, Building2, Truck, FlaskConical, Users, Fuel, Calculator } from 'lucide-react'
+import Link from 'next/link'
 import MasterDataManager from '@/components/master-data/MasterDataManager'
 
 export default function MasterDataPage() {
@@ -50,6 +51,18 @@ export default function MasterDataPage() {
             <p className="text-xs text-dark-500">{item.description}</p>
           </div>
         ))}
+
+        {/* Special card for Correction Factors - linked to separate page */}
+        <Link
+          href="/dashboard/master-data/correction-factors"
+          className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-soft-xl)] transition-all border-2 border-indigo-200 hover:border-indigo-400 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Calculator className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-indigo-900 text-sm mb-0.5">Faktori korekcije</h3>
+          <p className="text-xs text-indigo-600">Korekcija temperature goriva</p>
+        </Link>
       </div>
 
       {/* Master Data Manager */}

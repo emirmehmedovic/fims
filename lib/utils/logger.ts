@@ -53,16 +53,72 @@ const pinoLogger = pino({
 /**
  * Format error for structured logging
  */
-export const formatError = (error: unknown) => {
+export const formatError = (error: unknown): Record<string, unknown> => {
   if (error instanceof Error) {
-    return {
+    const formatted: Record<string, unknown> = {
       message: error.message,
       name: error.name,
-      stack: error.stack,
-      ...(error as any)
+      stack: error.stack
     }
+    // Copy any additional properties from the error (e.g., Prisma error codes)
+    const errorObj = error as unknown as Record<string, unknown>
+    for (const key of Object.keys(error)) {
+      if (!(key in formatted)) {
+        formatted[key] = errorObj[key]
+      }
+    }
+    return formatted
   }
   return { error: String(error) }
+}
+
+/**
+ * Get error message safely from unknown error type
+ * Use this in catch blocks instead of (error: any)
+ * @example
+ * catch (error) {
+ *   console.error('Failed:', getErrorMessage(error))
+ * }
+ */
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  return String(error)
+}
+
+/**
+ * Check if error has a specific property (like Prisma's code)
+ * @example
+ * if (hasErrorCode(error, 'P2002')) { ... }
+ */
+export const hasErrorCode = (error: unknown, code: string): boolean => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code: unknown }).code === code
+  )
+}
+
+/**
+ * Type guard for Prisma errors with code and meta
+ */
+interface PrismaError {
+  code: string
+  meta?: { target?: string[] }
+}
+
+export const isPrismaError = (error: unknown): error is PrismaError => {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as PrismaError).code === 'string'
+  )
 }
 
 /**
@@ -74,6 +130,7 @@ export const logger = {
    * @example logger.info({ userId: '123' }, 'User logged in')
    * @example logger.info('Simple message') // backward compatible
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info: (msgOrObj: any, ...args: any[]) => {
     if (typeof msgOrObj === 'string') {
       pinoLogger.info(msgOrObj, ...args)
@@ -86,6 +143,7 @@ export const logger = {
    * Log warnings
    * @example logger.warn({ count: 4 }, 'Rate limit approaching')
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn: (msgOrObj: any, ...args: any[]) => {
     if (typeof msgOrObj === 'string') {
       pinoLogger.warn(msgOrObj, ...args)
@@ -98,6 +156,7 @@ export const logger = {
    * Log errors
    * @example logger.error({ error: formatError(err) }, 'Database operation failed')
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: (msgOrObj: any, ...args: any[]) => {
     if (typeof msgOrObj === 'string') {
       pinoLogger.error(msgOrObj, ...args)
@@ -110,6 +169,7 @@ export const logger = {
    * Log debug information - only in development
    * @example logger.debug({ query: 'SELECT ...' }, 'Executing query')
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug: (msgOrObj: any, ...args: any[]) => {
     if (typeof msgOrObj === 'string') {
       pinoLogger.debug(msgOrObj, ...args)

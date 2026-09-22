@@ -13,6 +13,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const search = searchParams.get('search') || ''
 
     // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = includeInactive ? {} : { isActive: true }
 
     // Add search filter

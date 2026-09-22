@@ -5,6 +5,7 @@ import QRCode from 'qrcode'
 import fs from 'fs/promises'
 import path from 'path'
 import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
+import { getDocumentLocation } from '@/lib/utils/pdf-helpers'
 
 // Detect if running on Vercel/serverless
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
@@ -23,6 +24,8 @@ interface FuelCharacteristic {
   type: string | null
 }
 
+// Interface for fuel entry data used in Additive PDF generation
+// Compatible with Prisma query results (includes optional id fields on relations)
 interface FuelEntryAdditiveData {
   id: string
   registrationNumber: number
@@ -35,30 +38,31 @@ interface FuelEntryAdditiveData {
   vehicleRegistration: string | null
   additiveDetails: AdditiveDetail[]
   warehouse: {
+    id?: string
     name: string
     code: string
     location: string | null
   }
   operator: {
+    id?: string
     name: string
     email: string
   }
   client: {
+    id?: string
     name: string
     code: string | null
   } | null
   station: {
-    id: string
+    id?: string
     name: string
     code: string
     address: string
+    city?: string | null
   } | null
   createdAt: Date
-}
-
-const formatDate = (date: Date | null): string => {
-  if (!date) return '-'
-  return formatDateSarajevo(date)
+  // Allow additional fields from Prisma that we don't use
+  [key: string]: unknown
 }
 
 const formatDateTime = (dateTimeString: string): string => {
@@ -278,6 +282,9 @@ function generateAdditiveDeclarationTemplate(
   const declarationDate = entry.deliveryNoteDate
     ? formatDateSarajevo(new Date(entry.deliveryNoteDate))
     : formatDateSarajevo(new Date())
+
+  // Dynamic location based on warehouse/station
+  const documentLocation = getDocumentLocation(entry.warehouse, entry.station)
 
   // Use declaration number like regular declaration
   const prilogBroj = entry.declarationNumber || String(entry.registrationNumber)
@@ -545,7 +552,7 @@ function generateAdditiveDeclarationTemplate(
       <!-- Signature Area -->
       <div class="signature-area">
         <div class="date-section">
-          <div class="date-label">U Sarajevu,</div>
+          <div class="date-label">${documentLocation},</div>
           <div class="date-value">${declarationDate}</div>
         </div>
 

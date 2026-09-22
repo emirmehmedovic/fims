@@ -3,8 +3,31 @@
 import { useState, useEffect } from 'react'
 import { X, Key } from 'lucide-react'
 
+interface UserWarehouse {
+  id: string
+  name: string
+  code: string
+}
+
+interface UserStation {
+  id: string
+  name: string
+  code: string
+  address?: string
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  isActive: boolean
+  warehouses: UserWarehouse[]
+  stations?: UserStation[]
+}
+
 interface EditUserModalProps {
-  user: any
+  user: User
   onClose: () => void
   onSuccess: () => void
 }
@@ -12,8 +35,8 @@ interface EditUserModalProps {
 export default function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [warehouses, setWarehouses] = useState<any[]>([])
-  const [stations, setStations] = useState<any[]>([])
+  const [warehouses, setWarehouses] = useState<UserWarehouse[]>([])
+  const [stations, setStations] = useState<UserStation[]>([])
   const [stationSearch, setStationSearch] = useState('')
   const [showPasswordReset, setShowPasswordReset] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -23,8 +46,8 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
     email: user.email,
     role: user.role,
     isActive: user.isActive,
-    warehouseIds: user.warehouses.map((w: any) => w.id),
-    stationIds: user.stations?.map((s: any) => s.id) || []
+    warehouseIds: user.warehouses.map((w: { id: string }) => w.id),
+    stationIds: user.stations?.map((s: { id: string }) => s.id) || []
   })
 
   useEffect(() => {
@@ -84,8 +107,8 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
     setFormData(prev => ({
       ...prev,
       stationIds: allSelected
-        ? prev.stationIds.filter((id: string) => !filteredStations.find((s: any) => s.id === id))
-        : [...new Set([...prev.stationIds, ...filteredStations.map((s: any) => s.id)])]
+        ? prev.stationIds.filter((id: string) => !filteredStations.find((s: { id: string }) => s.id === id))
+        : [...new Set([...prev.stationIds, ...filteredStations.map((s: { id: string }) => s.id)])]
     }))
   }
 
@@ -279,7 +302,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                   .filter(station =>
                     station.name.toLowerCase().includes(stationSearch.toLowerCase()) ||
                     station.code.toLowerCase().includes(stationSearch.toLowerCase()) ||
-                    station.address.toLowerCase().includes(stationSearch.toLowerCase())
+                    station.address?.toLowerCase().includes(stationSearch.toLowerCase())
                   )
                   .map(station => (
                     <label key={station.id} className="flex items-center gap-2 cursor-pointer hover:bg-bg-secondary p-2 rounded-lg transition-colors">
@@ -298,7 +321,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 {stations.filter(station =>
                   station.name.toLowerCase().includes(stationSearch.toLowerCase()) ||
                   station.code.toLowerCase().includes(stationSearch.toLowerCase()) ||
-                  station.address.toLowerCase().includes(stationSearch.toLowerCase())
+                  station.address?.toLowerCase().includes(stationSearch.toLowerCase())
                 ).length === 0 && (
                   <div className="text-sm text-primary-gray text-center py-4">
                     Nema poslovnica za prikaz

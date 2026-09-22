@@ -18,6 +18,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const skip = (page - 1) * limit
 
     // Build filter conditions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {}
 
     // Non-admin users can only see their own logs

@@ -57,6 +57,15 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             name: true,
             code: true
           }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true,
+            city: true
+          }
         }
       }
     })
@@ -77,7 +86,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
         }
       } else {
         // OPERATOR/VIEWER: check warehouse access
-        const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
+        const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
         if (!userWarehouses.includes(fuelEntry.warehouseId)) {
           return errorResponse('Access denied to this fuel entry', 403)
         }
@@ -89,7 +98,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const includeCertificate = url.searchParams.get('includeCertificate') !== 'false'
 
     // Generate PDF
-    const pdfBuffer = await generateFuelEntryPDF(fuelEntry as any, includeCertificate)
+    const pdfBuffer = await generateFuelEntryPDF(fuelEntry, includeCertificate)
 
     // Log audit
     await prisma.auditLog.create({

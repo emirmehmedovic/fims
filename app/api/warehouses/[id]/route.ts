@@ -42,7 +42,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const userWarehouses = session.user.warehouses || []
     
     if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      const hasAccess = userWarehouses.some((w: any) => w.id === id)
+      const hasAccess = userWarehouses.some((w: { id: string }) => w.id === id)
       if (!hasAccess) {
         return errorResponse('Access denied to this warehouse', 403)
       }
@@ -90,6 +90,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     }
 
     // Prepare update data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (code !== undefined) updateData.code = code

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { formatDateSarajevo, formatDateTimeSarajevo } from '@/lib/utils/date'
 import { getCertificateDownloadUrl } from '@/lib/utils/certificate-url'
+import { LucideIcon } from 'lucide-react'
 import {
   X,
   FileText,
@@ -101,6 +102,18 @@ interface FuelEntryDetail {
     hasAdditives: boolean
     isLastUnload: boolean
     isTankCheckedAfterLastUnload: boolean
+    fuelFoundOnLastUnload: string | null
+    hasWeighing: boolean
+    weighingData: {
+      tara: string
+      neto: string
+      bruto: string
+      specificWeight: string
+      tempOnTanker: string
+      litersWithCorrection: string
+      deliveryNoteWeight: string
+      weightDifference: string
+    } | null
   } | null
   createdAt: string
   updatedAt: string
@@ -620,25 +633,37 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="bg-indigo-100">
-                            <th className="p-2 text-left">Rezervoar</th>
-                            <th className="p-2 text-right">Početno (L)</th>
-                            <th className="p-2 text-right">Završno (L)</th>
-                            <th className="p-2 text-right">Istočeno (L)</th>
+                            <th className="p-2 text-left">Rez.</th>
+                            <th className="p-2 text-right">Sonda poč.</th>
+                            <th className="p-2 text-right">Sonda zav.</th>
+                            <th className="p-2 text-right">Letva poč.</th>
+                            <th className="p-2 text-right">Letva zav.</th>
+                            <th className="p-2 text-right">Ist. (sonda)</th>
+                            <th className="p-2 text-right">Ist. (letva)</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {(details.receiptRecord.tankMeasurements as any[]).map((m: any, i: number) => (
-                            <tr key={i} className="border-b border-indigo-100">
-                              <td className="p-2 font-semibold">{m.tankNumber}</td>
-                              <td className="p-2 text-right">{m.initialLiters15 || '-'}</td>
-                              <td className="p-2 text-right">{m.finalLiters15 || '-'}</td>
-                              <td className="p-2 text-right font-semibold text-indigo-700">
-                                {m.initialLiters15 && m.finalLiters15
-                                  ? (parseInt(m.finalLiters15) - parseInt(m.initialLiters15)).toLocaleString()
-                                  : '-'}
-                              </td>
-                            </tr>
-                          ))}
+                          {(details.receiptRecord.tankMeasurements as any[]).map((m: any, i: number) => {
+                            const initSonde = parseInt(m.initialLiters15Sonde || m.initialLiters15) || 0
+                            const finalSonde = parseInt(m.finalLiters15Sonde || m.finalLiters15) || 0
+                            const initLetva = parseInt(m.initialLiters15Letva) || 0
+                            const finalLetva = parseInt(m.finalLiters15Letva) || 0
+                            return (
+                              <tr key={i} className="border-b border-indigo-100">
+                                <td className="p-2 font-semibold">{m.tankNumber}</td>
+                                <td className="p-2 text-right">{initSonde || '-'}</td>
+                                <td className="p-2 text-right">{finalSonde || '-'}</td>
+                                <td className="p-2 text-right">{initLetva || '-'}</td>
+                                <td className="p-2 text-right">{finalLetva || '-'}</td>
+                                <td className="p-2 text-right font-semibold text-indigo-700">
+                                  {initSonde && finalSonde ? (finalSonde - initSonde).toLocaleString() : '-'}
+                                </td>
+                                <td className="p-2 text-right font-semibold text-emerald-700">
+                                  {initLetva && finalLetva ? (finalLetva - initLetva).toLocaleString() : '-'}
+                                </td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -708,6 +733,56 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                     )
                   })}
                 </div>
+
+                {/* Fuel Found on Last Unload */}
+                {details.receiptRecord.fuelFoundOnLastUnload && (
+                  <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                    <span className="text-xs text-amber-700">
+                      Gorivo uočeno na zadnjem istovaru: <strong>{details.receiptRecord.fuelFoundOnLastUnload} L</strong>
+                    </span>
+                  </div>
+                )}
+
+                {/* Weighing Section */}
+                {details.receiptRecord.hasWeighing && details.receiptRecord.weighingData && (
+                  <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <h5 className="text-xs font-bold text-indigo-700 mb-2 uppercase">Vaganje cisterne</h5>
+                    <div className="grid grid-cols-4 gap-2 text-xs">
+                      <div>
+                        <span className="text-indigo-500">Tara:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.tara || '-'} kg</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Bruto:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.bruto || '-'} kg</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Neto:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.neto || '-'} kg</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Spec. težina:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.specificWeight || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Temp:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.tempOnTanker || '-'} °C</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">L s korekcijom:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.litersWithCorrection || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Otpremnica:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.deliveryNoteWeight || '-'} L</span>
+                      </div>
+                      <div>
+                        <span className="text-indigo-500">Razlika:</span>
+                        <span className="ml-1 font-medium">{details.receiptRecord.weighingData.weightDifference || '-'} L</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -833,7 +908,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   )
 }
 
-function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+function Section({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border border-dark-100 overflow-hidden">
       <div className="px-5 py-4 bg-dark-50 border-b border-dark-100 flex items-center gap-3">
@@ -847,7 +922,7 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
   )
 }
 
-function InfoCard({ label, value, icon: Icon }: { label: string; value: string | null | undefined; icon?: any }) {
+function InfoCard({ label, value, icon: Icon }: { label: string; value: string | null | undefined; icon?: LucideIcon }) {
   return (
     <div className="p-4 rounded-xl bg-dark-50 border border-dark-100 hover:border-primary-200 hover:bg-primary-50/30 transition-all">
       <div className="flex items-center gap-2 mb-1">

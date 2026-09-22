@@ -3,8 +3,18 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
+interface Warehouse {
+  id: string
+  name: string
+  code: string
+  location: string
+  capacity: number
+  description: string | null
+  isActive: boolean
+}
+
 interface EditWarehouseModalProps {
-  warehouse: any
+  warehouse: Warehouse
   onClose: () => void
   onSuccess: () => void
 }

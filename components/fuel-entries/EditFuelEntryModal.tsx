@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import { getCertificateDownloadUrl } from '@/lib/utils/certificate-url'
+import { LucideIcon } from 'lucide-react'
 import {
   X,
   Pencil,
@@ -854,7 +855,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
   )
 }
 
-function FormSection({ title, icon: Icon, required, children }: { title: string; icon: any; required?: boolean; children: React.ReactNode }) {
+function FormSection({ title, icon: Icon, required, children }: { title: string; icon: LucideIcon; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="mb-6 bg-white rounded-2xl border border-dark-100 overflow-hidden">
       <div className="px-5 py-4 bg-dark-50 border-b border-dark-100 flex items-center gap-3">
@@ -867,7 +868,7 @@ function FormSection({ title, icon: Icon, required, children }: { title: string;
   )
 }
 
-function FormField({ label, required, icon: Icon, children }: { label: string; required?: boolean; icon?: any; children: React.ReactNode }) {
+function FormField({ label, required, icon: Icon, children }: { label: string; required?: boolean; icon?: LucideIcon; children: React.ReactNode }) {
   return (
     <div>
       <label className="flex items-center gap-2 text-sm font-semibold text-dark-600 mb-2">

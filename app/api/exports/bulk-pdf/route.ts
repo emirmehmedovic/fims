@@ -43,6 +43,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     } = body
 
     // Build filter conditions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       isActive: true
     }
@@ -68,7 +69,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
     // Check warehouse access for non-admin users
     if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
+      const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
       if (warehouseId && !userWarehouses.includes(warehouseId)) {
         return errorResponse('Access denied to this warehouse', 403)
       }
@@ -115,6 +116,22 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             address: true,
             accreditationNumber: true
           }
+        },
+        client: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        station: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            address: true,
+            city: true
+          }
         }
       },
       orderBy: { registrationNumber: 'asc' },
@@ -146,7 +163,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         // Generate PDFs for this batch in parallel (reusing same browser)
         const pdfPromises = batch.map(async (entry) => {
           try {
-            const pdfBuffer = await generateFuelEntryPDF(entry as any, includeCertificates, browser)
+            const pdfBuffer = await generateFuelEntryPDF(entry, includeCertificates, browser)
             return { success: true, pdfBuffer, registrationNumber: entry.registrationNumber }
           } catch (error) {
             console.error(`[BULK_EXPORT] Error generating PDF for entry ${entry.registrationNumber}:`, error)
@@ -228,6 +245,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const dateField = url.searchParams.get('dateField') || 'entryDate'
 
     // Build filter conditions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       isActive: true
     }
@@ -246,7 +264,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 
     // Check warehouse access for non-admin users
     if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      const userWarehouses = session.user.warehouses?.map((w: any) => w.id) || []
+      const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
       if (warehouseId && !userWarehouses.includes(warehouseId)) {
         return errorResponse('Access denied to this warehouse', 403)
       }

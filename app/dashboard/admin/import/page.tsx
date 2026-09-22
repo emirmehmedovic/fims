@@ -45,7 +45,7 @@ export default function ImportClientsPage() {
       } else {
         setError(data.error || 'Failed to load import info')
       }
-    } catch (err: any) {
+    } catch (err) {
       setError('Failed to connect to server')
     } finally {
       setLoading(false)
@@ -76,8 +76,8 @@ export default function ImportClientsPage() {
       } else {
         setError(data.error || 'Import failed')
       }
-    } catch (err: any) {
-      setError('Failed to import: ' + err.message)
+    } catch (err) {
+      setError('Failed to import: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setImporting(false)
     }

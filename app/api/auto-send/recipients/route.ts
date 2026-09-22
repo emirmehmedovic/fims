@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
 import { successResponse, errorResponse } from "@/lib/api/response"
+import { hasErrorCode } from "@/lib/utils/logger"
 
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
@@ -52,8 +53,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     })
 
     return successResponse({ count: emails.length })
-  } catch (error: any) {
-    if (error?.code === 'P2002') {
+  } catch (error) {
+    if (hasErrorCode(error, 'P2002')) {
       return errorResponse('Email already exists', 400)
     }
     console.error('Error creating auto-send recipient:', error)

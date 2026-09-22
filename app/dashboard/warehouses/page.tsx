@@ -8,16 +8,30 @@ import WarehouseTable from '@/components/warehouses/WarehouseTable'
 import CreateWarehouseModal from '@/components/warehouses/CreateWarehouseModal'
 import EditWarehouseModal from '@/components/warehouses/EditWarehouseModal'
 
+interface Warehouse {
+  id: string
+  name: string
+  code: string
+  location: string
+  capacity: number
+  description: string | null
+  isActive: boolean
+  _count?: {
+    users: number
+    fuelEntries: number
+  }
+}
+
 export default function WarehousesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [warehouses, setWarehouses] = useState<any[]>([])
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [loading, setLoading] = useState(true)
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null)
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null)
 
   // Check if user is admin
   const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'ADMIN'
@@ -55,7 +69,7 @@ export default function WarehousesPage() {
     }
   }, [status, isAdmin, router])
 
-  const handleEdit = (warehouse: any) => {
+  const handleEdit = (warehouse: Warehouse) => {
     setSelectedWarehouse(warehouse)
     setShowEditModal(true)
   }

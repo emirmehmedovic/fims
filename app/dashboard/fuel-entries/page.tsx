@@ -62,7 +62,7 @@ interface Station {
   id: string
   name: string
   code: string
-  address: string
+  address: string | null
   isActive: boolean
 }
 
@@ -113,14 +113,14 @@ export default function FuelEntriesPage() {
     try {
       // For OPERATOR/VIEWER, use warehouses from session
       const userRole = session?.user?.role
-      const userWarehouses = (session?.user as any)?.warehouses || []
+      const userWarehouses = session?.user?.warehouses || []
 
       if (userRole === 'PUMPA') {
         // PUMPA users don't use warehouses filter - they use DEFAULT terminal automatically
         setWarehouses([])
       } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
         // Use only assigned warehouses
-        setWarehouses(userWarehouses.map((w: any) => ({
+        setWarehouses(userWarehouses.map((w) => ({
           id: w.id,
           name: w.name,
           code: w.code,
@@ -143,11 +143,11 @@ export default function FuelEntriesPage() {
     try {
       // For OPERATOR/VIEWER, use stations from session
       const userRole = session?.user?.role
-      const userStations = (session?.user as any)?.stations || []
+      const userStations = session?.user?.stations || []
 
       if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
         // Use only assigned stations
-        setStations(userStations.map((s: any) => ({
+        setStations(userStations.map((s) => ({
           id: s.id,
           name: s.name,
           code: s.code,
@@ -308,9 +308,9 @@ export default function FuelEntriesPage() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error exporting bulk PDF:', error)
-      alert(error.message || 'Greška pri generiranju bulk PDF-a')
+      alert(error instanceof Error ? error.message : 'Greška pri generiranju bulk PDF-a')
     } finally {
       setExportingBulk(false)
     }
@@ -636,7 +636,7 @@ export default function FuelEntriesPage() {
               options={stations.filter(s => s.isActive).map(s => ({
                 id: s.id,
                 label: s.name,
-                sublabel: s.code ? `${s.code} - ${s.address}` : s.address
+                sublabel: s.code ? `${s.code} - ${s.address || ''}` : (s.address || undefined)
               }))}
               value={stationFilter}
               onChange={(value) => {

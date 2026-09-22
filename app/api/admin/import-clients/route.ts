@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/api/withAuth'
 import { successResponse, errorResponse } from '@/lib/api/response'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { getErrorMessage } from '@/lib/utils/logger'
 
 interface Client {
   name: string
@@ -35,9 +36,9 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     try {
       const jsonData = readFileSync(jsonPath, 'utf-8')
       clients = JSON.parse(jsonData)
-    } catch (error: any) {
+    } catch (error) {
       console.error('[IMPORT_CLIENTS] Error reading JSON file:', error)
-      return errorResponse(`Failed to read clients file: ${error.message}`, 500)
+      return errorResponse(`Failed to read clients file: ${getErrorMessage(error)}`, 500)
     }
 
     console.log(`[IMPORT_CLIENTS] Loaded ${clients.length} clients from JSON`)
@@ -86,9 +87,9 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
           })
           created++
         }
-      } catch (error: any) {
+      } catch (error) {
         errors++
-        errorDetails.push(`${client.name} (${client.code}): ${error.message}`)
+        errorDetails.push(`${client.name} (${client.code}): ${getErrorMessage(error)}`)
         console.error(`[IMPORT_CLIENTS] Error with client ${client.code}:`, error)
       }
 
@@ -161,8 +162,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
         wouldCreate: clients.length - existingCount,
         filePath: 'data/clients-import.json'
       }
-    } catch (error: any) {
-      return errorResponse(`File not found or invalid: ${error.message}`, 404)
+    } catch (error) {
+      return errorResponse(`File not found or invalid: ${getErrorMessage(error)}`, 404)
     }
 
     return successResponse(fileInfo)

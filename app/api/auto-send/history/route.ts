@@ -12,6 +12,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     const batchId = searchParams.get('batchId')
 
     const skip = (page - 1) * limit
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {}
     if (recipient) {
       where.recipientEmails = { has: recipient.toLowerCase() }

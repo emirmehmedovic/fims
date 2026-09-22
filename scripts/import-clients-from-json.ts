@@ -116,9 +116,9 @@ async function importClients() {
           console.log(`${progress} ✅ Created: ${client.name} (${client.code})`)
           created++
         }
-      } catch (error: any) {
+      } catch (error) { // eslint-disable-line @typescript-eslint/no-explicit-any
         errors++
-        const errorMsg = `${client.name} (${client.code}): ${error.message}`
+        const errorMsg = `${client.name} (${client.code}): ${error instanceof Error ? error.message : String(error)}`
         errorDetails.push(errorMsg)
         console.log(`${progress} ❌ Error: ${errorMsg}`)
       }

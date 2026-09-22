@@ -3,9 +3,10 @@ import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
 import { errorResponse } from "@/lib/api/response"
 import { generateAdditiveDeclarationPDF } from "@/lib/utils/pdf-generator-additive"
+import { parseAdditiveDetails } from "@/lib/types"
 
 // GET /api/exports/additive-declaration/:entryId - Generate PDF for additive declaration
-export const GET = withAuth(async (req: NextRequest, context, session) => {
+export const GET = withAuth(async (req: NextRequest, context, _session) => {
   try {
     const params = await context.params
     const { entryId } = params
@@ -41,7 +42,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             id: true,
             name: true,
             code: true,
-            address: true
+            address: true,
+            city: true
           }
         }
       }
@@ -51,8 +53,11 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Fuel entry not found', 404)
     }
 
+    // Parse additive details from JSON field
+    const additiveDetails = parseAdditiveDetails(fuelEntry.additiveDetails)
+
     // Check if entry has additive details
-    if (!fuelEntry.additiveDetails || (fuelEntry.additiveDetails as any[]).length === 0) {
+    if (additiveDetails.length === 0) {
       return errorResponse('This entry has no additive information', 400)
     }
 
@@ -67,7 +72,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       name.replace(/[®™©]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
 
     // Find matching additives for each additive detail
-    const additiveNames = (fuelEntry.additiveDetails as any[]).map((ad: any) => ad.name)
+    const additiveNames = additiveDetails.map(ad => ad.name)
     console.log('[Additive PDF] Additive names from entry:', additiveNames)
 
     const additives = allAdditives.filter(a => {
@@ -87,12 +92,12 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       type: a.type
     })))
 
-    // Generate PDF - cast types properly
+    // Generate PDF with properly typed data
     const entryData = {
       ...fuelEntry,
-      additiveDetails: fuelEntry.additiveDetails as any[]
+      additiveDetails
     }
-    const pdfBuffer = await generateAdditiveDeclarationPDF(entryData as any, additives)
+    const pdfBuffer = await generateAdditiveDeclarationPDF(entryData, additives)
 
     // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
     const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)

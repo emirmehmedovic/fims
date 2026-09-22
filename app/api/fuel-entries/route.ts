@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
 import { paginatedResponse, successResponse, errorResponse } from "@/lib/api/response"
 import { saveFile, validateFile } from "@/lib/utils/file-upload"
-import { logger } from "@/lib/utils/logger"
+import { logger, isPrismaError } from "@/lib/utils/logger"
 import { startOfDaySarajevo, startOfNextDaySarajevo } from "@/lib/utils/date"
 import { generateDeclarationNumber } from "@/lib/utils/declaration-number"
 
@@ -30,6 +30,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const skip = (page - 1) * limit
 
     // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {}
 
     // For role-based filtering
@@ -41,7 +42,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       where.operatorId = session.user.id
     } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
       // OPERATOR/VIEWER see entries from their assigned warehouses
-      const assignedWarehouseIds = userWarehouses.map((w: any) => w.id)
+      const assignedWarehouseIds = userWarehouses.map((w: { id: string }) => w.id)
       if (assignedWarehouseIds.length === 0) {
         // User has no warehouses assigned, return empty result
         return paginatedResponse([], { total: 0, page, limit })
@@ -53,7 +54,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     if (warehouseId) {
       // If operator, verify they have access to this warehouse
       if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-        const hasAccess = userWarehouses.some((w: any) => w.id === warehouseId)
+        const hasAccess = userWarehouses.some((w: { id: string }) => w.id === warehouseId)
         if (!hasAccess) {
           return errorResponse('Access denied to this warehouse', 403)
         }
@@ -169,7 +170,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
             code: true,
             address: true
           }
-        }
+        },
+        receiptRecord: true
       },
       orderBy: {
         [sortBy]: sortOrder
@@ -224,6 +226,17 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const stationId = formData.get('stationId') as string | null
     const certificate = formData.get('certificate') as File | null
     const existingCertificatePath = formData.get('existingCertificatePath') as string | null
+    const receiptRecordStr = formData.get('receiptRecord') as string | null
+
+    // Parse receipt record data for PUMPA users
+    let receiptRecordData: any = null
+    if (receiptRecordStr) {
+      try {
+        receiptRecordData = JSON.parse(receiptRecordStr)
+      } catch {
+        return errorResponse('Invalid receiptRecord format', 400)
+      }
+    }
 
     // Validation
     if (!entryDate || !warehouseId || !productName || !quantity) {
@@ -335,11 +348,11 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
         // Success - break out of retry loop
         break
-      } catch (error: any) {
+      } catch (error) {
         lastError = error
 
         // Check if it's a unique constraint violation on declarationNumber (Prisma error P2002)
-        if (error?.code === 'P2002' && error?.meta?.target?.includes('declaration_number')) {
+        if (isPrismaError(error) && error.code === 'P2002' && error.meta?.target?.includes('declaration_number')) {
           logger.warn(`[FUEL_ENTRY] Declaration number collision on attempt ${attempt}, retrying...`)
 
           if (attempt === MAX_RETRIES) {
@@ -417,6 +430,50 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       fuelEntry.certificatePath = finalCertificatePath
       fuelEntry.certificateFileName = finalCertificateFileName
       fuelEntry.certificateUploadedAt = finalCertificateUploadedAt
+    }
+
+    // Create receipt record (Zapisnik o prijemu goriva) - for PUMPA users or ADMIN/SUPER_ADMIN if they choose to include it
+    const canCreateReceiptRecord = ['PUMPA', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
+    logger.info(`[FUEL_ENTRY] Receipt record check: hasData=${!!receiptRecordData}, role=${session.user.role}, canCreate=${canCreateReceiptRecord}`)
+    if (receiptRecordData && canCreateReceiptRecord) {
+      try {
+        logger.info(`[FUEL_ENTRY] Creating receipt record for entry ${fuelEntry.id}...`)
+        const receiptRecord = await prisma.fuelReceiptRecord.create({
+          data: {
+            fuelEntryId: fuelEntry.id,
+            tankMeasurements: receiptRecordData.tankMeasurements || [],
+            announcedQuantity: receiptRecordData.announcedQuantity,
+            dischargedQuantity: receiptRecordData.dischargedQuantity,
+            differenceQuantity: receiptRecordData.differenceQuantity,
+            meterReading: receiptRecordData.meterReading,
+            deliveryNoteQuantity: receiptRecordData.deliveryNoteQuantity,
+            finalDifference: receiptRecordData.finalDifference,
+            hasDeliveryNote: receiptRecordData.hasDeliveryNote || false,
+            hasQualityCertificate: receiptRecordData.hasQualityCertificate || false,
+            hasComplianceDeclaration: receiptRecordData.hasComplianceDeclaration || false,
+            isWaterMeasured: receiptRecordData.isWaterMeasured || false,
+            hasWaterInTank: receiptRecordData.hasWaterInTank || false,
+            isVisualInspectionDone: receiptRecordData.isVisualInspectionDone || false,
+            hasAdditives: receiptRecordData.hasAdditives || false,
+            isLastUnload: receiptRecordData.isLastUnload || false,
+            isTankCheckedAfterLastUnload: receiptRecordData.isTankCheckedAfterLastUnload || false,
+            fuelFoundOnLastUnload: receiptRecordData.fuelFoundOnLastUnload || null,
+            hasWeighing: receiptRecordData.hasWeighing || false,
+            weighingData: receiptRecordData.weighingData || null
+          }
+        })
+
+        // Add to response
+        fuelEntry.receiptRecord = receiptRecord
+        logger.info(`[FUEL_ENTRY] Receipt record created for entry ${fuelEntry.registrationNumber}`)
+      } catch (receiptError: any) {
+        logger.error('[FUEL_ENTRY] Failed to create receipt record:', receiptError?.message || receiptError)
+        logger.error('[FUEL_ENTRY] Receipt error details:', JSON.stringify(receiptError, null, 2))
+        // Don't fail the entire request, just log the error
+        // The fuel entry is already created successfully
+      }
+    } else {
+      logger.info(`[FUEL_ENTRY] Skipping receipt record: hasData=${!!receiptRecordData}, canCreate=${canCreateReceiptRecord}`)
     }
 
     // Log audit
