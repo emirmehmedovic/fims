@@ -12,8 +12,8 @@ const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
 interface AdditiveDetail {
   name: string
-  addedAt: string
-  quantity: string
+  addedAt?: string  // Optional for older entries
+  quantity?: string // Optional for older entries
 }
 
 interface FuelCharacteristic {
@@ -65,7 +65,7 @@ interface FuelEntryAdditiveData {
   [key: string]: unknown
 }
 
-const formatDateTime = (dateTimeString: string): string => {
+const formatDateTime = (dateTimeString: string | undefined): string => {
   if (!dateTimeString) return '-'
   return formatDateTimeSarajevo(dateTimeString)
 }
@@ -209,7 +209,7 @@ function generateAdditiveTableRows(
     <tr>
       <td class="row-number">10</td>
       <td class="row-label">KOLIČINA DODANOG ADITIVA</td>
-      <td class="row-value">${detail.quantity}</td>
+      <td class="row-value">${detail.quantity || '-'}</td>
     </tr>
   `
 }
@@ -257,8 +257,8 @@ function generateAdditiveFormulas(
     quantityMlM3 = ADDITIVE_DOSAGES[dosageKey].mlM3
     quantityMgKg = convertMlM3ToMgKg(quantityMlM3)
   } else {
-    // Fallback to user-entered quantity
-    quantityMgKg = parseFloat(detail.quantity) || 0
+    // Fallback to user-entered quantity (default to 0 if not provided)
+    quantityMgKg = parseFloat(detail.quantity || '0') || 0
     quantityMlM3 = convertMgKgToMlM3(quantityMgKg)
   }
 

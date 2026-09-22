@@ -9,18 +9,16 @@
 
 export interface AdditiveDetail {
   name: string
-  addedAt: string  // ISO date string or datetime
-  quantity: string // Quantity as string (e.g., "50ml", "100ml")
+  addedAt?: string  // ISO date string or datetime (optional for older entries)
+  quantity?: string // Quantity as string (e.g., "50ml", "100ml") (optional for older entries)
 }
 
-// Type guard for AdditiveDetail
+// Type guard for AdditiveDetail - only name is required, other fields are optional
 export function isAdditiveDetail(obj: unknown): obj is AdditiveDetail {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof (obj as AdditiveDetail).name === 'string' &&
-    typeof (obj as AdditiveDetail).addedAt === 'string' &&
-    typeof (obj as AdditiveDetail).quantity === 'string'
+    typeof (obj as AdditiveDetail).name === 'string'
   )
 }
 
