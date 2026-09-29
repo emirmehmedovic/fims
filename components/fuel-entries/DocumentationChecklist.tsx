@@ -113,12 +113,23 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
   }
 
   const handleWeighingChange = (field: keyof WeighingData, value: string) => {
+    const updatedWeighingData = {
+      ...values.weighingData,
+      [field]: value
+    }
+
+    // Auto-calculate Neto = Bruto - Tara
+    if (field === 'tara' || field === 'bruto') {
+      const tara = parseFloat(field === 'tara' ? value : updatedWeighingData.tara || '0') || 0
+      const bruto = parseFloat(field === 'bruto' ? value : updatedWeighingData.bruto || '0') || 0
+      if (bruto > 0 && tara >= 0) {
+        updatedWeighingData.neto = (bruto - tara).toString()
+      }
+    }
+
     onChange({
       ...values,
-      weighingData: {
-        ...values.weighingData,
-        [field]: value
-      }
+      weighingData: updatedWeighingData
     })
   }
 
@@ -215,7 +226,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Tara (kg)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={values.weighingData?.tara || ''}
                   onChange={(e) => handleWeighingChange('tara', e.target.value)}
                   className="input w-full text-sm"
@@ -225,7 +237,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Bruto (kg)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={values.weighingData?.bruto || ''}
                   onChange={(e) => handleWeighingChange('bruto', e.target.value)}
                   className="input w-full text-sm"
@@ -233,19 +246,20 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Neto (kg)</label>
+                <label className="block text-xs text-slate-600 mb-1">Neto (kg) = Bruto - Tara</label>
                 <input
-                  type="number"
+                  type="text"
                   value={values.weighingData?.neto || ''}
-                  onChange={(e) => handleWeighingChange('neto', e.target.value)}
-                  className="input w-full text-sm"
+                  readOnly
+                  className="input w-full text-sm bg-green-50 font-semibold text-green-700"
                   placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Spec. težina (kg/L)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   step="0.001"
                   value={values.weighingData?.specificWeight || ''}
                   onChange={(e) => handleWeighingChange('specificWeight', e.target.value)}
@@ -258,8 +272,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Temp na cisterni (°C)</label>
                 <input
-                  type="number"
-                  step="0.1"
+                  type="text"
+                  inputMode="decimal"
                   value={values.weighingData?.tempOnTanker || ''}
                   onChange={(e) => handleWeighingChange('tempOnTanker', e.target.value)}
                   className="input w-full text-sm"
@@ -269,7 +283,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Litara s korekcijom</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={values.weighingData?.litersWithCorrection || ''}
                   onChange={(e) => handleWeighingChange('litersWithCorrection', e.target.value)}
                   className="input w-full text-sm"
@@ -279,7 +294,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Otpremnica (L)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={values.weighingData?.deliveryNoteWeight || ''}
                   onChange={(e) => handleWeighingChange('deliveryNoteWeight', e.target.value)}
                   className="input w-full text-sm"
@@ -289,7 +305,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
               <div>
                 <label className="block text-xs text-slate-600 mb-1">Razlika (L)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={values.weighingData?.weightDifference || ''}
                   onChange={(e) => handleWeighingChange('weightDifference', e.target.value)}
                   className="input w-full text-sm bg-slate-50"
