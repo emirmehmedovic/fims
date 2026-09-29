@@ -653,9 +653,10 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                         </thead>
                         <tbody>
                           {(details.receiptRecord.tankMeasurements as any[]).map((m: any, i: number) => {
-                            // Support both old and new field names
-                            const initSonde = parseInt(m.initialSonde15 || m.initialLiters15Sonde || m.initialLiters15) || 0
-                            const finalSonde = parseInt(m.finalSonde15 || m.finalLiters15Sonde || m.finalLiters15) || 0
+                            // Sonda is already at 15°C - use raw value directly
+                            // Support old field names for backwards compatibility
+                            const initSonde = parseInt(m.initialSonde || m.initialSonde15 || m.initialLiters15Sonde || m.initialLiters15) || 0
+                            const finalSonde = parseInt(m.finalSonde || m.finalSonde15 || m.finalLiters15Sonde || m.finalLiters15) || 0
                             const initLetva = parseInt(m.initialLetva15 || m.initialLiters15Letva) || 0
                             const finalLetva = parseInt(m.finalLetva15 || m.finalLiters15Letva) || 0
                             return (

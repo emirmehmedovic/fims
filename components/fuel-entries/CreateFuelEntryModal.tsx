@@ -189,8 +189,6 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       finalTemp: '15',
       initialFactor: '1',
       finalFactor: '1',
-      initialSonde15: '',
-      finalSonde15: '',
       initialLetva15: '',
       finalLetva15: ''
     }
@@ -766,11 +764,12 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
       // Send receipt record data for PUMPA users or ADMIN with option enabled
       if (showReceiptRecord) {
-        // Calculate discharged quantity (using Letva on 15°C as primary)
+        // Calculate discharged quantity (using Letva on 15°C as primary, fallback to Sonda which is already at 15°C)
         let dischargedQty = 0
         for (const m of tankMeasurements) {
-          const initial = parseInt(m.initialLetva15) || parseInt(m.initialSonde15) || 0
-          const final = parseInt(m.finalLetva15) || parseInt(m.finalSonde15) || 0
+          // Sonda is already at 15°C, use raw value directly
+          const initial = parseInt(m.initialLetva15) || parseInt(m.initialSonde) || 0
+          const final = parseInt(m.finalLetva15) || parseInt(m.finalSonde) || 0
           dischargedQty += final - initial
         }
 

@@ -42,20 +42,19 @@ export function parseAdditiveDetails(json: unknown): AdditiveDetail[] {
 
 export interface TankMeasurement {
   tankNumber: string
-  // Sirove vrijednosti (unos korisnika)
+  // Sonda - već očitava na 15°C, direktan unos
   initialSonde: string
   finalSonde: string
+  // Letva - sirova vrijednost koju treba preračunati
   initialLetva: string
   finalLetva: string
-  // Temperatura
+  // Temperatura goriva u rezervoaru (za korekciju Letve)
   initialTemp: string
   finalTemp: string
   // Faktor korekcije
   initialFactor: string
   finalFactor: string
-  // Preračunato na 15°C (automatski)
-  initialSonde15: string
-  finalSonde15: string
+  // Letva preračunato na 15°C (automatski)
   initialLetva15: string
   finalLetva15: string
 }

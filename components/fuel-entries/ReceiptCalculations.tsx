@@ -27,13 +27,14 @@ export default function ReceiptCalculations({
   onMeterReadingChange,
   onDeliveryNoteQuantityChange
 }: Props) {
-  // Calculate total discharged quantity for Sonda (using 15°C values)
+  // Calculate total discharged quantity for Sonda
+  // Note: Sonda already reads at 15°C, so we use raw values directly
   const dischargedSonda = useMemo(() => {
     let total = 0
     for (const m of measurements) {
-      // Use 15°C values, fallback to raw if 15°C not available
-      const initial = parseInt(m.initialSonde15) || parseInt(m.initialSonde) || 0
-      const final = parseInt(m.finalSonde15) || parseInt(m.finalSonde) || 0
+      // Sonda is already at 15°C - use raw values directly
+      const initial = parseInt(m.initialSonde) || 0
+      const final = parseInt(m.finalSonde) || 0
       total += final - initial
     }
     return total

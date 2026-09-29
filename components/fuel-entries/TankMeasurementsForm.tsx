@@ -5,20 +5,19 @@ import { Thermometer, Droplets, Ruler, ChevronDown, Truck, Calculator } from 'lu
 
 export interface TankMeasurement {
   tankNumber: string // R1-R10
-  // Sirove vrijednosti (unos korisnika)
+  // Sonda - već očitava na 15°C, direktan unos
   initialSonde: string
   finalSonde: string
+  // Letva - sirova vrijednost koju treba preračunati
   initialLetva: string
   finalLetva: string
-  // Temperatura
+  // Temperatura goriva u rezervoaru (za korekciju Letve)
   initialTemp: string
   finalTemp: string
   // Faktor korekcije (automatski iz baze ili ručno)
   initialFactor: string
   finalFactor: string
-  // Preračunato na 15°C (automatski)
-  initialSonde15: string
-  finalSonde15: string
+  // Letva preračunato na 15°C (automatski)
   initialLetva15: string
   finalLetva15: string
 }
@@ -43,8 +42,6 @@ export const emptyMeasurement: TankMeasurement = {
   finalTemp: '15',
   initialFactor: '1',
   finalFactor: '1',
-  initialSonde15: '',
-  finalSonde15: '',
   initialLetva15: '',
   finalLetva15: ''
 }
@@ -118,17 +115,8 @@ export default function TankMeasurementsForm({
   const updateMeasurement = useCallback((field: keyof TankMeasurement, value: string) => {
     const updated = { ...measurement, [field]: value }
 
-    // Auto-calculate 15°C values when raw values or factors change
-    if (field === 'initialSonde' || field === 'initialFactor') {
-      const raw = field === 'initialSonde' ? value : updated.initialSonde
-      const factor = field === 'initialFactor' ? value : updated.initialFactor
-      updated.initialSonde15 = calculateLiters15(raw, factor)
-    }
-    if (field === 'finalSonde' || field === 'finalFactor') {
-      const raw = field === 'finalSonde' ? value : updated.finalSonde
-      const factor = field === 'finalFactor' ? value : updated.finalFactor
-      updated.finalSonde15 = calculateLiters15(raw, factor)
-    }
+    // Auto-calculate Letva 15°C when raw Letva or Factor changes
+    // Note: Sonda already reads at 15°C, no conversion needed
     if (field === 'initialLetva' || field === 'initialFactor') {
       const raw = field === 'initialLetva' ? value : updated.initialLetva
       const factor = field === 'initialFactor' ? value : updated.initialFactor
@@ -231,18 +219,18 @@ export default function TankMeasurementsForm({
             Početno stanje
           </h4>
 
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             <div>
               <label className="block text-xs text-slate-500 mb-1">
                 <Droplets className="w-3 h-3 inline mr-1" />
-                Sonda (L)
+                Sonda (L) <span className="text-blue-500">15°C</span>
               </label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={measurement.initialSonde}
                 onChange={(e) => updateMeasurement('initialSonde', e.target.value)}
-                className="input w-full text-sm"
+                className="input w-full text-sm bg-blue-50"
                 placeholder="0"
               />
             </div>
@@ -304,19 +292,6 @@ export default function TankMeasurementsForm({
             <div>
               <label className="block text-xs text-slate-500 mb-1">
                 <Calculator className="w-3 h-3 inline mr-1" />
-                Sonda 15°C
-              </label>
-              <input
-                type="text"
-                value={measurement.initialSonde15}
-                readOnly
-                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">
-                <Calculator className="w-3 h-3 inline mr-1" />
                 Letva 15°C
               </label>
               <input
@@ -337,18 +312,18 @@ export default function TankMeasurementsForm({
             Završno stanje
           </h4>
 
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             <div>
               <label className="block text-xs text-slate-500 mb-1">
                 <Droplets className="w-3 h-3 inline mr-1" />
-                Sonda (L)
+                Sonda (L) <span className="text-blue-500">15°C</span>
               </label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={measurement.finalSonde}
                 onChange={(e) => updateMeasurement('finalSonde', e.target.value)}
-                className="input w-full text-sm"
+                className="input w-full text-sm bg-blue-50"
                 placeholder="0"
               />
             </div>
@@ -407,19 +382,6 @@ export default function TankMeasurementsForm({
             <div>
               <label className="block text-xs text-slate-500 mb-1">
                 <Calculator className="w-3 h-3 inline mr-1" />
-                Sonda 15°C
-              </label>
-              <input
-                type="text"
-                value={measurement.finalSonde15}
-                readOnly
-                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">
-                <Calculator className="w-3 h-3 inline mr-1" />
                 Letva 15°C
               </label>
               <input
@@ -434,21 +396,21 @@ export default function TankMeasurementsForm({
         </div>
 
         {/* Per-tank summary */}
-        {(measurement.initialSonde15 && measurement.finalSonde15) ||
+        {(measurement.initialSonde && measurement.finalSonde) ||
          (measurement.initialLetva15 && measurement.finalLetva15) ? (
           <div className="mt-3 pt-3 border-t border-slate-200">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              {measurement.initialSonde15 && measurement.finalSonde15 && (
+              {measurement.initialSonde && measurement.finalSonde && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Istočeno (sonda):</span>
+                  <span className="text-slate-500">Istočeno (sonda 15°C):</span>
                   <span className="font-bold text-indigo-700">
-                    {(parseInt(measurement.finalSonde15) - parseInt(measurement.initialSonde15)).toLocaleString()} L
+                    {(parseInt(measurement.finalSonde) - parseInt(measurement.initialSonde)).toLocaleString()} L
                   </span>
                 </div>
               )}
               {measurement.initialLetva15 && measurement.finalLetva15 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Istočeno (letva):</span>
+                  <span className="text-slate-500">Istočeno (letva 15°C):</span>
                   <span className="font-bold text-emerald-700">
                     {(parseInt(measurement.finalLetva15) - parseInt(measurement.initialLetva15)).toLocaleString()} L
                   </span>
