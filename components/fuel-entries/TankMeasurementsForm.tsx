@@ -113,7 +113,9 @@ export default function TankMeasurementsForm({
   }, [productName])
 
   const updateMeasurement = useCallback((field: keyof TankMeasurement, value: string) => {
-    const updated = { ...measurement, [field]: value }
+    // Always use ref to get latest measurement (important for async operations)
+    const currentMeasurement = measurementsRef.current[0] || emptyMeasurement
+    const updated = { ...currentMeasurement, [field]: value }
 
     // Auto-calculate Letva 15°C when raw Letva or Factor changes
     // Note: Sonda already reads at 15°C, no conversion needed
@@ -129,7 +131,7 @@ export default function TankMeasurementsForm({
     }
 
     onChange([updated])
-  }, [measurement, onChange])
+  }, [onChange])
 
   // Auto-lookup correction factor when temperature changes
   const lookupFactor = useCallback(async (
