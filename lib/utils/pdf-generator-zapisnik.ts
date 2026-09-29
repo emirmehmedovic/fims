@@ -289,9 +289,9 @@ function generateZapisnikTemplate(
 
     body {
       font-family: Arial, sans-serif;
-      font-size: 9px;
-      line-height: 1.3;
-      color: #1a1a1a;
+      font-size: 8px;
+      line-height: 1.2;
+      color: #000;
       background: white;
       width: 210mm;
       height: 297mm;
@@ -302,6 +302,7 @@ function generateZapisnikTemplate(
       height: 297mm;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* Header - full width */
@@ -318,35 +319,34 @@ function generateZapisnikTemplate(
     /* Main content */
     .main-content {
       flex: 1;
-      padding: 3mm 10mm;
+      padding: 2mm 8mm;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* Title */
     .prilog-broj {
       text-align: center;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 1.5mm;
+      color: #000;
+      margin-bottom: 1mm;
       text-transform: uppercase;
     }
 
     .document-title {
       text-align: center;
-      margin-bottom: 3mm;
+      margin-bottom: 2mm;
     }
     .document-title h1 {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: #000;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
-      color: white;
-      padding: 2mm 5mm;
-      border-radius: 3px;
+      border: 2px solid #000;
+      padding: 1.5mm 4mm;
       display: inline-block;
     }
 
@@ -354,111 +354,107 @@ function generateZapisnikTemplate(
     .info-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.5mm;
-      margin-bottom: 3mm;
-      background: #f8fafc;
-      padding: 2mm;
-      border-radius: 3px;
-      border: 1px solid #e2e8f0;
+      gap: 0;
+      margin-bottom: 2mm;
+      border: 1px solid #000;
     }
 
     .info-item {
       display: flex;
       align-items: center;
-      padding: 1mm 0;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 1mm 2mm;
+      border-bottom: 1px solid #ccc;
+      border-right: 1px solid #ccc;
     }
 
-    .info-item:last-child,
-    .info-item:nth-last-child(2) {
+    .info-item:nth-child(2n) {
+      border-right: none;
+    }
+
+    .info-item:nth-last-child(-n+2) {
       border-bottom: none;
     }
 
     .info-label {
       font-weight: 600;
-      color: #64748b;
+      color: #333;
       font-size: 7px;
       text-transform: uppercase;
-      min-width: 24mm;
+      min-width: 22mm;
     }
 
     .info-value {
-      font-weight: 600;
-      color: #1a1a1a;
-      font-size: 9px;
+      font-weight: 700;
+      color: #000;
+      font-size: 8px;
     }
 
-    /* Tables */
+    /* Tables - unified black & white style */
     .table-container {
-      margin-bottom: 2.5mm;
-      border: 1px solid #e2e8f0;
-      border-radius: 3px;
+      margin-bottom: 1.5mm;
+      border: 1px solid #000;
       overflow: hidden;
-      background: #f8fafc;
     }
 
     .table-title {
       text-align: center;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
-      color: #1e3a5f;
+      color: #000;
       text-transform: uppercase;
-      padding: 1.5mm;
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 1mm;
+      background: #f0f0f0;
+      border-bottom: 1px solid #000;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 8px;
+      font-size: 7px;
     }
 
     td, th {
-      border: 1px solid #cbd5e1;
-      padding: 1.2mm 1.5mm;
+      border: 1px solid #000;
+      padding: 1mm;
       text-align: center;
     }
 
     .tank-header-row td {
-      background: #f1f5f9;
-      padding: 1mm;
+      background: #f0f0f0;
+      padding: 0.8mm;
       text-align: left;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid #000;
     }
 
     .tank-badge {
       display: inline-block;
-      background: #e2e8f0;
-      color: #1e3a5f;
-      padding: 0.8mm 2.5mm;
-      border-radius: 2px;
+      background: #fff;
+      color: #000;
+      padding: 0.5mm 2mm;
       font-weight: 700;
-      font-size: 8px;
-      border: 1px solid #cbd5e1;
+      font-size: 7px;
+      border: 1px solid #000;
     }
 
     .column-header-row td {
-      background: #f8fafc;
-      font-weight: 600;
-      font-size: 6.5px;
+      background: #f0f0f0;
+      font-weight: 700;
+      font-size: 6px;
       text-transform: uppercase;
-      color: #64748b;
+      color: #000;
       padding: 0.8mm;
-      border-bottom: 1px solid #e2e8f0;
     }
 
     .col-label {
-      width: 25%;
+      width: 20%;
     }
 
     .col-header {
-      width: 12.5%;
+      width: 16%;
     }
 
     .col-header.highlight {
-      background: #e2e8f0 !important;
-      color: #1e3a5f;
+      background: #e0e0e0 !important;
       font-weight: 700;
     }
 
@@ -469,77 +465,65 @@ function generateZapisnikTemplate(
     .row-label {
       text-align: left !important;
       font-weight: 600;
-      background: #f8fafc !important;
-      font-size: 7px;
-      color: #64748b;
+      background: #f5f5f5 !important;
+      font-size: 6px;
     }
 
     .highlight-cell {
-      background: #f1f5f9 !important;
+      background: #f0f0f0 !important;
       font-weight: 700;
-      color: #1e3a5f;
     }
 
     /* Calculations table */
     .calc-row td {
       font-weight: 600;
-      padding: 1.5mm;
+      padding: 1mm;
     }
 
     .calc-label {
       text-align: left !important;
-      background: #f8fafc !important;
+      background: #f5f5f5 !important;
       width: 35%;
-      font-size: 8px;
-      color: #64748b;
+      font-size: 7px;
     }
 
     .calc-value {
       background: white;
     }
 
-    .calc-highlight {
-      background: #f1f5f9 !important;
-      color: #1e3a5f;
-      font-weight: 700;
-    }
-
     .total-row td {
-      background: #f1f5f9 !important;
+      background: #f0f0f0 !important;
       font-weight: 700;
-      font-size: 9px;
-      border-top: 2px solid #e2e8f0;
+      font-size: 8px;
+      border-top: 2px solid #000;
     }
 
     .total-positive {
-      background: #d1fae5 !important;
-      color: #065f46 !important;
+      background: #e0e0e0 !important;
     }
 
     .total-negative {
-      background: #fee2e2 !important;
-      color: #991b1b !important;
+      background: #e0e0e0 !important;
     }
 
     .total-label {
       text-align: left !important;
-      color: #1e3a5f;
     }
 
-    /* Documentation checklist - clear black & white design */
+    /* Documentation checklist */
     .docs-section {
-      margin: 2mm 0;
-      border: 2px solid #000;
+      margin: 1.5mm 0;
+      border: 1px solid #000;
     }
 
     .docs-header {
       background: #f0f0f0;
       color: #000;
-      font-size: 9px;
+      font-size: 7px;
       font-weight: 700;
       text-transform: uppercase;
-      padding: 2mm 3mm;
-      border-bottom: 2px solid #000;
+      padding: 1mm 2mm;
+      border-bottom: 1px solid #000;
     }
 
     .docs-grid {
@@ -548,7 +532,7 @@ function generateZapisnikTemplate(
     }
 
     .docs-column {
-      padding: 2mm 3mm;
+      padding: 1.5mm 2mm;
     }
 
     .docs-column:first-child {
@@ -558,9 +542,9 @@ function generateZapisnikTemplate(
     .doc-row {
       display: flex;
       align-items: center;
-      padding: 1.5mm 0;
-      font-size: 8px;
-      border-bottom: 1px solid #ccc;
+      padding: 1mm 0;
+      font-size: 7px;
+      border-bottom: 1px solid #ddd;
     }
 
     .doc-row:last-child {
@@ -569,13 +553,13 @@ function generateZapisnikTemplate(
 
     .doc-checkbox {
       display: inline-block;
-      width: 4mm;
-      height: 4mm;
-      border: 1.5px solid #000;
-      margin-right: 2mm;
+      width: 3.5mm;
+      height: 3.5mm;
+      border: 1px solid #000;
+      margin-right: 1.5mm;
       text-align: center;
-      line-height: 3.5mm;
-      font-size: 10px;
+      line-height: 3mm;
+      font-size: 9px;
       font-weight: bold;
       flex-shrink: 0;
     }
@@ -587,71 +571,50 @@ function generateZapisnikTemplate(
 
     .doc-checkbox.unchecked {
       background: #fff;
-      color: transparent;
     }
 
     .doc-label {
       flex: 1;
-      font-size: 8px;
+      font-size: 7px;
     }
 
     .doc-row.warning {
       font-weight: 700;
       background: #eee;
-      padding: 1.5mm 2mm;
-      border: 2px solid #000;
-      margin: 1mm 0;
+      padding: 1mm;
+      border: 1px solid #000;
+      margin: 0.5mm 0;
     }
 
     .doc-row.fuel-found {
       font-weight: 600;
-      padding-left: 6mm;
+      padding-left: 5mm;
     }
 
-    /* Weighing section */
-    .weighing-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-    }
-
-    .weighing-item {
-      padding: 2mm;
-      border-right: 1px solid #000;
-      border-bottom: 1px solid #000;
-      text-align: center;
-    }
-
-    .weighing-item:nth-child(4n) {
-      border-right: none;
-    }
-
-    .weighing-item:nth-last-child(-n+4) {
-      border-bottom: none;
-    }
-
-    .weighing-label {
+    /* Weighing section - compact inline */
+    .weighing-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1mm 3mm;
+      padding: 1.5mm 2mm;
       font-size: 7px;
-      color: #333;
-      margin-bottom: 1mm;
-      font-weight: 600;
     }
 
-    .weighing-value {
+    .weighing-inline span {
+      white-space: nowrap;
+    }
+
+    .weighing-inline b {
       font-weight: 700;
-      font-size: 9px;
     }
 
     /* Statement */
     .statement {
       margin: 1.5mm 0;
       padding: 1.5mm;
-      border: 1px solid #1e3a5f;
-      border-radius: 2px;
-      font-size: 6.5px;
+      border: 1px solid #000;
+      font-size: 6px;
       text-align: justify;
-      background: #f0f9ff;
-      color: #1e3a5f;
       line-height: 1.3;
     }
 
@@ -661,42 +624,41 @@ function generateZapisnikTemplate(
       justify-content: space-between;
       align-items: flex-end;
       margin-top: auto;
-      padding-top: 2mm;
+      padding-top: 1.5mm;
     }
 
     .signature-box {
-      width: 30%;
+      width: 28%;
       text-align: center;
     }
 
     .signature-box.center-box {
-      width: 25%;
+      width: 20%;
     }
 
     .signature-line {
-      border-bottom: 1px solid #1a1a1a;
-      height: 8mm;
+      border-bottom: 1px solid #000;
+      height: 6mm;
       margin-bottom: 1mm;
     }
 
     .signature-label {
       font-size: 7px;
       font-weight: 700;
-      color: #1e3a5f;
       text-transform: uppercase;
     }
 
     .stamp-placeholder {
-      width: 18mm;
-      height: 18mm;
-      border: 1px dashed #94a3b8;
+      width: 15mm;
+      height: 15mm;
+      border: 1px dashed #666;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto;
-      font-size: 8px;
-      color: #94a3b8;
+      font-size: 7px;
+      color: #666;
       font-weight: 600;
     }
 
@@ -705,10 +667,9 @@ function generateZapisnikTemplate(
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 10mm;
-      padding: 2.5mm 10mm;
-      border-top: 1px solid #e2e8f0;
-      background: #f8fafc;
+      gap: 8mm;
+      padding: 2mm 8mm;
+      border-top: 1px solid #000;
       flex-shrink: 0;
     }
 
@@ -716,12 +677,12 @@ function generateZapisnikTemplate(
       text-align: center;
     }
     .qr-box img {
-      width: 16mm;
-      height: 16mm;
+      width: 12mm;
+      height: 12mm;
     }
     .qr-box .qr-label {
-      font-size: 5.5px;
-      color: #64748b;
+      font-size: 5px;
+      color: #666;
       margin-top: 0.5mm;
     }
 
@@ -729,22 +690,20 @@ function generateZapisnikTemplate(
       text-align: center;
     }
     .logo-box img {
-      height: 16mm;
+      height: 12mm;
       width: auto;
-      border-radius: 3px;
     }
 
     .date-box {
       text-align: center;
     }
     .date-label {
-      font-size: 6.5px;
-      color: #64748b;
+      font-size: 6px;
+      color: #666;
     }
     .date-value {
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
-      color: #1e3a5f;
     }
 
     @media print {
@@ -913,42 +872,18 @@ function generateZapisnikTemplate(
       ${record?.hasWeighing && record?.weighingData ? (() => {
         const w = record.weighingData as WeighingData
         return `
-      <!-- Weighing Section -->
+      <!-- Weighing Section - Compact -->
       <div class="docs-section">
         <div class="docs-header">Ako je u blizini vaga - vaga se cisterna</div>
-        <div class="weighing-grid">
-          <div class="weighing-item">
-            <div class="weighing-label">Tara</div>
-            <div class="weighing-value">${w.tara || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Bruto</div>
-            <div class="weighing-value">${w.bruto || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Neto</div>
-            <div class="weighing-value">${w.neto || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Specifična težina</div>
-            <div class="weighing-value">${w.specificWeight || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Temp na cisterni</div>
-            <div class="weighing-value">${w.tempOnTanker || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Litara sa korekcijom</div>
-            <div class="weighing-value">${w.litersWithCorrection || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Otpremnica</div>
-            <div class="weighing-value">${w.deliveryNoteWeight || '-'}</div>
-          </div>
-          <div class="weighing-item">
-            <div class="weighing-label">Razlika</div>
-            <div class="weighing-value">${w.weightDifference || '-'}</div>
-          </div>
+        <div class="weighing-inline">
+          <span>Tara: <b>${w.tara || '-'}</b></span>
+          <span>Bruto: <b>${w.bruto || '-'}</b></span>
+          <span>Neto: <b>${w.neto || '-'}</b></span>
+          <span>Spec. težina: <b>${w.specificWeight || '-'}</b></span>
+          <span>Temp: <b>${w.tempOnTanker || '-'}</b>°C</span>
+          <span>Litara s kor.: <b>${w.litersWithCorrection || '-'}</b></span>
+          <span>Otpremnica: <b>${w.deliveryNoteWeight || '-'}</b></span>
+          <span>Razlika: <b>${w.weightDifference || '-'}</b></span>
         </div>
       </div>
       `})() : ''}
