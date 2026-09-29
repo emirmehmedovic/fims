@@ -616,7 +616,15 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
                 <input
                   type="checkbox"
                   checked={isHigherQuality}
-                  onChange={(e) => setIsHigherQuality(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setIsHigherQuality(checked)
+                    // Clear characteristics and additive details when unchecked
+                    if (!checked) {
+                      setImprovedCharacteristics([])
+                      setAdditiveDetails({})
+                    }
+                  }}
                   className="w-5 h-5 rounded-lg border-dark-300 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-sm font-medium text-dark-900">Gorivo više kvalitete</span>
