@@ -526,92 +526,111 @@ function generateZapisnikTemplate(
       color: #1e3a5f;
     }
 
-    /* Compact documentation section */
-    .docs-compact {
-      margin: 1.5mm 0;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 2px;
-      padding: 1.5mm;
+    /* Documentation checklist - black & white friendly */
+    .docs-section {
+      margin: 2mm 0;
+      border: 1px solid #000;
     }
 
-    .docs-title {
-      font-size: 7px;
+    .docs-header {
+      background: #000;
+      color: #fff;
+      font-size: 8px;
       font-weight: 700;
-      color: #1e3a5f;
       text-transform: uppercase;
-      margin-bottom: 1mm;
+      padding: 1.5mm 2mm;
+      text-align: center;
     }
 
-    .docs-inline {
+    .docs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .docs-column {
+      padding: 1.5mm 2mm;
+    }
+
+    .docs-column:first-child {
+      border-right: 1px solid #000;
+    }
+
+    .doc-row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 1mm;
-    }
-
-    .doc-item {
-      display: inline-flex;
       align-items: center;
-      padding: 0.5mm 1.5mm;
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 2px;
+      padding: 0.8mm 0;
+      font-size: 7.5px;
+      border-bottom: 1px dotted #ccc;
+    }
+
+    .doc-row:last-child {
+      border-bottom: none;
+    }
+
+    .doc-checkbox {
+      font-family: "Segoe UI Symbol", "DejaVu Sans", sans-serif;
+      font-size: 10px;
+      margin-right: 1.5mm;
+      font-weight: bold;
+    }
+
+    .doc-checkbox.checked {
+      color: #000;
+    }
+
+    .doc-checkbox.unchecked {
+      color: #666;
+    }
+
+    .doc-label {
+      flex: 1;
+    }
+
+    .doc-row.warning {
+      font-weight: 700;
+      background: #f5f5f5;
+      padding: 1mm;
+      border: 1px solid #000;
+      margin: 0.5mm 0;
+    }
+
+    .doc-row.fuel-found {
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    /* Weighing section */
+    .weighing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .weighing-item {
+      padding: 1.5mm 2mm;
+      border-right: 1px solid #000;
+      border-bottom: 1px solid #000;
+      font-size: 7px;
+      text-align: center;
+    }
+
+    .weighing-item:nth-child(4n) {
+      border-right: none;
+    }
+
+    .weighing-item:nth-last-child(-n+4) {
+      border-bottom: none;
+    }
+
+    .weighing-label {
       font-size: 6px;
-      color: #94a3b8;
+      color: #666;
+      margin-bottom: 0.5mm;
     }
 
-    .doc-item::before {
-      content: '✗';
-      margin-right: 1mm;
-      color: #dc2626;
-      font-size: 7px;
-    }
-
-    .doc-item.checked {
-      background: #ecfdf5;
-      border-color: #10b981;
-      color: #065f46;
-    }
-
-    .doc-item.checked::before {
-      content: '✓';
-      color: #10b981;
-    }
-
-    .doc-item.warning {
-      background: #fef2f2;
-      border-color: #dc2626;
-      color: #991b1b;
-      font-weight: 600;
-    }
-
-    .doc-item.warning::before {
-      content: '⚠';
-      color: #dc2626;
-    }
-
-    .doc-item.fuel-found {
-      background: #fffbeb;
-      border-color: #f59e0b;
-      color: #92400e;
-      font-weight: 600;
-    }
-
-    .doc-item.fuel-found::before {
-      content: '⛽';
-    }
-
-    /* Weighing inline */
-    .weighing-inline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2mm;
-      font-size: 7px;
-      color: #374151;
-    }
-
-    .weighing-inline b {
-      color: #1e3a5f;
+    .weighing-value {
+      font-weight: 700;
+      font-size: 8px;
     }
 
     /* Statement */
@@ -830,38 +849,100 @@ function generateZapisnikTemplate(
         </table>
       </div>
 
-      <!-- Documentation Checkboxes - Compact inline layout -->
-      <div class="docs-compact">
-        <div class="docs-title">Dokumentacija i provjere</div>
-        <div class="docs-inline">
-          <span class="doc-item ${record?.hasDeliveryNote ? 'checked' : ''}">Otpremnica</span>
-          <span class="doc-item ${record?.hasQualityCertificate ? 'checked' : ''}">Certifikat</span>
-          <span class="doc-item ${record?.hasComplianceDeclaration ? 'checked' : ''}">Izjava</span>
-          <span class="doc-item ${record?.isWaterMeasured ? 'checked' : ''}">Voda mjerena</span>
-          <span class="doc-item ${record?.hasWaterInTank ? 'warning' : ''}">Voda u cisterni${record?.hasWaterInTank ? ' ⚠' : ''}</span>
-          <span class="doc-item ${record?.isVisualInspectionDone ? 'checked' : ''}">Vizuelni pregled</span>
-          <span class="doc-item ${record?.hasAdditives ? 'checked' : ''}">Aditiviranje</span>
-          <span class="doc-item ${record?.isLastUnload ? 'checked' : ''}">Zadnji istovar</span>
-          <span class="doc-item ${record?.isTankCheckedAfterLastUnload ? 'checked' : ''}">Provjera cisterne</span>
-          ${record?.fuelFoundOnLastUnload ? `<span class="doc-item fuel-found">Gorivo na zad. ist.: ${record.fuelFoundOnLastUnload} L</span>` : ''}
+      <!-- Documentation Checklist - Black & White Friendly -->
+      <div class="docs-section">
+        <div class="docs-header">Dokumentacija i provjere</div>
+        <div class="docs-grid">
+          <div class="docs-column">
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.hasDeliveryNote ? 'checked' : 'unchecked'}">${record?.hasDeliveryNote ? '☑' : '☐'}</span>
+              <span class="doc-label">Otpremnica primljena</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.hasQualityCertificate ? 'checked' : 'unchecked'}">${record?.hasQualityCertificate ? '☑' : '☐'}</span>
+              <span class="doc-label">Certifikat o kvalitetu</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.hasComplianceDeclaration ? 'checked' : 'unchecked'}">${record?.hasComplianceDeclaration ? '☑' : '☐'}</span>
+              <span class="doc-label">Izjava o usklađenosti</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.isWaterMeasured ? 'checked' : 'unchecked'}">${record?.isWaterMeasured ? '☑' : '☐'}</span>
+              <span class="doc-label">Voda mjerena u cisterni</span>
+            </div>
+            ${record?.hasWaterInTank ? `
+            <div class="doc-row warning">
+              <span class="doc-checkbox checked">☑</span>
+              <span class="doc-label">⚠ VODA U CISTERNI - OBUSTAVA!</span>
+            </div>
+            ` : ''}
+          </div>
+          <div class="docs-column">
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.isVisualInspectionDone ? 'checked' : 'unchecked'}">${record?.isVisualInspectionDone ? '☑' : '☐'}</span>
+              <span class="doc-label">Vizuelni pregled komore</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.hasAdditives ? 'checked' : 'unchecked'}">${record?.hasAdditives ? '☑' : '☐'}</span>
+              <span class="doc-label">Aditiviranje goriva</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.isLastUnload ? 'checked' : 'unchecked'}">${record?.isLastUnload ? '☑' : '☐'}</span>
+              <span class="doc-label">Posljednji istovar</span>
+            </div>
+            <div class="doc-row">
+              <span class="doc-checkbox ${record?.isTankCheckedAfterLastUnload ? 'checked' : 'unchecked'}">${record?.isTankCheckedAfterLastUnload ? '☑' : '☐'}</span>
+              <span class="doc-label">Provjera cisterne na zad. ist.</span>
+            </div>
+            ${record?.fuelFoundOnLastUnload ? `
+            <div class="doc-row fuel-found">
+              <span class="doc-checkbox checked">→</span>
+              <span class="doc-label">Gorivo uočeno: ${record.fuelFoundOnLastUnload} L</span>
+            </div>
+            ` : ''}
+          </div>
         </div>
       </div>
 
       ${record?.hasWeighing && record?.weighingData ? (() => {
         const w = record.weighingData as WeighingData
         return `
-      <!-- Weighing Section - Compact -->
-      <div class="docs-compact">
-        <div class="docs-title">Vaganje cisterne</div>
-        <div class="weighing-inline">
-          <span>Tara: <b>${w.tara || '-'}</b> kg</span>
-          <span>Bruto: <b>${w.bruto || '-'}</b> kg</span>
-          <span>Neto: <b>${w.neto || '-'}</b> kg</span>
-          <span>Spec.tež.: <b>${w.specificWeight || '-'}</b></span>
-          <span>Temp: <b>${w.tempOnTanker || '-'}</b> °C</span>
-          <span>L s kor.: <b>${w.litersWithCorrection || '-'}</b></span>
-          <span>Otpr.: <b>${w.deliveryNoteWeight || '-'}</b> L</span>
-          <span>Razl.: <b>${w.weightDifference || '-'}</b> L</span>
+      <!-- Weighing Section -->
+      <div class="docs-section">
+        <div class="docs-header">Vaganje cisterne</div>
+        <div class="weighing-grid">
+          <div class="weighing-item">
+            <div class="weighing-label">TARA (kg)</div>
+            <div class="weighing-value">${w.tara || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">BRUTO (kg)</div>
+            <div class="weighing-value">${w.bruto || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">NETO (kg)</div>
+            <div class="weighing-value">${w.neto || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">SPEC. TEŽINA</div>
+            <div class="weighing-value">${w.specificWeight || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">TEMP. (°C)</div>
+            <div class="weighing-value">${w.tempOnTanker || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">LITARA S KOR.</div>
+            <div class="weighing-value">${w.litersWithCorrection || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">OTPREMNICA (L)</div>
+            <div class="weighing-value">${w.deliveryNoteWeight || '-'}</div>
+          </div>
+          <div class="weighing-item">
+            <div class="weighing-label">RAZLIKA (L)</div>
+            <div class="weighing-value">${w.weightDifference || '-'}</div>
+          </div>
         </div>
       </div>
       `})() : ''}

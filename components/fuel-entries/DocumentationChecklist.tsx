@@ -10,7 +10,9 @@ import {
   Truck,
   AlertTriangle,
   Search,
-  Scale
+  Scale,
+  CheckCircle2,
+  Circle
 } from 'lucide-react'
 
 export interface WeighingData {
@@ -34,8 +36,7 @@ export interface DocumentationValues {
   hasAdditives: boolean
   isLastUnload: boolean
   isTankCheckedAfterLastUnload: boolean
-  fuelFoundOnLastUnload: string // Količina goriva uočenog na zadnjem istovaru
-  // Weighing data (optional)
+  fuelFoundOnLastUnload: string
   hasWeighing: boolean
   weighingData: WeighingData
 }
@@ -45,67 +46,59 @@ interface Props {
   onChange: (values: DocumentationValues) => void
 }
 
-const CHECKLIST_ITEMS = [
+// Grouped checklist items for better organization
+const DOCUMENTATION_ITEMS = [
   {
     key: 'hasDeliveryNote' as keyof DocumentationValues,
-    label: 'Otpremnica',
-    icon: FileText,
-    description: 'Primljena otpremnica s podacima o dostavi'
+    label: 'Otpremnica primljena',
+    icon: FileText
   },
   {
     key: 'hasQualityCertificate' as keyof DocumentationValues,
     label: 'Certifikat o kvalitetu',
-    icon: Award,
-    description: 'Laboratorijski certifikat o kvalitetu goriva'
+    icon: Award
   },
   {
     key: 'hasComplianceDeclaration' as keyof DocumentationValues,
     label: 'Izjava o usklađenosti',
-    icon: FileCheck,
-    description: 'Izjava dobavljača o usklađenosti sa standardima'
-  },
+    icon: FileCheck
+  }
+]
+
+const INSPECTION_ITEMS = [
   {
     key: 'isWaterMeasured' as keyof DocumentationValues,
     label: 'Voda mjerena u cisterni',
-    icon: Droplet,
-    description: 'Izvršeno mjerenje prisustva vode'
-  },
-  {
-    key: 'hasWaterInTank' as keyof DocumentationValues,
-    label: 'Voda u cisterni',
-    icon: AlertTriangle,
-    description: 'Utvrđeno prisustvo vode - OBUSTAVA istakanja!',
-    warning: true
+    icon: Droplet
   },
   {
     key: 'isVisualInspectionDone' as keyof DocumentationValues,
     label: 'Vizuelni pregled komore',
-    icon: Eye,
-    description: 'Obavljen vizuelni pregled cisterne'
+    icon: Eye
   },
   {
     key: 'hasAdditives' as keyof DocumentationValues,
-    label: 'Aditiviranje',
-    icon: FlaskConical,
-    description: 'Gorivo je aditivirano'
-  },
+    label: 'Aditiviranje goriva',
+    icon: FlaskConical
+  }
+]
+
+const UNLOAD_ITEMS = [
   {
     key: 'isLastUnload' as keyof DocumentationValues,
     label: 'Posljednji istovar',
-    icon: Truck,
-    description: 'Ovo je posljednji istovar s ove cisterne'
+    icon: Truck
   },
   {
     key: 'isTankCheckedAfterLastUnload' as keyof DocumentationValues,
-    label: 'Provjera cisterne na zadnjem istovaru',
-    icon: Search,
-    description: 'Cisterna provjerena - uočeno gorivo'
+    label: 'Provjera cisterne na zad. ist.',
+    icon: Search
   }
 ]
 
 export default function DocumentationChecklist({ values, onChange }: Props) {
   const handleToggle = (key: keyof DocumentationValues) => {
-    if (key === 'weighingData' || key === 'fuelFoundOnLastUnload') return // These are not boolean toggles
+    if (key === 'weighingData' || key === 'fuelFoundOnLastUnload') return
     onChange({
       ...values,
       [key]: !values[key]
@@ -133,56 +126,84 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
     })
   }
 
-  const checkedCount = CHECKLIST_ITEMS.filter(item => values[item.key] === true).length
+  const renderCheckItem = (item: { key: keyof DocumentationValues; label: string; icon: any }) => {
+    const Icon = item.icon
+    const isChecked = values[item.key] === true
+
+    return (
+      <button
+        key={item.key}
+        type="button"
+        onClick={() => handleToggle(item.key)}
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all w-full ${
+          isChecked
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+        }`}
+      >
+        {isChecked ? (
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+        ) : (
+          <Circle className="w-5 h-5 text-slate-300 flex-shrink-0" />
+        )}
+        <Icon className={`w-4 h-4 flex-shrink-0 ${isChecked ? 'text-emerald-600' : 'text-slate-400'}`} />
+        <span className="text-sm font-medium">{item.label}</span>
+      </button>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      {/* Documentation Checklist */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-            Dokumentacija i provjere
-          </h4>
-          <span className="text-xs text-slate-500">
-            {checkedCount} / {CHECKLIST_ITEMS.length} označeno
-          </span>
+      {/* Documentation & Inspections - Two Column Layout */}
+      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+          <FileText className="w-4 h-4" />
+          Dokumentacija i provjere
+        </h4>
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Left Column - Documentation */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Dokumenti</p>
+            {DOCUMENTATION_ITEMS.map(renderCheckItem)}
+          </div>
+
+          {/* Right Column - Inspections */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Provjere</p>
+            {INSPECTION_ITEMS.map(renderCheckItem)}
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {CHECKLIST_ITEMS.map(item => {
-            const Icon = item.icon
-            const isChecked = values[item.key] === true
-            const isWarning = (item as any).warning && isChecked
+        {/* Unload section - full width */}
+        <div className="mt-3 pt-3 border-t border-slate-200">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Istovar</p>
+          <div className="grid grid-cols-2 gap-2">
+            {UNLOAD_ITEMS.map(renderCheckItem)}
+          </div>
+        </div>
 
-            return (
-              <label
-                key={item.key}
-                className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                  isWarning
-                    ? 'bg-red-50 border-red-300 text-red-800'
-                    : isChecked
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => handleToggle(item.key)}
-                  className={`mt-0.5 w-4 h-4 rounded border-slate-300 ${isWarning ? 'text-red-600 focus:ring-red-500' : 'text-emerald-600 focus:ring-emerald-500'}`}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${isWarning ? 'text-red-600' : isChecked ? 'text-emerald-600' : 'text-slate-400'}`} />
-                    <span className="text-sm font-medium truncate">{item.label}</span>
-                  </div>
-                  <p className={`text-xs mt-0.5 ${isWarning ? 'text-red-600' : isChecked ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {item.description}
-                  </p>
-                </div>
-              </label>
-            )
-          })}
+        {/* Water Warning - Special case */}
+        <div className="mt-3 pt-3 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={() => handleToggle('hasWaterInTank')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all w-full ${
+              values.hasWaterInTank
+                ? 'bg-red-100 border-red-400 text-red-800 ring-2 ring-red-300'
+                : 'bg-white border-slate-200 text-slate-600 hover:border-red-200 hover:bg-red-50'
+            }`}
+          >
+            {values.hasWaterInTank ? (
+              <CheckCircle2 className="w-5 h-5 text-red-600 flex-shrink-0" />
+            ) : (
+              <Circle className="w-5 h-5 text-slate-300 flex-shrink-0" />
+            )}
+            <AlertTriangle className={`w-4 h-4 flex-shrink-0 ${values.hasWaterInTank ? 'text-red-600' : 'text-slate-400'}`} />
+            <span className="text-sm font-medium">
+              {values.hasWaterInTank ? '⚠️ VODA U CISTERNI - OBUSTAVA!' : 'Voda u cisterni (upozorenje)'}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -191,10 +212,11 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <label className="block">
             <span className="text-sm font-medium text-amber-800">
-              Istočena količina goriva uočenog na zadnjem istovaru (L)
+              Količina goriva uočenog na zadnjem istovaru (L)
             </span>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={values.fuelFoundOnLastUnload || ''}
               onChange={(e) => onChange({ ...values, fuelFoundOnLastUnload: e.target.value })}
               className="input w-full mt-2"
@@ -204,21 +226,28 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
         </div>
       )}
 
-      {/* Weighing Section (optional) */}
+      {/* Weighing Section */}
       <div className="border border-slate-200 rounded-xl overflow-hidden">
-        <label className="flex items-center gap-3 p-4 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
-          <input
-            type="checkbox"
-            checked={values.hasWeighing || false}
-            onChange={() => onChange({ ...values, hasWeighing: !values.hasWeighing })}
-            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          <Scale className="w-5 h-5 text-slate-500" />
+        <button
+          type="button"
+          onClick={() => onChange({ ...values, hasWeighing: !values.hasWeighing })}
+          className={`flex items-center gap-3 p-4 w-full text-left transition-colors ${
+            values.hasWeighing ? 'bg-indigo-50' : 'bg-slate-50 hover:bg-slate-100'
+          }`}
+        >
+          {values.hasWeighing ? (
+            <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+          ) : (
+            <Circle className="w-5 h-5 text-slate-300 flex-shrink-0" />
+          )}
+          <Scale className={`w-5 h-5 ${values.hasWeighing ? 'text-indigo-600' : 'text-slate-500'}`} />
           <div>
-            <span className="text-sm font-medium text-slate-700">Vaganje cisterne</span>
-            <p className="text-xs text-slate-500">Ako je u blizini vaga - vaga se cisterna</p>
+            <span className={`text-sm font-medium ${values.hasWeighing ? 'text-indigo-700' : 'text-slate-700'}`}>
+              Vaganje cisterne
+            </span>
+            <p className="text-xs text-slate-500">Ako je u blizini vaga</p>
           </div>
-        </label>
+        </button>
 
         {values.hasWeighing && (
           <div className="p-4 bg-white border-t border-slate-200">
@@ -246,21 +275,20 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Neto (kg) = Bruto - Tara</label>
+                <label className="block text-xs text-slate-600 mb-1">Neto (kg)</label>
                 <input
                   type="text"
                   value={values.weighingData?.neto || ''}
                   readOnly
                   className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                  placeholder="0"
+                  placeholder="Auto"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Spec. težina (kg/L)</label>
+                <label className="block text-xs text-slate-600 mb-1">Spec. težina</label>
                 <input
                   type="text"
                   inputMode="decimal"
-                  step="0.001"
                   value={values.weighingData?.specificWeight || ''}
                   onChange={(e) => handleWeighingChange('specificWeight', e.target.value)}
                   className="input w-full text-sm"
@@ -270,7 +298,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
             </div>
             <div className="grid grid-cols-4 gap-3 mt-3">
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Temp na cisterni (°C)</label>
+                <label className="block text-xs text-slate-600 mb-1">Temp (°C)</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -281,7 +309,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Litara s korekcijom</label>
+                <label className="block text-xs text-slate-600 mb-1">Litara s kor.</label>
                 <input
                   type="text"
                   inputMode="numeric"
