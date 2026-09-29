@@ -42,22 +42,22 @@ export function parseAdditiveDetails(json: unknown): AdditiveDetail[] {
 
 export interface TankMeasurement {
   tankNumber: string
-  // Sonda (električna)
-  initialSonde: string
-  finalSonde: string
-  // Letva (ručno mjerenje)
-  initialLetva: string
-  finalLetva: string
-  // Temperatura i faktor
+  // Sonda i Letva na 15°C (direktan unos)
+  initialSonde15: string
+  finalSonde15: string
+  initialLetva15: string
+  finalLetva15: string
+  // Temperatura (default 15°C)
   initialTemp: string
   finalTemp: string
+  // Faktor korekcije (koristi se samo ako temp ≠ 15)
   initialFactor: string
   finalFactor: string
-  // Izračunato na 15°C
-  initialLiters15Sonde: string
-  finalLiters15Sonde: string
-  initialLiters15Letva: string
-  finalLiters15Letva: string
+  // Sirove vrijednosti (koristi se samo ako temp ≠ 15)
+  initialSondeRaw: string
+  finalSondeRaw: string
+  initialLetvaRaw: string
+  finalLetvaRaw: string
 }
 
 // ============================================
@@ -145,6 +145,7 @@ export interface FuelEntryForPDF {
 
 export interface FuelReceiptRecordData {
   id: string
+  tankerRegistration: string | null
   tankMeasurements: TankMeasurement[]
   announcedQuantity: number | null
   dischargedQuantity: number | null

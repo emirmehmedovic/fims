@@ -181,20 +181,21 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [tankMeasurements, setTankMeasurements] = useState<TankMeasurement[]>([
     {
       tankNumber: 'R1',
-      initialSonde: '',
-      finalSonde: '',
-      initialLetva: '',
-      finalLetva: '',
-      initialTemp: '',
-      finalTemp: '',
-      initialFactor: '',
-      finalFactor: '',
-      initialLiters15Sonde: '',
-      finalLiters15Sonde: '',
-      initialLiters15Letva: '',
-      finalLiters15Letva: ''
+      initialSonde15: '',
+      finalSonde15: '',
+      initialLetva15: '',
+      finalLetva15: '',
+      initialTemp: '15',
+      finalTemp: '15',
+      initialFactor: '1',
+      finalFactor: '1',
+      initialSondeRaw: '',
+      finalSondeRaw: '',
+      initialLetvaRaw: '',
+      finalLetvaRaw: ''
     }
   ])
+  const [tankerRegistration, setTankerRegistration] = useState('')
   const [announcedQuantity, setAnnouncedQuantity] = useState('')
   const [meterReading, setMeterReading] = useState('')
   const [deliveryNoteQuantity, setDeliveryNoteQuantity] = useState('')
@@ -768,12 +769,13 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         // Calculate discharged quantity (using Letva on 15°C as primary)
         let dischargedQty = 0
         for (const m of tankMeasurements) {
-          const initial = parseInt(m.initialLiters15Letva) || parseInt(m.initialLiters15Sonde) || 0
-          const final = parseInt(m.finalLiters15Letva) || parseInt(m.finalLiters15Sonde) || 0
+          const initial = parseInt(m.initialLetva15) || parseInt(m.initialSonde15) || 0
+          const final = parseInt(m.finalLetva15) || parseInt(m.finalSonde15) || 0
           dischargedQty += final - initial
         }
 
         const receiptRecordData = {
+          tankerRegistration: tankerRegistration || null,
           tankMeasurements: tankMeasurements.filter(m => m.tankNumber), // Only include tanks with numbers
           announcedQuantity: parseInt(announcedQuantity) || null,
           dischargedQuantity: dischargedQty || null,
@@ -1448,6 +1450,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                         measurements={tankMeasurements}
                         onChange={setTankMeasurements}
                         productName={productName}
+                        tankerRegistration={tankerRegistration}
+                        onTankerRegistrationChange={setTankerRegistration}
                       />
                     </div>
 

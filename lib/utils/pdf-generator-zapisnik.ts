@@ -12,22 +12,60 @@ const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
 interface TankMeasurement {
   tankNumber: string
-  // Sonda (električna)
-  initialSonde: string
-  finalSonde: string
-  // Letva (ručno mjerenje)
-  initialLetva: string
-  finalLetva: string
+  // New field names (direct 15°C values)
+  initialSonde15?: string
+  finalSonde15?: string
+  initialLetva15?: string
+  finalLetva15?: string
+  // Old field names (for backwards compatibility)
+  initialLiters15Sonde?: string
+  finalLiters15Sonde?: string
+  initialLiters15Letva?: string
+  finalLiters15Letva?: string
   // Temperatura i faktor
-  initialTemp: string
-  finalTemp: string
-  initialFactor: string
-  finalFactor: string
-  // Izračunato na 15°C
-  initialLiters15Sonde: string
-  finalLiters15Sonde: string
-  initialLiters15Letva: string
-  finalLiters15Letva: string
+  initialTemp?: string
+  finalTemp?: string
+  initialFactor?: string
+  finalFactor?: string
+  // Raw values (for conversion when temp ≠ 15)
+  initialSondeRaw?: string
+  finalSondeRaw?: string
+  initialLetvaRaw?: string
+  finalLetvaRaw?: string
+  // Old raw field names (backwards compatibility)
+  initialSonde?: string
+  finalSonde?: string
+  initialLetva?: string
+  finalLetva?: string
+}
+
+// Helper to get 15°C values regardless of field name format
+function getSonde15(m: TankMeasurement, type: 'initial' | 'final'): string {
+  if (type === 'initial') {
+    return m.initialSonde15 || m.initialLiters15Sonde || ''
+  }
+  return m.finalSonde15 || m.finalLiters15Sonde || ''
+}
+
+function getLetva15(m: TankMeasurement, type: 'initial' | 'final'): string {
+  if (type === 'initial') {
+    return m.initialLetva15 || m.initialLiters15Letva || ''
+  }
+  return m.finalLetva15 || m.finalLiters15Letva || ''
+}
+
+function getSondeRaw(m: TankMeasurement, type: 'initial' | 'final'): string {
+  if (type === 'initial') {
+    return m.initialSondeRaw || m.initialSonde || ''
+  }
+  return m.finalSondeRaw || m.finalSonde || ''
+}
+
+function getLetvaRaw(m: TankMeasurement, type: 'initial' | 'final'): string {
+  if (type === 'initial') {
+    return m.initialLetvaRaw || m.initialLetva || ''
+  }
+  return m.finalLetvaRaw || m.finalLetva || ''
 }
 
 interface WeighingData {
@@ -44,6 +82,7 @@ interface WeighingData {
 // Interface accepts both parsed types and raw JSON (for Prisma compatibility)
 interface FuelReceiptRecordData {
   id: string
+  tankerRegistration?: string | null
   tankMeasurements: TankMeasurement[] | unknown
   announcedQuantity: number | null
   dischargedQuantity: number | null
@@ -145,6 +184,8 @@ function generateTankRows(measurements: TankMeasurement[]): string {
   let rows = ''
   for (const m of measurements) {
     const tankLabel = m.tankNumber || 'R1'
+    // Check if temperature is not 15 - if so, show raw values column
+    const showRawValues = (m.initialTemp && m.initialTemp !== '15') || (m.finalTemp && m.finalTemp !== '15')
 
     rows += `
       <tr class="tank-header-row">
@@ -152,8 +193,7 @@ function generateTankRows(measurements: TankMeasurement[]): string {
       </tr>
       <tr class="column-header-row">
         <td class="col-label"></td>
-        <td class="col-header">Sonda (L)</td>
-        <td class="col-header">Letva (L)</td>
+        ${showRawValues ? '<td class="col-header">Sonda sirovo</td><td class="col-header">Letva sirovo</td>' : ''}
         <td class="col-header">Temp (°C)</td>
         <td class="col-header">Faktor</td>
         <td class="col-header highlight">Sonda 15°C</td>
@@ -161,21 +201,19 @@ function generateTankRows(measurements: TankMeasurement[]): string {
       </tr>
       <tr class="data-row">
         <td class="row-label">POČETNO STANJE</td>
-        <td>${m.initialSonde || '-'}</td>
-        <td>${m.initialLetva || '-'}</td>
-        <td>${m.initialTemp || '-'}</td>
-        <td>${m.initialFactor || '-'}</td>
-        <td class="highlight-cell">${m.initialLiters15Sonde || '-'}</td>
-        <td class="highlight-cell">${m.initialLiters15Letva || '-'}</td>
+        ${showRawValues ? `<td>${getSondeRaw(m, 'initial') || '-'}</td><td>${getLetvaRaw(m, 'initial') || '-'}</td>` : ''}
+        <td>${m.initialTemp || '15'}</td>
+        <td>${m.initialFactor || '1'}</td>
+        <td class="highlight-cell">${getSonde15(m, 'initial') || '-'}</td>
+        <td class="highlight-cell">${getLetva15(m, 'initial') || '-'}</td>
       </tr>
       <tr class="data-row">
         <td class="row-label">ZAVRŠNO STANJE</td>
-        <td>${m.finalSonde || '-'}</td>
-        <td>${m.finalLetva || '-'}</td>
-        <td>${m.finalTemp || '-'}</td>
-        <td>${m.finalFactor || '-'}</td>
-        <td class="highlight-cell">${m.finalLiters15Sonde || '-'}</td>
-        <td class="highlight-cell">${m.finalLiters15Letva || '-'}</td>
+        ${showRawValues ? `<td>${getSondeRaw(m, 'final') || '-'}</td><td>${getLetvaRaw(m, 'final') || '-'}</td>` : ''}
+        <td>${m.finalTemp || '15'}</td>
+        <td>${m.finalFactor || '1'}</td>
+        <td class="highlight-cell">${getSonde15(m, 'final') || '-'}</td>
+        <td class="highlight-cell">${getLetva15(m, 'final') || '-'}</td>
       </tr>
     `
   }
@@ -197,10 +235,10 @@ function generateZapisnikTemplate(
   let totalDischargedLetva15 = 0
 
   for (const m of measurements) {
-    const initialSonda15 = parseInt(m.initialLiters15Sonde) || 0
-    const finalSonda15 = parseInt(m.finalLiters15Sonde) || 0
-    const initialLetva15 = parseInt(m.initialLiters15Letva) || 0
-    const finalLetva15 = parseInt(m.finalLiters15Letva) || 0
+    const initialSonda15 = parseInt(getSonde15(m, 'initial')) || 0
+    const finalSonda15 = parseInt(getSonde15(m, 'final')) || 0
+    const initialLetva15 = parseInt(getLetva15(m, 'initial')) || 0
+    const finalLetva15 = parseInt(getLetva15(m, 'final')) || 0
 
     totalDischargedSonda15 += finalSonda15 - initialSonda15
     totalDischargedLetva15 += finalLetva15 - initialLetva15
@@ -714,8 +752,12 @@ function generateZapisnikTemplate(
           <span class="info-value">${entry.transporter?.name || '-'}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">Reg. oznaka:</span>
+          <span class="info-label">Reg. oznaka vozila:</span>
           <span class="info-value">${entry.vehicleRegistration || '-'}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Reg. oznaka cisterne:</span>
+          <span class="info-value">${record?.tankerRegistration || '-'}</span>
         </div>
         <div class="info-item">
           <span class="info-label">Vrsta goriva:</span>

@@ -86,6 +86,7 @@ interface FuelEntryDetail {
   } | null
   receiptRecord?: {
     id: string
+    tankerRegistration: string | null
     tankMeasurements: any[]
     announcedQuantity: number | null
     dischargedQuantity: number | null
@@ -625,6 +626,14 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                   Zapisnik o prijemu goriva
                 </h3>
 
+                {/* Tanker Registration */}
+                {details.receiptRecord.tankerRegistration && (
+                  <div className="mb-4 p-3 bg-white rounded-lg border border-indigo-100">
+                    <p className="text-xs text-indigo-600 mb-1">Registarska oznaka cisterne</p>
+                    <p className="font-bold text-indigo-900">{details.receiptRecord.tankerRegistration}</p>
+                  </div>
+                )}
+
                 {/* Tank Measurements Summary */}
                 {details.receiptRecord.tankMeasurements && details.receiptRecord.tankMeasurements.length > 0 && (
                   <div className="mb-4">
@@ -644,10 +653,11 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                         </thead>
                         <tbody>
                           {(details.receiptRecord.tankMeasurements as any[]).map((m: any, i: number) => {
-                            const initSonde = parseInt(m.initialLiters15Sonde || m.initialLiters15) || 0
-                            const finalSonde = parseInt(m.finalLiters15Sonde || m.finalLiters15) || 0
-                            const initLetva = parseInt(m.initialLiters15Letva) || 0
-                            const finalLetva = parseInt(m.finalLiters15Letva) || 0
+                            // Support both old and new field names
+                            const initSonde = parseInt(m.initialSonde15 || m.initialLiters15Sonde || m.initialLiters15) || 0
+                            const finalSonde = parseInt(m.finalSonde15 || m.finalLiters15Sonde || m.finalLiters15) || 0
+                            const initLetva = parseInt(m.initialLetva15 || m.initialLiters15Letva) || 0
+                            const finalLetva = parseInt(m.finalLetva15 || m.finalLiters15Letva) || 0
                             return (
                               <tr key={i} className="border-b border-indigo-100">
                                 <td className="p-2 font-semibold">{m.tankNumber}</td>

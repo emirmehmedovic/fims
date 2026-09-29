@@ -441,6 +441,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         const receiptRecord = await prisma.fuelReceiptRecord.create({
           data: {
             fuelEntryId: fuelEntry.id,
+            tankerRegistration: receiptRecordData.tankerRegistration || null,
             tankMeasurements: receiptRecordData.tankMeasurements || [],
             announcedQuantity: receiptRecordData.announcedQuantity,
             dischargedQuantity: receiptRecordData.dischargedQuantity,

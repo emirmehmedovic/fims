@@ -31,8 +31,8 @@ export default function ReceiptCalculations({
   const dischargedSonda = useMemo(() => {
     let total = 0
     for (const m of measurements) {
-      const initial = parseInt(m.initialLiters15Sonde) || 0
-      const final = parseInt(m.finalLiters15Sonde) || 0
+      const initial = parseInt(m.initialSonde15) || 0
+      const final = parseInt(m.finalSonde15) || 0
       total += final - initial
     }
     return total
@@ -42,8 +42,8 @@ export default function ReceiptCalculations({
   const dischargedLetva = useMemo(() => {
     let total = 0
     for (const m of measurements) {
-      const initial = parseInt(m.initialLiters15Letva) || 0
-      const final = parseInt(m.finalLiters15Letva) || 0
+      const initial = parseInt(m.initialLetva15) || 0
+      const final = parseInt(m.finalLetva15) || 0
       total += final - initial
     }
     return total

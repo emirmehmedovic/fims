@@ -472,6 +472,9 @@ model FuelReceiptRecord {
   id          String @id @default(cuid())
   fuelEntryId String @unique @map("fuel_entry_id")
 
+  // Registarska oznaka cisterne
+  tankerRegistration String? @map("tanker_registration")
+
   // Podaci o mjerenjima - JSON struktura za fleksibilnost
   // Svaki tank ima: tankNumber (R1-R10), initialSonde, finalSonde, initialLetva, finalLetva,
   //                 initialTemp, finalTemp, initialFactor, finalFactor,
