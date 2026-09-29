@@ -12,7 +12,17 @@ const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
 
 interface TankMeasurement {
   tankNumber: string
-  // New field names (direct 15°C values)
+  // Sirove vrijednosti
+  initialSonde?: string
+  finalSonde?: string
+  initialLetva?: string
+  finalLetva?: string
+  // Temperatura i faktor
+  initialTemp?: string
+  finalTemp?: string
+  initialFactor?: string
+  finalFactor?: string
+  // Preračunato na 15°C
   initialSonde15?: string
   finalSonde15?: string
   initialLetva15?: string
@@ -22,21 +32,6 @@ interface TankMeasurement {
   finalLiters15Sonde?: string
   initialLiters15Letva?: string
   finalLiters15Letva?: string
-  // Temperatura i faktor
-  initialTemp?: string
-  finalTemp?: string
-  initialFactor?: string
-  finalFactor?: string
-  // Raw values (for conversion when temp ≠ 15)
-  initialSondeRaw?: string
-  finalSondeRaw?: string
-  initialLetvaRaw?: string
-  finalLetvaRaw?: string
-  // Old raw field names (backwards compatibility)
-  initialSonde?: string
-  finalSonde?: string
-  initialLetva?: string
-  finalLetva?: string
 }
 
 // Helper to get 15°C values regardless of field name format
@@ -56,16 +51,16 @@ function getLetva15(m: TankMeasurement, type: 'initial' | 'final'): string {
 
 function getSondeRaw(m: TankMeasurement, type: 'initial' | 'final'): string {
   if (type === 'initial') {
-    return m.initialSondeRaw || m.initialSonde || ''
+    return m.initialSonde || ''
   }
-  return m.finalSondeRaw || m.finalSonde || ''
+  return m.finalSonde || ''
 }
 
 function getLetvaRaw(m: TankMeasurement, type: 'initial' | 'final'): string {
   if (type === 'initial') {
-    return m.initialLetvaRaw || m.initialLetva || ''
+    return m.initialLetva || ''
   }
-  return m.finalLetvaRaw || m.finalLetva || ''
+  return m.finalLetva || ''
 }
 
 interface WeighingData {
@@ -184,8 +179,17 @@ function generateTankRows(measurements: TankMeasurement[]): string {
   let rows = ''
   for (const m of measurements) {
     const tankLabel = m.tankNumber || 'R1'
-    // Check if temperature is not 15 - if so, show raw values column
-    const showRawValues = (m.initialTemp && m.initialTemp !== '15') || (m.finalTemp && m.finalTemp !== '15')
+
+    // Get values - use raw if available, otherwise use 15°C values
+    const initialSondeRaw = getSondeRaw(m, 'initial') || getSonde15(m, 'initial') || '-'
+    const finalSondeRaw = getSondeRaw(m, 'final') || getSonde15(m, 'final') || '-'
+    const initialLetvaRaw = getLetvaRaw(m, 'initial') || getLetva15(m, 'initial') || '-'
+    const finalLetvaRaw = getLetvaRaw(m, 'final') || getLetva15(m, 'final') || '-'
+
+    const initialSonde15 = getSonde15(m, 'initial') || '-'
+    const finalSonde15 = getSonde15(m, 'final') || '-'
+    const initialLetva15 = getLetva15(m, 'initial') || '-'
+    const finalLetva15 = getLetva15(m, 'final') || '-'
 
     rows += `
       <tr class="tank-header-row">
@@ -193,7 +197,8 @@ function generateTankRows(measurements: TankMeasurement[]): string {
       </tr>
       <tr class="column-header-row">
         <td class="col-label"></td>
-        ${showRawValues ? '<td class="col-header">Sonda sirovo</td><td class="col-header">Letva sirovo</td>' : ''}
+        <td class="col-header">Sonda (L)</td>
+        <td class="col-header">Letva (L)</td>
         <td class="col-header">Temp (°C)</td>
         <td class="col-header">Faktor</td>
         <td class="col-header highlight">Sonda 15°C</td>
@@ -201,19 +206,21 @@ function generateTankRows(measurements: TankMeasurement[]): string {
       </tr>
       <tr class="data-row">
         <td class="row-label">POČETNO STANJE</td>
-        ${showRawValues ? `<td>${getSondeRaw(m, 'initial') || '-'}</td><td>${getLetvaRaw(m, 'initial') || '-'}</td>` : ''}
+        <td>${initialSondeRaw}</td>
+        <td>${initialLetvaRaw}</td>
         <td>${m.initialTemp || '15'}</td>
         <td>${m.initialFactor || '1'}</td>
-        <td class="highlight-cell">${getSonde15(m, 'initial') || '-'}</td>
-        <td class="highlight-cell">${getLetva15(m, 'initial') || '-'}</td>
+        <td class="highlight-cell">${initialSonde15}</td>
+        <td class="highlight-cell">${initialLetva15}</td>
       </tr>
       <tr class="data-row">
         <td class="row-label">ZAVRŠNO STANJE</td>
-        ${showRawValues ? `<td>${getSondeRaw(m, 'final') || '-'}</td><td>${getLetvaRaw(m, 'final') || '-'}</td>` : ''}
+        <td>${finalSondeRaw}</td>
+        <td>${finalLetvaRaw}</td>
         <td>${m.finalTemp || '15'}</td>
         <td>${m.finalFactor || '1'}</td>
-        <td class="highlight-cell">${getSonde15(m, 'final') || '-'}</td>
-        <td class="highlight-cell">${getLetva15(m, 'final') || '-'}</td>
+        <td class="highlight-cell">${finalSonde15}</td>
+        <td class="highlight-cell">${finalLetva15}</td>
       </tr>
     `
   }

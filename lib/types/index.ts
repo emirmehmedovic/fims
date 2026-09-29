@@ -42,22 +42,22 @@ export function parseAdditiveDetails(json: unknown): AdditiveDetail[] {
 
 export interface TankMeasurement {
   tankNumber: string
-  // Sonda i Letva na 15°C (direktan unos)
+  // Sirove vrijednosti (unos korisnika)
+  initialSonde: string
+  finalSonde: string
+  initialLetva: string
+  finalLetva: string
+  // Temperatura
+  initialTemp: string
+  finalTemp: string
+  // Faktor korekcije
+  initialFactor: string
+  finalFactor: string
+  // Preračunato na 15°C (automatski)
   initialSonde15: string
   finalSonde15: string
   initialLetva15: string
   finalLetva15: string
-  // Temperatura (default 15°C)
-  initialTemp: string
-  finalTemp: string
-  // Faktor korekcije (koristi se samo ako temp ≠ 15)
-  initialFactor: string
-  finalFactor: string
-  // Sirove vrijednosti (koristi se samo ako temp ≠ 15)
-  initialSondeRaw: string
-  finalSondeRaw: string
-  initialLetvaRaw: string
-  finalLetvaRaw: string
 }
 
 // ============================================

@@ -27,23 +27,25 @@ export default function ReceiptCalculations({
   onMeterReadingChange,
   onDeliveryNoteQuantityChange
 }: Props) {
-  // Calculate total discharged quantity for Sonda
+  // Calculate total discharged quantity for Sonda (using 15°C values)
   const dischargedSonda = useMemo(() => {
     let total = 0
     for (const m of measurements) {
-      const initial = parseInt(m.initialSonde15) || 0
-      const final = parseInt(m.finalSonde15) || 0
+      // Use 15°C values, fallback to raw if 15°C not available
+      const initial = parseInt(m.initialSonde15) || parseInt(m.initialSonde) || 0
+      const final = parseInt(m.finalSonde15) || parseInt(m.finalSonde) || 0
       total += final - initial
     }
     return total
   }, [measurements])
 
-  // Calculate total discharged quantity for Letva
+  // Calculate total discharged quantity for Letva (using 15°C values)
   const dischargedLetva = useMemo(() => {
     let total = 0
     for (const m of measurements) {
-      const initial = parseInt(m.initialLetva15) || 0
-      const final = parseInt(m.finalLetva15) || 0
+      // Use 15°C values, fallback to raw if 15°C not available
+      const initial = parseInt(m.initialLetva15) || parseInt(m.initialLetva) || 0
+      const final = parseInt(m.finalLetva15) || parseInt(m.finalLetva) || 0
       total += final - initial
     }
     return total

@@ -181,18 +181,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [tankMeasurements, setTankMeasurements] = useState<TankMeasurement[]>([
     {
       tankNumber: 'R1',
-      initialSonde15: '',
-      finalSonde15: '',
-      initialLetva15: '',
-      finalLetva15: '',
+      initialSonde: '',
+      finalSonde: '',
+      initialLetva: '',
+      finalLetva: '',
       initialTemp: '15',
       finalTemp: '15',
       initialFactor: '1',
       finalFactor: '1',
-      initialSondeRaw: '',
-      finalSondeRaw: '',
-      initialLetvaRaw: '',
-      finalLetvaRaw: ''
+      initialSonde15: '',
+      finalSonde15: '',
+      initialLetva15: '',
+      finalLetva15: ''
     }
   ])
   const [tankerRegistration, setTankerRegistration] = useState('')

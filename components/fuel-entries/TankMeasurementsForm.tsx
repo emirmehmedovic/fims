@@ -1,26 +1,26 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Thermometer, Droplets, Ruler, ChevronDown, Truck } from 'lucide-react'
+import { Thermometer, Droplets, Ruler, ChevronDown, Truck, Calculator } from 'lucide-react'
 
 export interface TankMeasurement {
   tankNumber: string // R1-R10
-  // Sonda i Letva na 15°C (direktan unos)
+  // Sirove vrijednosti (unos korisnika)
+  initialSonde: string
+  finalSonde: string
+  initialLetva: string
+  finalLetva: string
+  // Temperatura
+  initialTemp: string
+  finalTemp: string
+  // Faktor korekcije (automatski iz baze ili ručno)
+  initialFactor: string
+  finalFactor: string
+  // Preračunato na 15°C (automatski)
   initialSonde15: string
   finalSonde15: string
   initialLetva15: string
   finalLetva15: string
-  // Temperatura (default 15°C)
-  initialTemp: string
-  finalTemp: string
-  // Faktor korekcije (koristi se samo ako temp ≠ 15)
-  initialFactor: string
-  finalFactor: string
-  // Sirove vrijednosti (koristi se samo ako temp ≠ 15)
-  initialSondeRaw: string
-  finalSondeRaw: string
-  initialLetvaRaw: string
-  finalLetvaRaw: string
 }
 
 interface Props {
@@ -35,18 +35,18 @@ const TANK_OPTIONS = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10
 
 export const emptyMeasurement: TankMeasurement = {
   tankNumber: 'R1',
-  initialSonde15: '',
-  finalSonde15: '',
-  initialLetva15: '',
-  finalLetva15: '',
+  initialSonde: '',
+  finalSonde: '',
+  initialLetva: '',
+  finalLetva: '',
   initialTemp: '15',
   finalTemp: '15',
   initialFactor: '1',
   finalFactor: '1',
-  initialSondeRaw: '',
-  finalSondeRaw: '',
-  initialLetvaRaw: '',
-  finalLetvaRaw: ''
+  initialSonde15: '',
+  finalSonde15: '',
+  initialLetva15: '',
+  finalLetva15: ''
 }
 
 // Calculate liters at 15°C from raw value and factor
@@ -81,10 +81,6 @@ export default function TankMeasurementsForm({
 
   // Single measurement - always use index 0
   const measurement = measurements[0] || emptyMeasurement
-
-  // Check if we need to show conversion fields
-  const showInitialConversion = measurement.initialTemp !== '15' && measurement.initialTemp !== ''
-  const showFinalConversion = measurement.finalTemp !== '15' && measurement.finalTemp !== ''
 
   // Fetch available temperatures when productName changes
   useEffect(() => {
@@ -123,37 +119,25 @@ export default function TankMeasurementsForm({
     const updated = { ...measurement, [field]: value }
 
     // Auto-calculate 15°C values when raw values or factors change
-    if (field === 'initialSondeRaw' || field === 'initialFactor') {
-      const raw = field === 'initialSondeRaw' ? value : updated.initialSondeRaw
+    if (field === 'initialSonde' || field === 'initialFactor') {
+      const raw = field === 'initialSonde' ? value : updated.initialSonde
       const factor = field === 'initialFactor' ? value : updated.initialFactor
       updated.initialSonde15 = calculateLiters15(raw, factor)
     }
-    if (field === 'finalSondeRaw' || field === 'finalFactor') {
-      const raw = field === 'finalSondeRaw' ? value : updated.finalSondeRaw
+    if (field === 'finalSonde' || field === 'finalFactor') {
+      const raw = field === 'finalSonde' ? value : updated.finalSonde
       const factor = field === 'finalFactor' ? value : updated.finalFactor
       updated.finalSonde15 = calculateLiters15(raw, factor)
     }
-    if (field === 'initialLetvaRaw' || field === 'initialFactor') {
-      const raw = field === 'initialLetvaRaw' ? value : updated.initialLetvaRaw
+    if (field === 'initialLetva' || field === 'initialFactor') {
+      const raw = field === 'initialLetva' ? value : updated.initialLetva
       const factor = field === 'initialFactor' ? value : updated.initialFactor
       updated.initialLetva15 = calculateLiters15(raw, factor)
     }
-    if (field === 'finalLetvaRaw' || field === 'finalFactor') {
-      const raw = field === 'finalLetvaRaw' ? value : updated.finalLetvaRaw
+    if (field === 'finalLetva' || field === 'finalFactor') {
+      const raw = field === 'finalLetva' ? value : updated.finalLetva
       const factor = field === 'finalFactor' ? value : updated.finalFactor
       updated.finalLetva15 = calculateLiters15(raw, factor)
-    }
-
-    // If temp changes to 15, reset factor to 1 and clear raw values
-    if (field === 'initialTemp' && value === '15') {
-      updated.initialFactor = '1'
-      updated.initialSondeRaw = ''
-      updated.initialLetvaRaw = ''
-    }
-    if (field === 'finalTemp' && value === '15') {
-      updated.finalFactor = '1'
-      updated.finalSondeRaw = ''
-      updated.finalLetvaRaw = ''
     }
 
     onChange([updated])
@@ -165,10 +149,17 @@ export default function TankMeasurementsForm({
     temperature: string,
     type: 'initial' | 'final'
   ) => {
-    if (!productName || !temperature || temperature === '15') return
+    if (!productName || !temperature) return
 
     const tempValue = parseFloat(temperature)
     if (isNaN(tempValue)) return
+
+    // For 15°C, factor is always 1
+    if (tempValue === 15) {
+      const field = type === 'initial' ? 'initialFactor' : 'finalFactor'
+      updateMeasurement(field, '1')
+      return
+    }
 
     const key = `0-${type}`
     setLoadingFactors(prev => ({ ...prev, [key]: true }))
@@ -198,11 +189,7 @@ export default function TankMeasurementsForm({
   // Handle temperature change and trigger factor lookup
   const handleTempChange = (type: 'initial' | 'final', value: string) => {
     updateMeasurement(type === 'initial' ? 'initialTemp' : 'finalTemp', value)
-
-    // Lookup factor when temperature is selected (but not for 15°C)
-    if (value && value !== '15') {
-      lookupFactor(productName, value, type)
-    }
+    lookupFactor(productName, value, type)
   }
 
   return (
@@ -244,112 +231,102 @@ export default function TankMeasurementsForm({
             Početno stanje
           </h4>
 
-          <div className="space-y-3">
-            {/* Main row - 15°C values */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Droplets className="w-3 h-3 inline mr-1" />
-                  Sonda (L na 15°C)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={measurement.initialSonde15}
-                  onChange={(e) => updateMeasurement('initialSonde15', e.target.value)}
-                  className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                  placeholder="0"
-                  disabled={showInitialConversion}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Ruler className="w-3 h-3 inline mr-1" />
-                  Letva (L na 15°C)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={measurement.initialLetva15}
-                  onChange={(e) => updateMeasurement('initialLetva15', e.target.value)}
-                  className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                  placeholder="0"
-                  disabled={showInitialConversion}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Thermometer className="w-3 h-3 inline mr-1" />
-                  Temp (°C)
-                  {loadingTemperatures && (
-                    <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
-                  )}
-                </label>
-                <div className="relative">
-                  <select
-                    value={measurement.initialTemp}
-                    onChange={(e) => handleTempChange('initial', e.target.value)}
-                    className="input w-full text-sm appearance-none pr-8"
-                  >
-                    <option value="15">15°C (default)</option>
-                    {availableTemperatures
-                      .filter(t => t !== 15)
-                      .map(temp => (
-                        <option key={temp} value={temp}>{temp}°C</option>
-                      ))
-                    }
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
+          <div className="grid grid-cols-6 gap-2">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Droplets className="w-3 h-3 inline mr-1" />
+                Sonda (L)
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={measurement.initialSonde}
+                onChange={(e) => updateMeasurement('initialSonde', e.target.value)}
+                className="input w-full text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Ruler className="w-3 h-3 inline mr-1" />
+                Letva (L)
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={measurement.initialLetva}
+                onChange={(e) => updateMeasurement('initialLetva', e.target.value)}
+                className="input w-full text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Thermometer className="w-3 h-3 inline mr-1" />
+                Temp (°C)
+                {loadingTemperatures && (
+                  <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
+                )}
+              </label>
+              <div className="relative">
+                <select
+                  value={measurement.initialTemp}
+                  onChange={(e) => handleTempChange('initial', e.target.value)}
+                  className="input w-full text-sm appearance-none pr-6"
+                >
+                  <option value="15">15</option>
+                  {availableTemperatures
+                    .filter(t => t !== 15)
+                    .map(temp => (
+                      <option key={temp} value={temp}>{temp}</option>
+                    ))
+                  }
+                </select>
+                <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
-
-            {/* Conversion fields - only show if temp ≠ 15 */}
-            {showInitialConversion && (
-              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                <p className="text-xs text-amber-700 mb-2 font-medium">Preračunavanje na 15°C:</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Sonda sirovo (L)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={measurement.initialSondeRaw}
-                      onChange={(e) => updateMeasurement('initialSondeRaw', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Letva sirovo (L)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={measurement.initialLetvaRaw}
-                      onChange={(e) => updateMeasurement('initialLetvaRaw', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">
-                      Faktor
-                      {loadingFactors['0-initial'] && (
-                        <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={measurement.initialFactor}
-                      onChange={(e) => updateMeasurement('initialFactor', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="1.0000"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                Faktor
+                {loadingFactors['0-initial'] && (
+                  <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
+                )}
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={measurement.initialFactor}
+                onChange={(e) => updateMeasurement('initialFactor', e.target.value)}
+                className="input w-full text-sm bg-amber-50"
+                placeholder="1.0000"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Calculator className="w-3 h-3 inline mr-1" />
+                Sonda 15°C
+              </label>
+              <input
+                type="text"
+                value={measurement.initialSonde15}
+                readOnly
+                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Calculator className="w-3 h-3 inline mr-1" />
+                Letva 15°C
+              </label>
+              <input
+                type="text"
+                value={measurement.initialLetva15}
+                readOnly
+                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
+                placeholder="0"
+              />
+            </div>
           </div>
         </div>
 
@@ -360,109 +337,99 @@ export default function TankMeasurementsForm({
             Završno stanje
           </h4>
 
-          <div className="space-y-3">
-            {/* Main row - 15°C values */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Droplets className="w-3 h-3 inline mr-1" />
-                  Sonda (L na 15°C)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={measurement.finalSonde15}
-                  onChange={(e) => updateMeasurement('finalSonde15', e.target.value)}
-                  className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                  placeholder="0"
-                  disabled={showFinalConversion}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Ruler className="w-3 h-3 inline mr-1" />
-                  Letva (L na 15°C)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={measurement.finalLetva15}
-                  onChange={(e) => updateMeasurement('finalLetva15', e.target.value)}
-                  className="input w-full text-sm bg-green-50 font-semibold text-green-700"
-                  placeholder="0"
-                  disabled={showFinalConversion}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">
-                  <Thermometer className="w-3 h-3 inline mr-1" />
-                  Temp (°C)
-                </label>
-                <div className="relative">
-                  <select
-                    value={measurement.finalTemp}
-                    onChange={(e) => handleTempChange('final', e.target.value)}
-                    className="input w-full text-sm appearance-none pr-8"
-                  >
-                    <option value="15">15°C (default)</option>
-                    {availableTemperatures
-                      .filter(t => t !== 15)
-                      .map(temp => (
-                        <option key={temp} value={temp}>{temp}°C</option>
-                      ))
-                    }
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
+          <div className="grid grid-cols-6 gap-2">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Droplets className="w-3 h-3 inline mr-1" />
+                Sonda (L)
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={measurement.finalSonde}
+                onChange={(e) => updateMeasurement('finalSonde', e.target.value)}
+                className="input w-full text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Ruler className="w-3 h-3 inline mr-1" />
+                Letva (L)
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={measurement.finalLetva}
+                onChange={(e) => updateMeasurement('finalLetva', e.target.value)}
+                className="input w-full text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Thermometer className="w-3 h-3 inline mr-1" />
+                Temp (°C)
+              </label>
+              <div className="relative">
+                <select
+                  value={measurement.finalTemp}
+                  onChange={(e) => handleTempChange('final', e.target.value)}
+                  className="input w-full text-sm appearance-none pr-6"
+                >
+                  <option value="15">15</option>
+                  {availableTemperatures
+                    .filter(t => t !== 15)
+                    .map(temp => (
+                      <option key={temp} value={temp}>{temp}</option>
+                    ))
+                  }
+                </select>
+                <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
-
-            {/* Conversion fields - only show if temp ≠ 15 */}
-            {showFinalConversion && (
-              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                <p className="text-xs text-amber-700 mb-2 font-medium">Preračunavanje na 15°C:</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Sonda sirovo (L)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={measurement.finalSondeRaw}
-                      onChange={(e) => updateMeasurement('finalSondeRaw', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Letva sirovo (L)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={measurement.finalLetvaRaw}
-                      onChange={(e) => updateMeasurement('finalLetvaRaw', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">
-                      Faktor
-                      {loadingFactors['0-final'] && (
-                        <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={measurement.finalFactor}
-                      onChange={(e) => updateMeasurement('finalFactor', e.target.value)}
-                      className="input w-full text-sm"
-                      placeholder="1.0000"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                Faktor
+                {loadingFactors['0-final'] && (
+                  <span className="ml-1 inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
+                )}
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={measurement.finalFactor}
+                onChange={(e) => updateMeasurement('finalFactor', e.target.value)}
+                className="input w-full text-sm bg-amber-50"
+                placeholder="1.0000"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Calculator className="w-3 h-3 inline mr-1" />
+                Sonda 15°C
+              </label>
+              <input
+                type="text"
+                value={measurement.finalSonde15}
+                readOnly
+                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                <Calculator className="w-3 h-3 inline mr-1" />
+                Letva 15°C
+              </label>
+              <input
+                type="text"
+                value={measurement.finalLetva15}
+                readOnly
+                className="input w-full text-sm bg-green-50 font-semibold text-green-700"
+                placeholder="0"
+              />
+            </div>
           </div>
         </div>
 
