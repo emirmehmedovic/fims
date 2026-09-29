@@ -743,14 +743,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         formData.append('improvedCharacteristics[]', char)
       })
 
-      // Send additive details as JSON
-      if (Object.keys(additiveDetails).length > 0) {
-        const additiveDetailsArray = Object.entries(additiveDetails).map(([name, details]) => ({
-          name,
-          addedAt: details.addedAt || null,
-          quantity: details.quantity ? parseFloat(details.quantity) : null
-        }))
-        formData.append('additiveDetails', JSON.stringify(additiveDetailsArray))
+      // Send additive details as JSON - only for characteristics that are actually selected
+      if (improvedCharacteristics.length > 0) {
+        const additiveDetailsArray = improvedCharacteristics
+          .filter(char => additiveDetails[char]) // Only include if details exist
+          .map(char => ({
+            name: char,
+            addedAt: additiveDetails[char]?.addedAt || null,
+            quantity: additiveDetails[char]?.quantity ? parseFloat(additiveDetails[char].quantity) : null
+          }))
+        if (additiveDetailsArray.length > 0) {
+          formData.append('additiveDetails', JSON.stringify(additiveDetailsArray))
+        }
       }
 
       // Handle certificate selection
