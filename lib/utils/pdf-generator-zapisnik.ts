@@ -526,20 +526,20 @@ function generateZapisnikTemplate(
       color: #1e3a5f;
     }
 
-    /* Documentation checklist - black & white friendly */
+    /* Documentation checklist - clear black & white design */
     .docs-section {
       margin: 2mm 0;
-      border: 1px solid #000;
+      border: 2px solid #000;
     }
 
     .docs-header {
-      background: #000;
-      color: #fff;
-      font-size: 8px;
+      background: #f0f0f0;
+      color: #000;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      padding: 1.5mm 2mm;
-      text-align: center;
+      padding: 2mm 3mm;
+      border-bottom: 2px solid #000;
     }
 
     .docs-grid {
@@ -548,7 +548,7 @@ function generateZapisnikTemplate(
     }
 
     .docs-column {
-      padding: 1.5mm 2mm;
+      padding: 2mm 3mm;
     }
 
     .docs-column:first-child {
@@ -558,9 +558,9 @@ function generateZapisnikTemplate(
     .doc-row {
       display: flex;
       align-items: center;
-      padding: 0.8mm 0;
-      font-size: 7.5px;
-      border-bottom: 1px dotted #ccc;
+      padding: 1.5mm 0;
+      font-size: 8px;
+      border-bottom: 1px solid #ccc;
     }
 
     .doc-row:last-child {
@@ -568,35 +568,44 @@ function generateZapisnikTemplate(
     }
 
     .doc-checkbox {
-      font-family: "Segoe UI Symbol", "DejaVu Sans", sans-serif;
+      display: inline-block;
+      width: 4mm;
+      height: 4mm;
+      border: 1.5px solid #000;
+      margin-right: 2mm;
+      text-align: center;
+      line-height: 3.5mm;
       font-size: 10px;
-      margin-right: 1.5mm;
       font-weight: bold;
+      flex-shrink: 0;
     }
 
     .doc-checkbox.checked {
-      color: #000;
+      background: #000;
+      color: #fff;
     }
 
     .doc-checkbox.unchecked {
-      color: #666;
+      background: #fff;
+      color: transparent;
     }
 
     .doc-label {
       flex: 1;
+      font-size: 8px;
     }
 
     .doc-row.warning {
       font-weight: 700;
-      background: #f5f5f5;
-      padding: 1mm;
-      border: 1px solid #000;
-      margin: 0.5mm 0;
+      background: #eee;
+      padding: 1.5mm 2mm;
+      border: 2px solid #000;
+      margin: 1mm 0;
     }
 
     .doc-row.fuel-found {
       font-weight: 600;
-      font-style: italic;
+      padding-left: 6mm;
     }
 
     /* Weighing section */
@@ -607,10 +616,9 @@ function generateZapisnikTemplate(
     }
 
     .weighing-item {
-      padding: 1.5mm 2mm;
+      padding: 2mm;
       border-right: 1px solid #000;
       border-bottom: 1px solid #000;
-      font-size: 7px;
       text-align: center;
     }
 
@@ -623,14 +631,15 @@ function generateZapisnikTemplate(
     }
 
     .weighing-label {
-      font-size: 6px;
-      color: #666;
-      margin-bottom: 0.5mm;
+      font-size: 7px;
+      color: #333;
+      margin-bottom: 1mm;
+      font-weight: 600;
     }
 
     .weighing-value {
       font-weight: 700;
-      font-size: 8px;
+      font-size: 9px;
     }
 
     /* Statement */
@@ -849,53 +858,52 @@ function generateZapisnikTemplate(
         </table>
       </div>
 
-      <!-- Documentation Checklist - Black & White Friendly -->
+      <!-- Documentation Checklist -->
       <div class="docs-section">
         <div class="docs-header">Dokumentacija za preuzimanje od vozača</div>
         <div class="docs-grid">
           <div class="docs-column">
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.hasDeliveryNote ? 'checked' : 'unchecked'}">${record?.hasDeliveryNote ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.hasDeliveryNote ? 'checked' : 'unchecked'}">${record?.hasDeliveryNote ? '✓' : ''}</span>
               <span class="doc-label">Otpremnica</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.hasQualityCertificate ? 'checked' : 'unchecked'}">${record?.hasQualityCertificate ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.hasQualityCertificate ? 'checked' : 'unchecked'}">${record?.hasQualityCertificate ? '✓' : ''}</span>
               <span class="doc-label">Certifikat o kvalitetu</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.hasComplianceDeclaration ? 'checked' : 'unchecked'}">${record?.hasComplianceDeclaration ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.hasComplianceDeclaration ? 'checked' : 'unchecked'}">${record?.hasComplianceDeclaration ? '✓' : ''}</span>
               <span class="doc-label">Izjava o usklađenosti</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.isWaterMeasured ? 'checked' : 'unchecked'}">${record?.isWaterMeasured ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.isWaterMeasured ? 'checked' : 'unchecked'}">${record?.isWaterMeasured ? '✓' : ''}</span>
               <span class="doc-label">Voda mjerena u cisterni</span>
             </div>
             <div class="doc-row ${record?.hasWaterInTank ? 'warning' : ''}">
-              <span class="doc-checkbox ${record?.hasWaterInTank ? 'checked' : 'unchecked'}">${record?.hasWaterInTank ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.hasWaterInTank ? 'checked' : 'unchecked'}">${record?.hasWaterInTank ? '✓' : ''}</span>
               <span class="doc-label">Voda u cisterni${record?.hasWaterInTank ? ' - OBUSTAVA istakanja!' : ''}</span>
             </div>
           </div>
           <div class="docs-column">
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.isVisualInspectionDone ? 'checked' : 'unchecked'}">${record?.isVisualInspectionDone ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.isVisualInspectionDone ? 'checked' : 'unchecked'}">${record?.isVisualInspectionDone ? '✓' : ''}</span>
               <span class="doc-label">Vizuelni pregled komore</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.hasAdditives ? 'checked' : 'unchecked'}">${record?.hasAdditives ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.hasAdditives ? 'checked' : 'unchecked'}">${record?.hasAdditives ? '✓' : ''}</span>
               <span class="doc-label">Aditiviranje</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.isLastUnload ? 'checked' : 'unchecked'}">${record?.isLastUnload ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.isLastUnload ? 'checked' : 'unchecked'}">${record?.isLastUnload ? '✓' : ''}</span>
               <span class="doc-label">Poslijednji istovar</span>
             </div>
             <div class="doc-row">
-              <span class="doc-checkbox ${record?.isTankCheckedAfterLastUnload ? 'checked' : 'unchecked'}">${record?.isTankCheckedAfterLastUnload ? '☑' : '☐'}</span>
+              <span class="doc-checkbox ${record?.isTankCheckedAfterLastUnload ? 'checked' : 'unchecked'}">${record?.isTankCheckedAfterLastUnload ? '✓' : ''}</span>
               <span class="doc-label">Provjera cisterne na zadnjem istovaru uočeno gorivo</span>
             </div>
             ${record?.fuelFoundOnLastUnload ? `
             <div class="doc-row fuel-found">
-              <span class="doc-checkbox checked">→</span>
-              <span class="doc-label">Istočena količina uočenog goriva: ${record.fuelFoundOnLastUnload} L</span>
+              <span class="doc-label">→ Istočena količina uočenog goriva: ${record.fuelFoundOnLastUnload} L</span>
             </div>
             ` : ''}
           </div>
