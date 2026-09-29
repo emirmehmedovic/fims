@@ -851,12 +851,12 @@ function generateZapisnikTemplate(
 
       <!-- Documentation Checklist - Black & White Friendly -->
       <div class="docs-section">
-        <div class="docs-header">Dokumentacija i provjere</div>
+        <div class="docs-header">Dokumentacija za preuzimanje od vozača</div>
         <div class="docs-grid">
           <div class="docs-column">
             <div class="doc-row">
               <span class="doc-checkbox ${record?.hasDeliveryNote ? 'checked' : 'unchecked'}">${record?.hasDeliveryNote ? '☑' : '☐'}</span>
-              <span class="doc-label">Otpremnica primljena</span>
+              <span class="doc-label">Otpremnica</span>
             </div>
             <div class="doc-row">
               <span class="doc-checkbox ${record?.hasQualityCertificate ? 'checked' : 'unchecked'}">${record?.hasQualityCertificate ? '☑' : '☐'}</span>
@@ -870,12 +870,10 @@ function generateZapisnikTemplate(
               <span class="doc-checkbox ${record?.isWaterMeasured ? 'checked' : 'unchecked'}">${record?.isWaterMeasured ? '☑' : '☐'}</span>
               <span class="doc-label">Voda mjerena u cisterni</span>
             </div>
-            ${record?.hasWaterInTank ? `
-            <div class="doc-row warning">
-              <span class="doc-checkbox checked">☑</span>
-              <span class="doc-label">⚠ VODA U CISTERNI - OBUSTAVA!</span>
+            <div class="doc-row ${record?.hasWaterInTank ? 'warning' : ''}">
+              <span class="doc-checkbox ${record?.hasWaterInTank ? 'checked' : 'unchecked'}">${record?.hasWaterInTank ? '☑' : '☐'}</span>
+              <span class="doc-label">Voda u cisterni${record?.hasWaterInTank ? ' - OBUSTAVA istakanja!' : ''}</span>
             </div>
-            ` : ''}
           </div>
           <div class="docs-column">
             <div class="doc-row">
@@ -884,20 +882,20 @@ function generateZapisnikTemplate(
             </div>
             <div class="doc-row">
               <span class="doc-checkbox ${record?.hasAdditives ? 'checked' : 'unchecked'}">${record?.hasAdditives ? '☑' : '☐'}</span>
-              <span class="doc-label">Aditiviranje goriva</span>
+              <span class="doc-label">Aditiviranje</span>
             </div>
             <div class="doc-row">
               <span class="doc-checkbox ${record?.isLastUnload ? 'checked' : 'unchecked'}">${record?.isLastUnload ? '☑' : '☐'}</span>
-              <span class="doc-label">Posljednji istovar</span>
+              <span class="doc-label">Poslijednji istovar</span>
             </div>
             <div class="doc-row">
               <span class="doc-checkbox ${record?.isTankCheckedAfterLastUnload ? 'checked' : 'unchecked'}">${record?.isTankCheckedAfterLastUnload ? '☑' : '☐'}</span>
-              <span class="doc-label">Provjera cisterne na zad. ist.</span>
+              <span class="doc-label">Provjera cisterne na zadnjem istovaru uočeno gorivo</span>
             </div>
             ${record?.fuelFoundOnLastUnload ? `
             <div class="doc-row fuel-found">
               <span class="doc-checkbox checked">→</span>
-              <span class="doc-label">Gorivo uočeno: ${record.fuelFoundOnLastUnload} L</span>
+              <span class="doc-label">Istočena količina uočenog goriva: ${record.fuelFoundOnLastUnload} L</span>
             </div>
             ` : ''}
           </div>
@@ -909,38 +907,38 @@ function generateZapisnikTemplate(
         return `
       <!-- Weighing Section -->
       <div class="docs-section">
-        <div class="docs-header">Vaganje cisterne</div>
+        <div class="docs-header">Ako je u blizini vaga - vaga se cisterna</div>
         <div class="weighing-grid">
           <div class="weighing-item">
-            <div class="weighing-label">TARA (kg)</div>
+            <div class="weighing-label">Tara</div>
             <div class="weighing-value">${w.tara || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">BRUTO (kg)</div>
+            <div class="weighing-label">Bruto</div>
             <div class="weighing-value">${w.bruto || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">NETO (kg)</div>
+            <div class="weighing-label">Neto</div>
             <div class="weighing-value">${w.neto || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">SPEC. TEŽINA</div>
+            <div class="weighing-label">Specifična težina</div>
             <div class="weighing-value">${w.specificWeight || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">TEMP. (°C)</div>
+            <div class="weighing-label">Temp na cisterni</div>
             <div class="weighing-value">${w.tempOnTanker || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">LITARA S KOR.</div>
+            <div class="weighing-label">Litara sa korekcijom</div>
             <div class="weighing-value">${w.litersWithCorrection || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">OTPREMNICA (L)</div>
+            <div class="weighing-label">Otpremnica</div>
             <div class="weighing-value">${w.deliveryNoteWeight || '-'}</div>
           </div>
           <div class="weighing-item">
-            <div class="weighing-label">RAZLIKA (L)</div>
+            <div class="weighing-label">Razlika</div>
             <div class="weighing-value">${w.weightDifference || '-'}</div>
           </div>
         </div>

@@ -46,11 +46,11 @@ interface Props {
   onChange: (values: DocumentationValues) => void
 }
 
-// Grouped checklist items for better organization
+// Grouped checklist items - names matching Excel template exactly
 const DOCUMENTATION_ITEMS = [
   {
     key: 'hasDeliveryNote' as keyof DocumentationValues,
-    label: 'Otpremnica primljena',
+    label: 'Otpremnica',
     icon: FileText
   },
   {
@@ -78,7 +78,7 @@ const INSPECTION_ITEMS = [
   },
   {
     key: 'hasAdditives' as keyof DocumentationValues,
-    label: 'Aditiviranje goriva',
+    label: 'Aditiviranje',
     icon: FlaskConical
   }
 ]
@@ -86,12 +86,12 @@ const INSPECTION_ITEMS = [
 const UNLOAD_ITEMS = [
   {
     key: 'isLastUnload' as keyof DocumentationValues,
-    label: 'Posljednji istovar',
+    label: 'Poslijednji istovar',
     icon: Truck
   },
   {
     key: 'isTankCheckedAfterLastUnload' as keyof DocumentationValues,
-    label: 'Provjera cisterne na zad. ist.',
+    label: 'Provjera cisterne na zadnjem istovaru uočeno gorivo',
     icon: Search
   }
 ]
@@ -158,7 +158,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
       <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
         <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4" />
-          Dokumentacija i provjere
+          Dokumentacija za preuzimanje od vozača
         </h4>
 
         <div className="grid grid-cols-2 gap-3">
@@ -201,7 +201,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
             )}
             <AlertTriangle className={`w-4 h-4 flex-shrink-0 ${values.hasWaterInTank ? 'text-red-600' : 'text-slate-400'}`} />
             <span className="text-sm font-medium">
-              {values.hasWaterInTank ? '⚠️ VODA U CISTERNI - OBUSTAVA!' : 'Voda u cisterni (upozorenje)'}
+              {values.hasWaterInTank ? '⚠️ Voda u cisterni - OBUSTAVA istakanja!' : 'Voda u cisterni'}
             </span>
           </button>
         </div>
@@ -212,7 +212,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <label className="block">
             <span className="text-sm font-medium text-amber-800">
-              Količina goriva uočenog na zadnjem istovaru (L)
+              Istočena količina uočenog goriva na zadnjem istovaru (L)
             </span>
             <input
               type="text"
@@ -243,9 +243,8 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
           <Scale className={`w-5 h-5 ${values.hasWeighing ? 'text-indigo-600' : 'text-slate-500'}`} />
           <div>
             <span className={`text-sm font-medium ${values.hasWeighing ? 'text-indigo-700' : 'text-slate-700'}`}>
-              Vaganje cisterne
+              Ako je u blizini vaga - vaga se cisterna
             </span>
-            <p className="text-xs text-slate-500">Ako je u blizini vaga</p>
           </div>
         </button>
 
@@ -253,7 +252,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
           <div className="p-4 bg-white border-t border-slate-200">
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Tara (kg)</label>
+                <label className="block text-xs text-slate-600 mb-1">Tara</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -264,7 +263,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Bruto (kg)</label>
+                <label className="block text-xs text-slate-600 mb-1">Bruto</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -275,7 +274,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Neto (kg)</label>
+                <label className="block text-xs text-slate-600 mb-1">Neto</label>
                 <input
                   type="text"
                   value={values.weighingData?.neto || ''}
@@ -285,7 +284,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Spec. težina</label>
+                <label className="block text-xs text-slate-600 mb-1">Specifična težina</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -298,7 +297,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
             </div>
             <div className="grid grid-cols-4 gap-3 mt-3">
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Temp (°C)</label>
+                <label className="block text-xs text-slate-600 mb-1">Temp na cisterni</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -309,7 +308,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Litara s kor.</label>
+                <label className="block text-xs text-slate-600 mb-1">Litara sa korekcijom</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -320,7 +319,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Otpremnica (L)</label>
+                <label className="block text-xs text-slate-600 mb-1">Otpremnica</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -331,7 +330,7 @@ export default function DocumentationChecklist({ values, onChange }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-600 mb-1">Razlika (L)</label>
+                <label className="block text-xs text-slate-600 mb-1">Razlika</label>
                 <input
                   type="text"
                   inputMode="numeric"
