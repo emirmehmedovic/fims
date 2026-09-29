@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Thermometer, Droplets, Calculator, Ruler, ChevronDown, Truck } from 'lucide-react'
+import { Thermometer, Droplets, Ruler, ChevronDown, Truck } from 'lucide-react'
 
 export interface TankMeasurement {
   tankNumber: string // R1-R10
@@ -253,7 +253,8 @@ export default function TankMeasurementsForm({
                   Sonda (L na 15°C)
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={measurement.initialSonde15}
                   onChange={(e) => updateMeasurement('initialSonde15', e.target.value)}
                   className="input w-full text-sm bg-green-50 font-semibold text-green-700"
@@ -267,7 +268,8 @@ export default function TankMeasurementsForm({
                   Letva (L na 15°C)
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={measurement.initialLetva15}
                   onChange={(e) => updateMeasurement('initialLetva15', e.target.value)}
                   className="input w-full text-sm bg-green-50 font-semibold text-green-700"
@@ -288,7 +290,6 @@ export default function TankMeasurementsForm({
                     value={measurement.initialTemp}
                     onChange={(e) => handleTempChange('initial', e.target.value)}
                     className="input w-full text-sm appearance-none pr-8"
-                    disabled={availableTemperatures.length === 0}
                   >
                     <option value="15">15°C (default)</option>
                     {availableTemperatures
@@ -311,7 +312,8 @@ export default function TankMeasurementsForm({
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Sonda sirovo (L)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={measurement.initialSondeRaw}
                       onChange={(e) => updateMeasurement('initialSondeRaw', e.target.value)}
                       className="input w-full text-sm"
@@ -321,7 +323,8 @@ export default function TankMeasurementsForm({
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Letva sirovo (L)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={measurement.initialLetvaRaw}
                       onChange={(e) => updateMeasurement('initialLetvaRaw', e.target.value)}
                       className="input w-full text-sm"
@@ -336,8 +339,8 @@ export default function TankMeasurementsForm({
                       )}
                     </label>
                     <input
-                      type="number"
-                      step="0.000001"
+                      type="text"
+                      inputMode="decimal"
                       value={measurement.initialFactor}
                       onChange={(e) => updateMeasurement('initialFactor', e.target.value)}
                       className="input w-full text-sm"
@@ -366,7 +369,8 @@ export default function TankMeasurementsForm({
                   Sonda (L na 15°C)
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={measurement.finalSonde15}
                   onChange={(e) => updateMeasurement('finalSonde15', e.target.value)}
                   className="input w-full text-sm bg-green-50 font-semibold text-green-700"
@@ -380,7 +384,8 @@ export default function TankMeasurementsForm({
                   Letva (L na 15°C)
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={measurement.finalLetva15}
                   onChange={(e) => updateMeasurement('finalLetva15', e.target.value)}
                   className="input w-full text-sm bg-green-50 font-semibold text-green-700"
@@ -398,7 +403,6 @@ export default function TankMeasurementsForm({
                     value={measurement.finalTemp}
                     onChange={(e) => handleTempChange('final', e.target.value)}
                     className="input w-full text-sm appearance-none pr-8"
-                    disabled={availableTemperatures.length === 0}
                   >
                     <option value="15">15°C (default)</option>
                     {availableTemperatures
@@ -421,7 +425,8 @@ export default function TankMeasurementsForm({
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Sonda sirovo (L)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={measurement.finalSondeRaw}
                       onChange={(e) => updateMeasurement('finalSondeRaw', e.target.value)}
                       className="input w-full text-sm"
@@ -431,7 +436,8 @@ export default function TankMeasurementsForm({
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Letva sirovo (L)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={measurement.finalLetvaRaw}
                       onChange={(e) => updateMeasurement('finalLetvaRaw', e.target.value)}
                       className="input w-full text-sm"
@@ -446,8 +452,8 @@ export default function TankMeasurementsForm({
                       )}
                     </label>
                     <input
-                      type="number"
-                      step="0.000001"
+                      type="text"
+                      inputMode="decimal"
                       value={measurement.finalFactor}
                       onChange={(e) => updateMeasurement('finalFactor', e.target.value)}
                       className="input w-full text-sm"
