@@ -328,7 +328,7 @@ function generateZapisnikTemplate(
     /* Title */
     .prilog-broj {
       text-align: center;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       color: #000;
       margin-bottom: 1mm;
@@ -340,13 +340,13 @@ function generateZapisnikTemplate(
       margin-bottom: 2mm;
     }
     .document-title h1 {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       color: #000;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 2px solid #000;
-      padding: 1.5mm 4mm;
+      border: 1px solid #000;
+      padding: 2mm 5mm;
       display: inline-block;
     }
 
@@ -356,15 +356,15 @@ function generateZapisnikTemplate(
       grid-template-columns: 1fr 1fr;
       gap: 0;
       margin-bottom: 2mm;
-      border: 1px solid #000;
+      border: 0.5px solid #000;
     }
 
     .info-item {
       display: flex;
       align-items: center;
-      padding: 1mm 2mm;
-      border-bottom: 1px solid #ccc;
-      border-right: 1px solid #ccc;
+      padding: 1.5mm 2mm;
+      border-bottom: 0.5px solid #999;
+      border-right: 0.5px solid #999;
     }
 
     .info-item:nth-child(2n) {
@@ -378,21 +378,21 @@ function generateZapisnikTemplate(
     .info-label {
       font-weight: 600;
       color: #333;
-      font-size: 7px;
+      font-size: 8px;
       text-transform: uppercase;
-      min-width: 22mm;
+      min-width: 28mm;
     }
 
     .info-value {
       font-weight: 700;
       color: #000;
-      font-size: 8px;
+      font-size: 9px;
     }
 
     /* Tables - unified black & white style */
     .table-container {
       margin-bottom: 1.5mm;
-      border: 1px solid #000;
+      border: 0.5px solid #000;
       overflow: hidden;
     }
 
@@ -402,28 +402,28 @@ function generateZapisnikTemplate(
       font-weight: 700;
       color: #000;
       text-transform: uppercase;
-      padding: 1mm;
+      padding: 1.2mm;
       background: #f0f0f0;
-      border-bottom: 1px solid #000;
+      border-bottom: 0.5px solid #000;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7px;
+      font-size: 8px;
     }
 
     td, th {
-      border: 1px solid #000;
-      padding: 1mm;
+      border: 0.5px solid #666;
+      padding: 1.2mm;
       text-align: center;
     }
 
     .tank-header-row td {
       background: #f0f0f0;
-      padding: 0.8mm;
+      padding: 1mm;
       text-align: left;
-      border-bottom: 1px solid #000;
+      border-bottom: 0.5px solid #000;
     }
 
     .tank-badge {
@@ -432,17 +432,17 @@ function generateZapisnikTemplate(
       color: #000;
       padding: 0.5mm 2mm;
       font-weight: 700;
-      font-size: 7px;
-      border: 1px solid #000;
+      font-size: 8px;
+      border: 0.5px solid #000;
     }
 
     .column-header-row td {
       background: #f0f0f0;
       font-weight: 700;
-      font-size: 6px;
+      font-size: 7px;
       text-transform: uppercase;
       color: #000;
-      padding: 0.8mm;
+      padding: 1mm;
     }
 
     .col-label {
@@ -454,37 +454,39 @@ function generateZapisnikTemplate(
     }
 
     .col-header.highlight {
-      background: #e0e0e0 !important;
+      background: #e8e8e8 !important;
       font-weight: 700;
     }
 
     .data-row td {
       background: white;
+      font-size: 8px;
     }
 
     .row-label {
       text-align: left !important;
       font-weight: 600;
       background: #f5f5f5 !important;
-      font-size: 6px;
+      font-size: 7px;
     }
 
     .highlight-cell {
-      background: #f0f0f0 !important;
+      background: #f5f5f5 !important;
       font-weight: 700;
     }
 
     /* Calculations table */
     .calc-row td {
       font-weight: 600;
-      padding: 1mm;
+      padding: 1.2mm;
+      font-size: 8px;
     }
 
     .calc-label {
       text-align: left !important;
       background: #f5f5f5 !important;
       width: 35%;
-      font-size: 7px;
+      font-size: 8px;
     }
 
     .calc-value {
@@ -495,15 +497,15 @@ function generateZapisnikTemplate(
       background: #f0f0f0 !important;
       font-weight: 700;
       font-size: 8px;
-      border-top: 2px solid #000;
+      border-top: 1px solid #000;
     }
 
     .total-positive {
-      background: #e0e0e0 !important;
+      background: #e8e8e8 !important;
     }
 
     .total-negative {
-      background: #e0e0e0 !important;
+      background: #e8e8e8 !important;
     }
 
     .total-label {
@@ -513,17 +515,17 @@ function generateZapisnikTemplate(
     /* Documentation checklist */
     .docs-section {
       margin: 1.5mm 0;
-      border: 1px solid #000;
+      border: 0.5px solid #000;
     }
 
     .docs-header {
       background: #f0f0f0;
       color: #000;
-      font-size: 7px;
+      font-size: 8px;
       font-weight: 700;
       text-transform: uppercase;
-      padding: 1mm 2mm;
-      border-bottom: 1px solid #000;
+      padding: 1.2mm 2mm;
+      border-bottom: 0.5px solid #000;
     }
 
     .docs-grid {
@@ -536,15 +538,15 @@ function generateZapisnikTemplate(
     }
 
     .docs-column:first-child {
-      border-right: 1px solid #000;
+      border-right: 0.5px solid #666;
     }
 
     .doc-row {
       display: flex;
       align-items: center;
-      padding: 1mm 0;
-      font-size: 7px;
-      border-bottom: 1px solid #ddd;
+      padding: 1.2mm 0;
+      font-size: 7.5px;
+      border-bottom: 0.5px solid #ddd;
     }
 
     .doc-row:last-child {
@@ -555,7 +557,7 @@ function generateZapisnikTemplate(
       display: inline-block;
       width: 3.5mm;
       height: 3.5mm;
-      border: 1px solid #000;
+      border: 0.5px solid #000;
       margin-right: 1.5mm;
       text-align: center;
       line-height: 3mm;
@@ -575,14 +577,14 @@ function generateZapisnikTemplate(
 
     .doc-label {
       flex: 1;
-      font-size: 7px;
+      font-size: 7.5px;
     }
 
     .doc-row.warning {
       font-weight: 700;
       background: #eee;
       padding: 1mm;
-      border: 1px solid #000;
+      border: 0.5px solid #000;
       margin: 0.5mm 0;
     }
 
@@ -611,11 +613,11 @@ function generateZapisnikTemplate(
     /* Statement */
     .statement {
       margin: 1.5mm 0;
-      padding: 1.5mm;
-      border: 1px solid #000;
-      font-size: 6px;
+      padding: 1.5mm 2mm;
+      border: 0.5px solid #000;
+      font-size: 7px;
       text-align: justify;
-      line-height: 1.3;
+      line-height: 1.4;
     }
 
     /* Signatures */
@@ -624,7 +626,7 @@ function generateZapisnikTemplate(
       justify-content: space-between;
       align-items: flex-end;
       margin-top: auto;
-      padding-top: 1.5mm;
+      padding-top: 2mm;
     }
 
     .signature-box {
@@ -637,8 +639,8 @@ function generateZapisnikTemplate(
     }
 
     .signature-line {
-      border-bottom: 1px solid #000;
-      height: 6mm;
+      border-bottom: 0.5px solid #000;
+      height: 7mm;
       margin-bottom: 1mm;
     }
 
@@ -651,7 +653,7 @@ function generateZapisnikTemplate(
     .stamp-placeholder {
       width: 15mm;
       height: 15mm;
-      border: 1px dashed #666;
+      border: 0.5px dashed #666;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -669,7 +671,7 @@ function generateZapisnikTemplate(
       align-items: center;
       gap: 8mm;
       padding: 2mm 8mm;
-      border-top: 1px solid #000;
+      border-top: 0.5px solid #000;
       flex-shrink: 0;
     }
 
