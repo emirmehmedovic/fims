@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Resolve dependencies from this app instead of an inferred parent workspace.
+  turbopack: {
+    root: __dirname,
+  },
+
   // External packages that should not be bundled (server-only)
   serverExternalPackages: ['pino', 'pino-pretty'],
 

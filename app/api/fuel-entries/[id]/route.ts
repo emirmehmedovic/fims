@@ -1,3 +1,6 @@
+import { canUseWarehouse } from '@/lib/fuel-entries/server-access'
+import { parseReceiptRecord } from '@/lib/fuel-entries/receipt-record'
+import { canWriteReceipt, fuelEntryAccessFilter } from '@/lib/fuel-entries/access'
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -11,20 +14,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const { id } = params
 
     // OPTIMIZED: Build WHERE clause with authorization check
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = { id }
-
-    // Add access restrictions based on role
-    if (userRole === 'PUMPA') {
-      // PUMPA users can only access their own entries
-      where.operatorId = session.user.id
-    } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      // OPERATOR/VIEWER: check warehouse access
-      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
-      where.warehouseId = { in: warehouseIds }
-    }
+    const where = { id, AND: [fuelEntryAccessFilter(session.user)] }
 
     const fuelEntry = await prisma.fuelEntry.findUnique({
       where,
@@ -113,20 +103,7 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const { id } = params
 
     // OPTIMIZED: Build WHERE clause with authorization check
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = { id }
-
-    // Add access restrictions based on role
-    if (userRole === 'PUMPA') {
-      // PUMPA users can only update their own entries
-      where.operatorId = session.user.id
-    } else if (userRole === 'OPERATOR' || userRole === 'VIEWER') {
-      // OPERATOR/VIEWER: check warehouse access
-      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
-      where.warehouseId = { in: warehouseIds }
-    }
+    const where = { id, AND: [fuelEntryAccessFilter(session.user)] }
 
     // Check if fuel entry exists (with authorization built into query)
     const existingEntry = await prisma.fuelEntry.findUnique({
@@ -168,6 +145,20 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     const additiveDetailsStr = formData.get('additiveDetails') as string | null
     const certificate = formData.get('certificate') as File | null
     const existingCertificatePath = formData.get('existingCertificatePath') as string | null
+    const receiptRecordStr = formData.get('receiptRecord') as string | null
+
+    let receiptData: ReturnType<typeof parseReceiptRecord> | undefined
+    if (receiptRecordStr && canWriteReceipt(session.user.role)) {
+      try {
+        receiptData = parseReceiptRecord(JSON.parse(receiptRecordStr))
+      } catch {
+        return errorResponse('Invalid receiptRecord format', 400)
+      }
+    }
+
+    if (warehouseId && warehouseId !== existingEntry.warehouseId && !await canUseWarehouse(session.user, warehouseId)) {
+      return errorResponse('Access denied to this warehouse', 403)
+    }
 
     // Build update data object
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -214,6 +205,12 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
       }
     }
 
+    // The quality flag is authoritative, including for previously imported data.
+    if (!(updateData.isHigherQuality ?? existingEntry.isHigherQuality)) {
+      updateData.improvedCharacteristics = []
+      updateData.additiveDetails = []
+    }
+
     // Handle certificate (upload new OR use existing)
     if (certificate && certificate.size > 0) {
       // Upload new certificate
@@ -249,7 +246,10 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
     // Update fuel entry
     const updatedEntry = await prisma.fuelEntry.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        ...(receiptData ? { receiptRecord: { upsert: { create: receiptData, update: receiptData } } } : {}),
+      },
       include: {
         warehouse: {
           select: {
@@ -269,7 +269,8 @@ export const PATCH = withAuth(async (req: NextRequest, context, session) => {
         transporter: true,
         client: true,
         laboratory: true,
-        station: true
+        station: true,
+        receiptRecord: true
       }
     })
 
@@ -298,19 +299,7 @@ export const DELETE = withAuth(async (req: NextRequest, context, session) => {
     const { id } = params
 
     // OPTIMIZED: Build WHERE clause with authorization check
-    const userRole = session.user.role
-    const userWarehouses = session.user.warehouses || []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = { id }
-
-    // Add access restrictions based on role
-    if (userRole === 'PUMPA') {
-      // PUMPA users can only delete their own entries
-      where.operatorId = session.user.id
-    } else if (userRole === 'OPERATOR') {
-      const warehouseIds = userWarehouses.map((w: { id: string }) => w.id)
-      where.warehouseId = { in: warehouseIds }
-    }
+    const where = { id, AND: [fuelEntryAccessFilter(session.user)] }
 
     const existingEntry = await prisma.fuelEntry.findUnique({
       where,

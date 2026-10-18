@@ -1,3 +1,4 @@
+import { receiptTotals, sondeReading, letvaReading } from '@/lib/fuel-entries/measurements'
 import puppeteer from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium-min'
@@ -39,19 +40,11 @@ interface TankMeasurement {
 // NOTE: Sonda already reads at 15°C, so we use raw Sonda value directly
 // For backwards compatibility, also check old field names
 function getSonde15(m: TankMeasurement, type: 'initial' | 'final'): string {
-  if (type === 'initial') {
-    // New logic: Sonda is already at 15°C, use raw value
-    // Fallback: check old field names for backwards compatibility
-    return m.initialSonde || m.initialSonde15 || m.initialLiters15Sonde || ''
-  }
-  return m.finalSonde || m.finalSonde15 || m.finalLiters15Sonde || ''
+  return sondeReading(m, type)?.toString() ?? ''
 }
 
 function getLetva15(m: TankMeasurement, type: 'initial' | 'final'): string {
-  if (type === 'initial') {
-    return m.initialLetva15 || m.initialLiters15Letva || ''
-  }
-  return m.finalLetva15 || m.finalLiters15Letva || ''
+  return letvaReading(m, type)?.toString() ?? ''
 }
 
 function getSondeRaw(m: TankMeasurement, type: 'initial' | 'final'): string {
@@ -240,19 +233,7 @@ function generateZapisnikTemplate(
   const record = entry.receiptRecord
   const measurements = (record?.tankMeasurements || []) as TankMeasurement[]
 
-  // Calculate totals for Sonda and Letva at 15°C
-  let totalDischargedSonda15 = 0
-  let totalDischargedLetva15 = 0
-
-  for (const m of measurements) {
-    const initialSonda15 = parseInt(getSonde15(m, 'initial')) || 0
-    const finalSonda15 = parseInt(getSonde15(m, 'final')) || 0
-    const initialLetva15 = parseInt(getLetva15(m, 'initial')) || 0
-    const finalLetva15 = parseInt(getLetva15(m, 'final')) || 0
-
-    totalDischargedSonda15 += finalSonda15 - initialSonda15
-    totalDischargedLetva15 += finalLetva15 - initialLetva15
-  }
+  const { sonde: totalDischargedSonda15, letva: totalDischargedLetva15 } = receiptTotals(measurements)
 
   const declarationDate = entry.deliveryNoteDate
     ? formatDateSarajevo(new Date(entry.deliveryNoteDate))
@@ -799,7 +780,7 @@ function generateZapisnikTemplate(
               <td class="calc-value">${diffLetva15.toLocaleString()} L</td>
             </tr>
             <tr class="calc-row">
-              <td class="calc-label">Istočeno po brojčanicima</td>
+              <td class="calc-label">Prodata količina u toku istakanja (L)</td>
               <td class="calc-value" colspan="2">${meter.toLocaleString()} L</td>
             </tr>
             <tr class="calc-row">

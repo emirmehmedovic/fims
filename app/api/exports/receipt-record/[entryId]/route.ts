@@ -1,3 +1,4 @@
+import { canAccessFuelEntry } from '@/lib/fuel-entries/access'
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -50,20 +51,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
       return errorResponse('Receipt record not found for this entry', 404)
     }
 
-    // Check if user has access to this entry
-    if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      if (session.user.role === 'PUMPA') {
-        // PUMPA users can only access their own entries
-        if (fuelEntry.operatorId !== session.user.id) {
-          return errorResponse('Access denied to this fuel entry', 403)
-        }
-      } else {
-        // OPERATOR/VIEWER: check warehouse access
-        const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
-        if (!userWarehouses.includes(fuelEntry.warehouseId)) {
-          return errorResponse('Access denied to this fuel entry', 403)
-        }
-      }
+    if (!canAccessFuelEntry(session.user, fuelEntry)) {
+      return errorResponse('Access denied to this fuel entry', 403)
     }
 
     // Generate PDF

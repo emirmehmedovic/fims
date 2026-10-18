@@ -1,3 +1,4 @@
+import { documentMark } from '@/lib/fuel-entries/pdf-policy'
 import puppeteer from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium-min'
@@ -557,7 +558,7 @@ function generateAdditiveDeclarationTemplate(
         </div>
 
         <div class="stamp-section">
-          <img src="${stampBase64}" alt="Pečat i potpis" />
+          ${stampBase64 ? `<img src="${stampBase64}" alt="Pečat i potpis" />` : ''}
           <div class="stamp-label">Potpis odgovorne osobe</div>
         </div>
       </div>
@@ -593,7 +594,8 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 
 export async function generateAdditiveDeclarationPDF(
   entry: FuelEntryAdditiveData,
-  additives: FuelCharacteristic[]
+  additives: FuelCharacteristic[],
+  role: string
 ): Promise<Buffer> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
   const verificationUrl = `${baseUrl}/verify/${entry.id}`
@@ -602,7 +604,7 @@ export async function generateAdditiveDeclarationPDF(
   const [qrCodeDataUrl, headerBase64, stampBase64, footerBase64] = await Promise.all([
     generateQRCode(verificationUrl),
     loadImageAsBase64('hifa-header.png'),
-    loadImageAsBase64('pecat.png'),
+    documentMark('additive', role) ? loadImageAsBase64(documentMark('additive', role)!) : Promise.resolve(''),
     loadImageAsBase64('Screenshot_8.png')
   ])
 

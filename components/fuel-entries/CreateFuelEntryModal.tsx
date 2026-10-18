@@ -1,5 +1,7 @@
 'use client'
 
+import { receiptQuantities } from '@/lib/fuel-entries/receipt-calculations'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
@@ -100,6 +102,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const userRole = session?.user?.role
   const isPumpa = userRole === 'PUMPA'
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
+  const canChooseImportProduct = isAdmin || userRole === 'OPERATOR'
 
   // For ADMIN users - optional receipt record
   const [includeReceiptRecord, setIncludeReceiptRecord] = useState(false)
@@ -196,7 +199,6 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   const [tankerRegistration, setTankerRegistration] = useState('')
   const [announcedQuantity, setAnnouncedQuantity] = useState('')
   const [meterReading, setMeterReading] = useState('')
-  const [deliveryNoteQuantity, setDeliveryNoteQuantity] = useState('')
   const [documentation, setDocumentation] = useState<DocumentationValues>({
     hasDeliveryNote: false,
     hasQualityCertificate: false,
@@ -465,6 +467,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
   // Toggle product menu and fetch products if needed
   const handleShowProductMenu = () => {
+    if (!canChooseImportProduct) return
     if (!showProductMenu && userProducts.length === 0) {
       fetchUserProducts()
     }
@@ -477,7 +480,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     setImportingLastEntry(true)
     setShowProductMenu(false)
     try {
-      const url = productNameFilter
+      const url = canChooseImportProduct && productNameFilter
         ? `/api/fuel-entries/last?productName=${encodeURIComponent(productNameFilter)}`
         : '/api/fuel-entries/last'
       const res = await fetch(url)
@@ -506,11 +509,11 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
       // Import quality
       setIsHigherQuality(entry.isHigherQuality || false)
-      if (entry.improvedCharacteristics) setImprovedCharacteristics(entry.improvedCharacteristics)
+      setImprovedCharacteristics(entry.isHigherQuality ? entry.improvedCharacteristics || [] : [])
       if (entry.countryOfOrigin) setCountryOfOrigin(entry.countryOfOrigin)
 
       // Import additive details with their original dates
-      if (entry.additiveDetails && Array.isArray(entry.additiveDetails)) {
+      if (entry.isHigherQuality && Array.isArray(entry.additiveDetails)) {
         const additiveMap: Record<string, { addedAt: string; quantity: string }> = {}
         entry.additiveDetails.forEach((ad: any) => {
           if (ad.name) {
@@ -532,6 +535,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
           }
         })
         setAdditiveDetails(additiveMap)
+      } else {
+        setAdditiveDetails({})
       }
 
       // Import laboratory with date
@@ -768,24 +773,11 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
       // Send receipt record data for PUMPA users or ADMIN with option enabled
       if (showReceiptRecord) {
-        // Calculate discharged quantity (using Letva on 15°C as primary, fallback to Sonda which is already at 15°C)
-        let dischargedQty = 0
-        for (const m of tankMeasurements) {
-          // Sonda is already at 15°C, use raw value directly
-          const initial = parseInt(m.initialLetva15) || parseInt(m.initialSonde) || 0
-          const final = parseInt(m.finalLetva15) || parseInt(m.finalSonde) || 0
-          dischargedQty += final - initial
-        }
 
         const receiptRecordData = {
           tankerRegistration: tankerRegistration || null,
           tankMeasurements: tankMeasurements.filter(m => m.tankNumber), // Only include tanks with numbers
-          announcedQuantity: parseInt(announcedQuantity) || null,
-          dischargedQuantity: dischargedQty || null,
-          differenceQuantity: (parseInt(announcedQuantity) || 0) - dischargedQty,
-          meterReading: parseInt(meterReading) || null,
-          deliveryNoteQuantity: parseInt(deliveryNoteQuantity) || null,
-          finalDifference: (parseInt(deliveryNoteQuantity) || 0) - dischargedQty,
+          ...receiptQuantities(tankMeasurements, parseInt(announcedQuantity) || null, parseInt(meterReading) || null),
           ...documentation
         }
         formData.append('receiptRecord', JSON.stringify(receiptRecordData))
@@ -849,7 +841,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 type="button"
                 onClick={() => importFromLastEntry()}
                 disabled={importingLastEntry}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-l-xl font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 ${canChooseImportProduct ? 'rounded-l-xl' : 'rounded-xl'} font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {importingLastEntry ? (
                   <>
@@ -864,6 +856,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 )}
               </button>
               {/* Dropdown toggle for fuel type */}
+              {canChooseImportProduct && (
               <button
                 type="button"
                 onClick={handleShowProductMenu}
@@ -873,10 +866,11 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
               >
                 <ChevronDown className={`w-4 h-4 transition-transform ${showProductMenu ? 'rotate-180' : ''}`} />
               </button>
+              )}
             </div>
 
             {/* Product dropdown menu */}
-            {showProductMenu && (
+            {canChooseImportProduct && showProductMenu && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
                 <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
                   <p className="text-xs font-semibold text-slate-500 uppercase">Uvezi po tipu goriva</p>
@@ -1473,10 +1467,8 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                         measurements={tankMeasurements}
                         announcedQuantity={announcedQuantity}
                         meterReading={meterReading}
-                        deliveryNoteQuantity={deliveryNoteQuantity}
                         onAnnouncedQuantityChange={setAnnouncedQuantity}
                         onMeterReadingChange={setMeterReading}
-                        onDeliveryNoteQuantityChange={setDeliveryNoteQuantity}
                       />
                     </div>
 

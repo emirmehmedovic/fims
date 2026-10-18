@@ -1,3 +1,4 @@
+import { canAccessFuelEntry } from '@/lib/fuel-entries/access'
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -77,20 +78,8 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     console.log('[PDF EXPORT] Entry found:', fuelEntry.registrationNumber)
     console.log('[PDF EXPORT] certificatePath:', fuelEntry.certificatePath)
 
-    // Check if user has access to this entry
-    if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      if (session.user.role === 'PUMPA') {
-        // PUMPA users can only access their own entries
-        if (fuelEntry.operatorId !== session.user.id) {
-          return errorResponse('Access denied to this fuel entry', 403)
-        }
-      } else {
-        // OPERATOR/VIEWER: check warehouse access
-        const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
-        if (!userWarehouses.includes(fuelEntry.warehouseId)) {
-          return errorResponse('Access denied to this fuel entry', 403)
-        }
-      }
+    if (!canAccessFuelEntry(session.user, fuelEntry)) {
+      return errorResponse('Access denied to this fuel entry', 403)
     }
 
     // Check URL params for options
@@ -98,7 +87,7 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
     const includeCertificate = url.searchParams.get('includeCertificate') !== 'false'
 
     // Generate PDF
-    const pdfBuffer = await generateFuelEntryPDF(fuelEntry, includeCertificate)
+    const pdfBuffer = await generateFuelEntryPDF(fuelEntry, session.user.role, includeCertificate)
 
     // Log audit
     await prisma.auditLog.create({

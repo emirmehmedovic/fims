@@ -1,3 +1,4 @@
+import { canAccessFuelEntry } from '@/lib/fuel-entries/access'
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -6,7 +7,7 @@ import { generateAdditiveDeclarationPDF } from "@/lib/utils/pdf-generator-additi
 import { parseAdditiveDetails } from "@/lib/types"
 
 // GET /api/exports/additive-declaration/:entryId - Generate PDF for additive declaration
-export const GET = withAuth(async (req: NextRequest, context, _session) => {
+export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
     const params = await context.params
     const { entryId } = params
@@ -53,6 +54,14 @@ export const GET = withAuth(async (req: NextRequest, context, _session) => {
       return errorResponse('Fuel entry not found', 404)
     }
 
+    if (!canAccessFuelEntry(session.user, fuelEntry)) {
+      return errorResponse('Access denied to this fuel entry', 403)
+    }
+
+    if (!fuelEntry.isHigherQuality) {
+      return errorResponse('Izjava o aditiviranju dostupna je samo za gorivo višeg kvaliteta', 400)
+    }
+
     // Parse additive details from JSON field
     const additiveDetails = parseAdditiveDetails(fuelEntry.additiveDetails)
 
@@ -97,7 +106,7 @@ export const GET = withAuth(async (req: NextRequest, context, _session) => {
       ...fuelEntry,
       additiveDetails
     }
-    const pdfBuffer = await generateAdditiveDeclarationPDF(entryData, additives)
+    const pdfBuffer = await generateAdditiveDeclarationPDF(entryData, additives, session.user.role)
 
     // Use declarationNumber (format: 0001/26) and sanitize for filename (replace / with -)
     const declarationNum = fuelEntry.declarationNumber || String(fuelEntry.registrationNumber)

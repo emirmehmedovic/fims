@@ -1,5 +1,8 @@
 'use client'
 
+import { sondeReading, letvaReading } from '@/lib/fuel-entries/measurements'
+import { receiptQuantities } from '@/lib/fuel-entries/receipt-calculations'
+
 import { useState, useEffect, useCallback } from 'react'
 import { formatDateInputValueSarajevo } from '@/lib/utils/date'
 import { getCertificateDownloadUrl } from '@/lib/utils/certificate-url'
@@ -22,11 +25,15 @@ import {
   Download,
   Save,
   Users,
-  Fuel
+  Fuel,
+  ClipboardList
 } from 'lucide-react'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import AsyncSearchableSelect from '@/components/ui/AsyncSearchableSelect'
 import CertificateSelector from '@/components/ui/CertificateSelector'
+import TankMeasurementsForm, { TankMeasurement } from './TankMeasurementsForm'
+import ReceiptCalculations from './ReceiptCalculations'
+import DocumentationChecklist, { DocumentationValues } from './DocumentationChecklist'
 
 interface Warehouse {
   id: string
@@ -184,6 +191,50 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
     path?: string
   } | null>(null)
 
+  // Receipt Record state (Zapisnik o prijemu goriva)
+  const [hasReceiptRecord, setHasReceiptRecord] = useState(false)
+  const [tankMeasurements, setTankMeasurements] = useState<TankMeasurement[]>([
+    {
+      tankNumber: 'R1',
+      initialSonde: '',
+      finalSonde: '',
+      initialLetva: '',
+      finalLetva: '',
+      initialTemp: '15',
+      finalTemp: '15',
+      initialFactor: '1',
+      finalFactor: '1',
+      initialLetva15: '',
+      finalLetva15: ''
+    }
+  ])
+  const [tankerRegistration, setTankerRegistration] = useState('')
+  const [announcedQuantity, setAnnouncedQuantity] = useState('')
+  const [meterReading, setMeterReading] = useState('')
+  const [documentation, setDocumentation] = useState<DocumentationValues>({
+    hasDeliveryNote: false,
+    hasQualityCertificate: false,
+    hasComplianceDeclaration: false,
+    isWaterMeasured: false,
+    hasWaterInTank: false,
+    isVisualInspectionDone: false,
+    hasAdditives: false,
+    isLastUnload: false,
+    isTankCheckedAfterLastUnload: false,
+    fuelFoundOnLastUnload: '',
+    hasWeighing: false,
+    weighingData: {
+      tara: '',
+      neto: '',
+      bruto: '',
+      specificWeight: '',
+      tempOnTanker: '',
+      litersWithCorrection: '',
+      deliveryNoteWeight: '',
+      weightDifference: ''
+    }
+  })
+
   // Max date for date inputs (30 days in future)
   const maxDate = formatDateInputValueSarajevo(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
 
@@ -299,6 +350,61 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
             }
           })
           setAdditiveDetails(details)
+        }
+
+        // Load receipt record data if exists
+        if (e.receiptRecord) {
+          setHasReceiptRecord(true)
+          const r = e.receiptRecord
+
+          // Set tanker registration
+          setTankerRegistration(r.tankerRegistration || '')
+
+          // Set tank measurements
+          if (r.tankMeasurements && Array.isArray(r.tankMeasurements) && r.tankMeasurements.length > 0) {
+            setTankMeasurements(r.tankMeasurements.map((m: any) => ({
+              tankNumber: m.tankNumber || 'R1',
+              initialSonde: sondeReading(m, 'initial')?.toString() ?? '',
+              finalSonde: sondeReading(m, 'final')?.toString() ?? '',
+              initialLetva: m.initialLetva || '',
+              finalLetva: m.finalLetva || '',
+              initialTemp: m.initialTemp || '15',
+              finalTemp: m.finalTemp || '15',
+              initialFactor: m.initialFactor || '1',
+              finalFactor: m.finalFactor || '1',
+              initialLetva15: letvaReading(m, 'initial')?.toString() ?? '',
+              finalLetva15: letvaReading(m, 'final')?.toString() ?? ''
+            })))
+          }
+
+          // Set calculation fields
+          setAnnouncedQuantity(r.announcedQuantity?.toString() || '')
+          setMeterReading(r.meterReading?.toString() || '')
+
+          // Set documentation values
+          setDocumentation({
+            hasDeliveryNote: r.hasDeliveryNote || false,
+            hasQualityCertificate: r.hasQualityCertificate || false,
+            hasComplianceDeclaration: r.hasComplianceDeclaration || false,
+            isWaterMeasured: r.isWaterMeasured || false,
+            hasWaterInTank: r.hasWaterInTank || false,
+            isVisualInspectionDone: r.isVisualInspectionDone || false,
+            hasAdditives: r.hasAdditives || false,
+            isLastUnload: r.isLastUnload || false,
+            isTankCheckedAfterLastUnload: r.isTankCheckedAfterLastUnload || false,
+            fuelFoundOnLastUnload: r.fuelFoundOnLastUnload || '',
+            hasWeighing: r.hasWeighing || false,
+            weighingData: r.weighingData || {
+              tara: '',
+              neto: '',
+              bruto: '',
+              specificWeight: '',
+              tempOnTanker: '',
+              litersWithCorrection: '',
+              deliveryNoteWeight: '',
+              weightDifference: ''
+            }
+          })
         }
       }
     } catch (error) {
@@ -431,6 +537,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
       if (clientId) formData.append('clientId', clientId)
       if (stationId) formData.append('stationId', stationId)
 
+      if (improvedCharacteristics.length === 0) formData.append('improvedCharacteristics[]', '')
       improvedCharacteristics.forEach(char => {
         formData.append('improvedCharacteristics[]', char)
       })
@@ -444,9 +551,7 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
           quantity: additiveDetails[char]?.quantity || ''
         }))
 
-      if (additiveDetailsArray.length > 0) {
-        formData.append('additiveDetails', JSON.stringify(additiveDetailsArray))
-      }
+      formData.append('additiveDetails', JSON.stringify(additiveDetailsArray))
 
       // Handle certificate selection
       if (certificateSelection) {
@@ -455,6 +560,18 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
         } else if (certificateSelection.type === 'existing' && certificateSelection.path) {
           formData.append('existingCertificatePath', certificateSelection.path)
         }
+      }
+
+      // Send receipt record data if present
+      if (hasReceiptRecord) {
+
+        const receiptRecordData = {
+          tankerRegistration: tankerRegistration || null,
+          tankMeasurements: tankMeasurements.filter(m => m.tankNumber), // Only include tanks with numbers
+          ...receiptQuantities(tankMeasurements, parseInt(announcedQuantity) || null, parseInt(meterReading) || null),
+          ...documentation
+        }
+        formData.append('receiptRecord', JSON.stringify(receiptRecordData))
       }
 
       const res = await fetch(`/api/fuel-entries/${entry.id}`, {
@@ -835,6 +952,43 @@ export default function EditFuelEntryModal({ entry, onClose, onSuccess }: Props)
             )}
             <CertificateSelector value={certificateSelection} onChange={setCertificateSelection} existingCertificatePath={fullEntry?.certificatePath} />
           </FormSection>
+
+          {/* Receipt Record Section - Zapisnik o prijemu goriva */}
+          {hasReceiptRecord && (
+            <FormSection title="Zapisnik o prijemu goriva" icon={ClipboardList}>
+              <div className="space-y-6">
+                {/* Tank Measurements */}
+                <div>
+                  <h4 className="text-sm font-bold text-slate-700 mb-3">Mjerenja rezervoara</h4>
+                  <TankMeasurementsForm
+                    measurements={tankMeasurements}
+                    onChange={setTankMeasurements}
+                    productName={productName}
+                    tankerRegistration={tankerRegistration}
+                    onTankerRegistrationChange={setTankerRegistration}
+                  />
+                </div>
+
+                {/* Calculations */}
+                <div>
+                  <h4 className="text-sm font-bold text-slate-700 mb-3">Količine i izračuni</h4>
+                  <ReceiptCalculations
+                    measurements={tankMeasurements}
+                    announcedQuantity={announcedQuantity}
+                    meterReading={meterReading}
+                    onAnnouncedQuantityChange={setAnnouncedQuantity}
+                    onMeterReadingChange={setMeterReading}
+                  />
+                </div>
+
+                {/* Documentation Checklist */}
+                <DocumentationChecklist
+                  values={documentation}
+                  onChange={setDocumentation}
+                />
+              </div>
+            </FormSection>
+          )}
         </form>
 
         {/* Footer */}

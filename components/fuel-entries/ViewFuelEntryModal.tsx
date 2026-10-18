@@ -837,7 +837,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
               </div>
 
               {/* Aditiviranje buttons */}
-              {details.additiveDetails && details.additiveDetails.length > 0 && (
+              {details.isHigherQuality && details.additiveDetails && details.additiveDetails.length > 0 && (
                 <div className="flex">
                   <button
                     onClick={handleExportAdditivePdf}

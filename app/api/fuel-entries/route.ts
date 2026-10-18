@@ -1,3 +1,6 @@
+import { canUseWarehouse } from '@/lib/fuel-entries/server-access'
+import { parseReceiptRecord } from '@/lib/fuel-entries/receipt-record'
+import { canWriteReceipt } from '@/lib/fuel-entries/access'
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -229,10 +232,10 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     const receiptRecordStr = formData.get('receiptRecord') as string | null
 
     // Parse receipt record data for PUMPA users
-    let receiptRecordData: any = null
-    if (receiptRecordStr) {
+    let receiptRecordData: ReturnType<typeof parseReceiptRecord> | undefined
+    if (receiptRecordStr && canWriteReceipt(session.user.role)) {
       try {
-        receiptRecordData = JSON.parse(receiptRecordStr)
+        receiptRecordData = parseReceiptRecord(JSON.parse(receiptRecordStr))
       } catch {
         return errorResponse('Invalid receiptRecord format', 400)
       }
@@ -241,6 +244,10 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     // Validation
     if (!entryDate || !warehouseId || !productName || !quantity) {
       return errorResponse('Missing required fields', 400)
+    }
+
+    if (!await canUseWarehouse(session.user, warehouseId)) {
+      return errorResponse('Access denied to this warehouse', 403)
     }
 
     const parsedQuantity = parseInt(quantity)
@@ -283,8 +290,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             customsDeclarationNumber: customsDeclarationNumber || null,
             customsDeclarationDate: customsDeclarationDate ? new Date(customsDeclarationDate) : null,
             isHigherQuality,
-            improvedCharacteristics: improvedCharacteristics.filter(Boolean),
-            additiveDetails: additiveDetails || null,
+            improvedCharacteristics: isHigherQuality ? improvedCharacteristics.filter(Boolean) : [],
+            additiveDetails: isHigherQuality ? additiveDetails || null : [],
             countryOfOrigin: countryOfOrigin || null,
             laboratoryName: laboratoryName || null,
             labAccreditationNumber: labAccreditationNumber || null,
@@ -303,9 +310,11 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             certificatePath: null,
             certificateFileName: null,
             certificateUploadedAt: null,
+            ...(receiptRecordData ? { receiptRecord: { create: receiptRecordData } } : {}),
             createdBy: session.user.id
           },
           include: {
+            receiptRecord: true,
             warehouse: {
               select: {
                 id: true,
@@ -430,51 +439,6 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       fuelEntry.certificatePath = finalCertificatePath
       fuelEntry.certificateFileName = finalCertificateFileName
       fuelEntry.certificateUploadedAt = finalCertificateUploadedAt
-    }
-
-    // Create receipt record (Zapisnik o prijemu goriva) - for PUMPA users or ADMIN/SUPER_ADMIN if they choose to include it
-    const canCreateReceiptRecord = ['PUMPA', 'ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
-    logger.info(`[FUEL_ENTRY] Receipt record check: hasData=${!!receiptRecordData}, role=${session.user.role}, canCreate=${canCreateReceiptRecord}`)
-    if (receiptRecordData && canCreateReceiptRecord) {
-      try {
-        logger.info(`[FUEL_ENTRY] Creating receipt record for entry ${fuelEntry.id}...`)
-        const receiptRecord = await prisma.fuelReceiptRecord.create({
-          data: {
-            fuelEntryId: fuelEntry.id,
-            tankerRegistration: receiptRecordData.tankerRegistration || null,
-            tankMeasurements: receiptRecordData.tankMeasurements || [],
-            announcedQuantity: receiptRecordData.announcedQuantity,
-            dischargedQuantity: receiptRecordData.dischargedQuantity,
-            differenceQuantity: receiptRecordData.differenceQuantity,
-            meterReading: receiptRecordData.meterReading,
-            deliveryNoteQuantity: receiptRecordData.deliveryNoteQuantity,
-            finalDifference: receiptRecordData.finalDifference,
-            hasDeliveryNote: receiptRecordData.hasDeliveryNote || false,
-            hasQualityCertificate: receiptRecordData.hasQualityCertificate || false,
-            hasComplianceDeclaration: receiptRecordData.hasComplianceDeclaration || false,
-            isWaterMeasured: receiptRecordData.isWaterMeasured || false,
-            hasWaterInTank: receiptRecordData.hasWaterInTank || false,
-            isVisualInspectionDone: receiptRecordData.isVisualInspectionDone || false,
-            hasAdditives: receiptRecordData.hasAdditives || false,
-            isLastUnload: receiptRecordData.isLastUnload || false,
-            isTankCheckedAfterLastUnload: receiptRecordData.isTankCheckedAfterLastUnload || false,
-            fuelFoundOnLastUnload: receiptRecordData.fuelFoundOnLastUnload || null,
-            hasWeighing: receiptRecordData.hasWeighing || false,
-            weighingData: receiptRecordData.weighingData || null
-          }
-        })
-
-        // Add to response
-        fuelEntry.receiptRecord = receiptRecord
-        logger.info(`[FUEL_ENTRY] Receipt record created for entry ${fuelEntry.registrationNumber}`)
-      } catch (receiptError: any) {
-        logger.error('[FUEL_ENTRY] Failed to create receipt record:', receiptError?.message || receiptError)
-        logger.error('[FUEL_ENTRY] Receipt error details:', JSON.stringify(receiptError, null, 2))
-        // Don't fail the entire request, just log the error
-        // The fuel entry is already created successfully
-      }
-    } else {
-      logger.info(`[FUEL_ENTRY] Skipping receipt record: hasData=${!!receiptRecordData}, canCreate=${canCreateReceiptRecord}`)
     }
 
     // Log audit

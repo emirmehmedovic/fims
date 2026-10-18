@@ -1,3 +1,4 @@
+import { documentMark } from '@/lib/fuel-entries/pdf-policy'
 import puppeteer, { Browser } from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
 import chromium from '@sparticuz/chromium-min'
@@ -410,7 +411,7 @@ ${entry.isHigherQuality ? `
         </div>
 
         <div class="signature-section">
-          <img src="${stampBase64}" alt="Pečat i potpis" />
+          ${stampBase64 ? `<img src="${stampBase64}" alt="Potpis" />` : ''}
           <div class="signature-label">Zamjenik direktora</div>
         </div>
       </div>
@@ -457,6 +458,7 @@ async function createBrowser() {
 // OPTIMIZED: Accepts optional browser instance for reuse
 export async function generatePDF(
   entry: FuelEntryData,
+  role: string,
   browserInstance?: Browser
 ): Promise<Buffer> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
@@ -466,7 +468,7 @@ export async function generatePDF(
   const [qrCodeDataUrl, headerBase64, stampBase64] = await Promise.all([
     generateQRCode(verificationUrl),
     loadImageAsBase64('hifa-header.png'),
-    loadImageAsBase64('pecat.png')
+    documentMark('compliance', role) ? loadImageAsBase64(documentMark('compliance', role)!) : Promise.resolve('')
   ])
 
   const htmlContent = generatePDFTemplate(entry, qrCodeDataUrl, headerBase64, stampBase64)
@@ -633,6 +635,7 @@ export async function mergePDFs(mainPdfBuffer: Buffer, certificatePath: string |
 // OPTIMIZED: Accepts optional browser instance for bulk operations
 export async function generateFuelEntryPDF(
   entry: FuelEntryData,
+  role: string,
   includeCertificate: boolean = true,
   browserInstance?: Browser
 ): Promise<Buffer> {
@@ -640,7 +643,7 @@ export async function generateFuelEntryPDF(
   console.log('[PDF] includeCertificate:', includeCertificate)
   console.log('[PDF] entry.certificatePath:', entry.certificatePath)
 
-  const mainPdf = await generatePDF(entry, browserInstance)
+  const mainPdf = await generatePDF(entry, role, browserInstance)
 
   if (includeCertificate && entry.certificatePath) {
     console.log('[PDF] Will merge with certificate')

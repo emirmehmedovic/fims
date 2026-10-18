@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { receiptTotals } from '@/lib/fuel-entries/measurements'
+import { calculateDeliveryNoteQuantity } from '@/lib/utils/receipt-quantity'
 import { Calculator, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react'
 import { TankMeasurement } from './TankMeasurementsForm'
 
@@ -8,10 +9,8 @@ interface Props {
   measurements: TankMeasurement[]
   announcedQuantity: string
   meterReading: string
-  deliveryNoteQuantity: string
   onAnnouncedQuantityChange: (value: string) => void
   onMeterReadingChange: (value: string) => void
-  onDeliveryNoteQuantityChange: (value: string) => void
 }
 
 // Warning thresholds for differences
@@ -22,40 +21,16 @@ export default function ReceiptCalculations({
   measurements,
   announcedQuantity,
   meterReading,
-  deliveryNoteQuantity,
   onAnnouncedQuantityChange,
-  onMeterReadingChange,
-  onDeliveryNoteQuantityChange
+  onMeterReadingChange
 }: Props) {
-  // Calculate total discharged quantity for Sonda
-  // Note: Sonda already reads at 15°C, so we use raw values directly
-  const dischargedSonda = useMemo(() => {
-    let total = 0
-    for (const m of measurements) {
-      // Sonda is already at 15°C - use raw values directly
-      const initial = parseInt(m.initialSonde) || 0
-      const final = parseInt(m.finalSonde) || 0
-      total += final - initial
-    }
-    return total
-  }, [measurements])
-
-  // Calculate total discharged quantity for Letva (using 15°C values)
-  const dischargedLetva = useMemo(() => {
-    let total = 0
-    for (const m of measurements) {
-      // Use 15°C values, fallback to raw if 15°C not available
-      const initial = parseInt(m.initialLetva15) || parseInt(m.initialLetva) || 0
-      const final = parseInt(m.finalLetva15) || parseInt(m.finalLetva) || 0
-      total += final - initial
-    }
-    return total
-  }, [measurements])
+  const { sonde: dischargedSonda, letva: dischargedLetva } = receiptTotals(measurements)
 
   // Parse input values
   const announced = parseInt(announcedQuantity) || 0
   const meter = parseInt(meterReading) || 0
-  const deliveryNote = parseInt(deliveryNoteQuantity) || 0
+  const deliveryNoteQuantity = calculateDeliveryNoteQuantity(measurements, meterReading)
+  const deliveryNote = deliveryNoteQuantity ?? 0
 
   // RAZLIKE = Najavljena - Istočena (za Letva na 15°C kao primarni pokazatelj)
   const differenceFromAnnouncedSonda = announced - dischargedSonda
@@ -104,21 +79,29 @@ export default function ReceiptCalculations({
             Najavljena količina (L)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={announcedQuantity}
-            onChange={(e) => onAnnouncedQuantityChange(e.target.value)}
+            onChange={(e) => {
+              if (/^[0-9]*$/.test(e.target.value)) onAnnouncedQuantityChange(e.target.value)
+            }}
             className="input w-full"
             placeholder="0"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1.5">
-            Brojčanik cisterne (L)
+            Prodata količina u toku istakanja (L)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={meterReading}
-            onChange={(e) => onMeterReadingChange(e.target.value)}
+            onChange={(e) => {
+              if (/^[0-9]*$/.test(e.target.value)) onMeterReadingChange(e.target.value)
+            }}
             className="input w-full"
             placeholder="0"
           />
@@ -129,10 +112,11 @@ export default function ReceiptCalculations({
           </label>
           <input
             type="number"
-            value={deliveryNoteQuantity}
-            onChange={(e) => onDeliveryNoteQuantityChange(e.target.value)}
-            className="input w-full"
-            placeholder="0"
+            value={deliveryNoteQuantity ?? ''}
+            readOnly
+            aria-label="Otpremnica (L)"
+            className="input w-full bg-slate-100 cursor-not-allowed"
+            placeholder="Unesite stanja"
           />
         </div>
       </div>
@@ -182,7 +166,7 @@ export default function ReceiptCalculations({
           {/* Meter reading */}
           {meter > 0 && (
             <div className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-indigo-100">
-              <span className="text-sm text-indigo-700">Istočeno po brojčanicima:</span>
+              <span className="text-sm text-indigo-700">Prodata količina u toku istakanja:</span>
               <span className="font-semibold text-indigo-900">{meter.toLocaleString()} L</span>
             </div>
           )}

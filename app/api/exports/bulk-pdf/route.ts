@@ -1,3 +1,4 @@
+import { fuelEntryAccessFilter } from '@/lib/fuel-entries/access'
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuth } from "@/lib/api/withAuth"
@@ -67,14 +68,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
       }
     }
 
-    // Check warehouse access for non-admin users
-    if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
-      const userWarehouses = session.user.warehouses?.map((w: { id: string }) => w.id) || []
-      if (warehouseId && !userWarehouses.includes(warehouseId)) {
-        return errorResponse('Access denied to this warehouse', 403)
-      }
-      where.warehouseId = { in: userWarehouses }
-    }
+    // Intersect requested filters with the same access rules as individual exports.
+    where.AND = [fuelEntryAccessFilter(session.user)]
 
     // Fetch fuel entries
     const fuelEntries = await prisma.fuelEntry.findMany({
@@ -163,7 +158,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
         // Generate PDFs for this batch in parallel (reusing same browser)
         const pdfPromises = batch.map(async (entry) => {
           try {
-            const pdfBuffer = await generateFuelEntryPDF(entry, includeCertificates, browser)
+            const pdfBuffer = await generateFuelEntryPDF(entry, session.user.role, includeCertificates, browser)
             return { success: true, pdfBuffer, registrationNumber: entry.registrationNumber }
           } catch (error) {
             console.error(`[BULK_EXPORT] Error generating PDF for entry ${entry.registrationNumber}:`, error)

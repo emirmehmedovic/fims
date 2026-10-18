@@ -272,6 +272,12 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
   const globalEntryMap = new Map(allEntries.map(entry => [entry.id, entry]))
 
   // OPTIMIZED: Create ONE shared browser for all PDFs (memory optimization)
+  const exportingUserId = initiatedBy || batch.createdBy
+  const exportingUser = exportingUserId
+    ? await prisma.user.findUniqueOrThrow({ where: { id: exportingUserId }, select: { role: true } })
+    : null
+  // Scheduled system reports have no user and retain their existing administrative seal.
+  const exportRole = exportingUser?.role ?? 'ADMIN'
   const browser = await createSharedBrowser()
 
   try {
@@ -290,7 +296,7 @@ export const processAutoSendBatch = async (batchId: string, initiatedBy?: string
         const attachments = []
         for (const entry of orderedEntries) {
           // Reuse browser instance
-          const pdfBuffer = await generateFuelEntryPDF(entry, item.includeCertificates, browser)
+          const pdfBuffer = await generateFuelEntryPDF(entry, exportRole, item.includeCertificates, browser)
           attachments.push({
             filename: `Izjava_${entry?.registrationNumber}.pdf`,
             content: pdfBuffer,

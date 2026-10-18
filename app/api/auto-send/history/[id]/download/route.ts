@@ -5,7 +5,7 @@ import { errorResponse } from "@/lib/api/response"
 import { generateFuelEntryPDF } from "@/lib/utils/pdf-generator"
 import { PDFDocument } from "pdf-lib"
 
-export const GET = withAuth(async (req: NextRequest, context) => {
+export const GET = withAuth(async (req: NextRequest, context, session) => {
   try {
     const { id } = await context.params
     const item = await prisma.autoSendBatchItem.findUnique({
@@ -37,7 +37,7 @@ export const GET = withAuth(async (req: NextRequest, context) => {
 
     const mergedPdf = await PDFDocument.create()
     for (const entry of orderedEntries) {
-      const pdfBuffer = await generateFuelEntryPDF(entry, item.includeCertificates)
+      const pdfBuffer = await generateFuelEntryPDF(entry, session.user.role, item.includeCertificates)
       const pdf = await PDFDocument.load(pdfBuffer)
       const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices())
       pages.forEach(page => mergedPdf.addPage(page))
