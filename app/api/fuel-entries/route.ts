@@ -1,3 +1,5 @@
+import { z, ZodError } from 'zod'
+import { CREATE_UNCONFIRMED, createFieldLabels, validateCreateFields } from '@/lib/fuel-entries/create-errors'
 import { canUseWarehouse } from '@/lib/fuel-entries/server-access'
 import { parseReceiptRecord } from '@/lib/fuel-entries/receipt-record'
 import { canWriteReceipt } from '@/lib/fuel-entries/access'
@@ -190,8 +192,15 @@ export const GET = withAuth(async (req: NextRequest, context, session) => {
 
 // POST /api/fuel-entries - Create new fuel entry
 export const POST = withAuth(async (req: NextRequest, context, session) => {
+  const fail = (message: string, status = 400) => errorResponse(message, status, { localized: true })
+  let savedEntryId: string | undefined
   try {
-    const formData = await req.formData()
+    let formData: FormData
+    try { formData = await req.formData() } catch {
+      return fail('Podaci prijave nisu ispravno poslani. Osvježite stranicu i pokušajte ponovo.')
+    }
+    const validationError = validateCreateFields(formData)
+    if (validationError) return fail(validationError)
 
     // Extract fields
     const entryDate = formData.get('entryDate') as string
@@ -208,9 +217,13 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     let additiveDetails = null
     if (additiveDetailsStr) {
       try {
-        additiveDetails = JSON.parse(additiveDetailsStr)
+        additiveDetails = z.array(z.object({
+          name: z.string().min(1),
+          addedAt: z.string().refine(value => Number.isFinite(new Date(value).getTime())),
+          quantity: z.number().nonnegative().nullable().optional(),
+        })).parse(JSON.parse(additiveDetailsStr))
       } catch {
-        return errorResponse('Invalid additiveDetails format', 400)
+        return fail('Podaci o aditiviranju nisu ispravni. Provjerite unesene aditive, količine i datume.')
       }
     }
     const countryOfOrigin = formData.get('countryOfOrigin') as string | null
@@ -236,31 +249,32 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     if (receiptRecordStr && canWriteReceipt(session.user.role)) {
       try {
         receiptRecordData = parseReceiptRecord(JSON.parse(receiptRecordStr))
-      } catch {
-        return errorResponse('Invalid receiptRecord format', 400)
+      } catch (error) {
+        if (error instanceof ZodError) {
+          const fields = [...new Set(error.issues.map(issue => {
+            const key = String(issue.path.at(-1))
+            const tankIndex = issue.path[1]
+            const label = createFieldLabels[key] || 'Podaci zapisnika'
+            return typeof tankIndex === 'number' ? `Rezervoar ${tankIndex + 1}: ${label}` : label
+          }))]
+          return fail(`Zapisnik o prijemu sadrži neispravna polja: ${fields.join(', ')}. Provjerite unesene vrijednosti; količine moraju biti cijeli nenegativni brojevi.`)
+        }
+        return fail('Zapisnik o prijemu goriva nije ispravno poslan. Provjerite podatke zapisnika.')
       }
     }
 
-    // Validation
-    if (!entryDate || !warehouseId || !productName || !quantity) {
-      return errorResponse('Missing required fields', 400)
-    }
-
     if (!await canUseWarehouse(session.user, warehouseId)) {
-      return errorResponse('Access denied to this warehouse', 403)
+      return fail('Nemate dozvolu za kreiranje prijave u odabranom skladištu. Odaberite dodijeljeno skladište ili kontaktirajte administratora.', 403)
     }
-
-    const parsedQuantity = parseInt(quantity)
-    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
-      return errorResponse('Invalid quantity', 400)
-    }
+    const parsedQuantity = Number(quantity)
 
     // Validate certificate BEFORE creating entry (if certificate is provided)
     // This prevents creating orphan entries with invalid files
-    if (certificate && certificate.size > 0) {
+    if (certificate) {
+      if (typeof certificate === 'string') return fail('Certifikat nije ispravno poslan. Ponovo odaberite datoteku.')
       const validation = await validateFile(certificate)
       if (!validation.valid) {
-        return errorResponse(validation.error || 'Invalid certificate file', 400)
+        return fail(validation.error || 'Certifikat nije ispravan. Odaberite PDF, JPEG ili PNG datoteku do 10 MB.')
       }
     }
 
@@ -291,7 +305,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
             customsDeclarationDate: customsDeclarationDate ? new Date(customsDeclarationDate) : null,
             isHigherQuality,
             improvedCharacteristics: isHigherQuality ? improvedCharacteristics.filter(Boolean) : [],
-            additiveDetails: isHigherQuality ? additiveDetails || null : [],
+            additiveDetails: isHigherQuality ? additiveDetails || [] : [],
             countryOfOrigin: countryOfOrigin || null,
             laboratoryName: laboratoryName || null,
             labAccreditationNumber: labAccreditationNumber || null,
@@ -355,6 +369,8 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
           }
         })
 
+        savedEntryId = fuelEntry.id
+
         // Success - break out of retry loop
         break
       } catch (error) {
@@ -366,7 +382,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
           if (attempt === MAX_RETRIES) {
             logger.error('[FUEL_ENTRY] Max retries reached for declaration number generation')
-            return errorResponse('Unable to generate unique declaration number. Please try again.', 500)
+            return fail('Nije moguće dodijeliti jedinstven broj izjave zbog istovremenog kreiranja prijava. Pokušajte ponovo.', 409)
           }
 
           // Small delay before retry to reduce collision chance
@@ -381,7 +397,7 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
 
     if (!fuelEntry) {
       logger.error('[FUEL_ENTRY] Failed to create entry after retries:', lastError)
-      return errorResponse('Failed to create fuel entry', 500)
+      return fail(CREATE_UNCONFIRMED, 500)
     }
 
     // Handle certificate (upload new OR use existing) AFTER entry is created
@@ -406,16 +422,16 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
           await prisma.fuelEntry.delete({
             where: { id: fuelEntry.id }
           })
+          savedEntryId = undefined
           logger.info('[FUEL_ENTRY] Entry rolled back due to upload failure')
         } catch (deleteError) {
           logger.error('[FUEL_ENTRY] Failed to rollback entry:', deleteError)
           // Entry remains in database without certificate - admin can clean up later
         }
 
-        return errorResponse(
-          'Failed to upload certificate. Please try again.',
-          500
-        )
+        return fail(savedEntryId
+          ? 'Prijava je kreirana, ali certifikat nije spremljen. Otvorite prijavu na listi i dodajte certifikat ili kontaktirajte administratora. Nemojte kreirati novu prijavu.'
+          : 'Prijava nije kreirana jer spremanje certifikata nije uspjelo. Pokušajte ponovo; ako se problem ponovi, kontaktirajte administratora.', 500)
       }
     } else if (existingCertificatePath) {
       // Use existing certificate
@@ -462,6 +478,12 @@ export const POST = withAuth(async (req: NextRequest, context, session) => {
     return successResponse(fuelEntry, 201)
   } catch (error) {
     logger.error('Error creating fuel entry:', error)
-    return errorResponse('Failed to create fuel entry', 500)
+    if (savedEntryId) return fail('Prijava je kreirana, ali završno spremanje nije u potpunosti uspjelo. Provjerite prijavu i certifikat na listi ili kontaktirajte administratora. Nemojte kreirati novu prijavu.', 500)
+    if (isPrismaError(error)) {
+      if (error.code === 'P2003' || error.code === 'P2025') return fail('Odabrano skladište, klijent, laboratorija, poslovnica, dobavljač ili prijevoznik više nije dostupan. Osvježite listu i ponovo odaberite podatke.', 409)
+      if (error.code === 'P2002') return fail('Prijava s istim jedinstvenim brojem već postoji. Provjerite listu prijava prije ponovnog slanja.', 409)
+      if (['P1001', 'P1002', 'P2024'].includes(error.code)) return fail('Veza s bazom podataka trenutno nije dostupna. Sačekajte kratko i pokušajte ponovo.', 503)
+    }
+    return fail(CREATE_UNCONFIRMED, 500)
   }
 }, ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'PUMPA'])

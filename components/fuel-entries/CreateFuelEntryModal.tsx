@@ -1,4 +1,5 @@
 'use client'
+import { CREATE_UNCONFIRMED, createResponseError, validateCreateFields } from '@/lib/fuel-entries/create-errors'
 
 import { receiptQuantities } from '@/lib/fuel-entries/receipt-calculations'
 
@@ -634,39 +635,31 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       return
     }
 
-    // Validate basic required fields
-    if (!warehouseId || !productName || !quantity) {
-      const missing = []
-      if (!warehouseId) missing.push('skladište')
-      if (!productName) missing.push('proizvod')
-      if (!quantity) missing.push('količina')
-      toast.error(`Molimo popunite sva obavezna polja (${missing.join(', ')})`)
-      return
-    }
-
-    // Validate quantity
-    const numQuantity = parseInt(quantity)
-    if (numQuantity > 50000) {
-      toast.error('Količina ne može biti veća od 50,000 litara')
+    const basicFields = new FormData()
+    Object.entries({ entryDate, warehouseId, productName, quantity, deliveryNoteDate, customsDeclarationDate, testReportDate })
+      .forEach(([key, value]) => basicFields.set(key, value))
+    const fieldError = validateCreateFields(basicFields)
+    if (fieldError) {
+      toast.error(fieldError, { duration: 8000 })
       return
     }
 
     // Validate mandatory fields
     const missingFields: string[] = []
 
-    if (!deliveryNoteNumber) {
+    if (!deliveryNoteNumber.trim()) {
       missingFields.push('Broj otpremnice')
     }
     if (!deliveryNoteDate) {
       missingFields.push('Datum otpremnice')
     }
-    if (!countryOfOrigin) {
+    if (!countryOfOrigin.trim()) {
       missingFields.push('Zemlja porijekla')
     }
     if (!laboratoryId) {
       missingFields.push('Laboratorija')
     }
-    if (!testReportNumber) {
+    if (!testReportNumber.trim()) {
       missingFields.push('Broj izvještaja laboratorije')
     }
     if (!testReportDate) {
@@ -679,7 +672,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
       missingFields.push('Certifikat / Izvještaj')
     }
     // Vehicle registration is mandatory only for PUMPA users
-    if (isPumpa && !vehicleRegistration) {
+    if (isPumpa && !vehicleRegistration.trim()) {
       missingFields.push('Registarska oznaka vozila')
     }
     // Station is mandatory for PUMPA users
@@ -788,16 +781,16 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         body: formData
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
 
-      if (data.success) {
+      if (res.ok && data?.success) {
         toast.success(`Prijava uspješno kreirana! Broj izjave: ${data.data.declarationNumber}`)
         onSuccess()
       } else {
-        toast.error(data.error || 'Greška pri kreiranju prijave')
+        toast.error(createResponseError(res.status, data), { duration: 10000 })
       }
     } catch (error) {
-      toast.error('Greška pri kreiranju prijave')
+      toast.error(`Veza sa serverom je prekinuta. ${CREATE_UNCONFIRMED}`, { duration: 10000 })
     } finally {
       setLoading(false)
     }
@@ -832,7 +825,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
+        <form noValidate onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
           {/* Import from last entry button with fuel type dropdown */}
           <div className="mb-6 relative product-menu-container">
             <div className="inline-flex">

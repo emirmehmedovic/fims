@@ -17,7 +17,7 @@ async function validateFileMagicNumber(file: File): Promise<{ valid: boolean; er
 
     // Check if file has content
     if (bytes.length === 0) {
-      return { valid: false, error: 'File is empty' }
+      return { valid: false, error: 'Datoteka certifikata je prazna. Odaberite drugu datoteku.' }
     }
 
     // PDF: Starts with %PDF (0x25 0x50 0x44 0x46)
@@ -46,26 +46,31 @@ async function validateFileMagicNumber(file: File): Promise<{ valid: boolean; er
 
     return {
       valid: false,
-      error: 'Invalid file content. File does not match allowed formats (PDF, JPEG, PNG).'
+      error: 'Sadržaj certifikata nije u PDF, JPEG ili PNG formatu. Odaberite ispravnu datoteku.'
     }
   } catch (error) {
     console.error('[FILE_UPLOAD] Error validating file magic number:', error)
-    return { valid: false, error: 'Error reading file content' }
+    return { valid: false, error: 'Nije moguće pročitati certifikat. Odaberite datoteku ponovo.' }
   }
 }
 
 export async function validateFile(file: File): Promise<{ valid: boolean; error?: string }> {
   if (!file) {
-    return { valid: false, error: 'No file provided' }
+    return { valid: false, error: 'Nije odabran certifikat. Odaberite datoteku.' }
+  }
+
+  if (file.size === 0) return { valid: false, error: 'Datoteka certifikata je prazna. Odaberite drugu datoteku.' }
+  if (!['.pdf', '.jpg', '.jpeg', '.png'].includes(path.extname(file.name).toLowerCase())) {
+    return { valid: false, error: 'Naziv certifikata mora završavati sa .pdf, .jpg, .jpeg ili .png.' }
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: 'File size exceeds 10MB limit' }
+    return { valid: false, error: 'Certifikat je prevelik. Najveća dozvoljena veličina je 10 MB.' }
   }
 
   // Check MIME type (first line of defense)
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return { valid: false, error: 'Invalid file type. Only PDF, JPEG, and PNG are allowed' }
+    return { valid: false, error: 'Format certifikata nije dozvoljen. Odaberite PDF, JPEG ili PNG datoteku.' }
   }
 
   // SECURITY: Validate file content by magic numbers (prevents MIME type spoofing)

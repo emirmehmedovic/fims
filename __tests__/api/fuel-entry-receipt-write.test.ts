@@ -24,7 +24,7 @@ function request(receipt: unknown) {
   return new NextRequest('http://localhost/api/fuel-entries', { method: 'POST', body })
 }
 
-beforeEach(() => { jest.clearAllMocks(); mockRole = 'ADMIN' })
+beforeEach(() => { jest.resetAllMocks(); mockRole = 'ADMIN' })
 
 it('creates entry and receipt with a single nested write', async () => {
   jest.mocked(prisma.fuelEntry.create).mockResolvedValue({ id: 'entry', registrationNumber: 125, warehouse: { code: 'TEST' } } as never)
@@ -56,4 +56,35 @@ it('rejects creation in an unassigned warehouse for an operator', async () => {
   const response = await POST(new NextRequest(req.url, { method: 'POST', body }), { params: Promise.resolve({}) })
   expect(response.status).toBe(403)
   expect(prisma.fuelEntry.create).not.toHaveBeenCalled()
+})
+
+it('identifies missing fields without writing an entry', async () => {
+  const response = await POST(new NextRequest('http://localhost/api/fuel-entries', { method: 'POST', body: new FormData() }), { params: Promise.resolve({}) })
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({ error: expect.stringContaining('Datum ulaza, Skladište, Naziv proizvoda, Količina (litara)'), details: { localized: true } })
+  expect(prisma.fuelEntry.create).not.toHaveBeenCalled()
+})
+
+it('identifies the invalid receipt measurement', async () => {
+  const response = await POST(request({ tankMeasurements: [{ initialSonde: '-5' }] }), { params: Promise.resolve({}) })
+  expect(response.status).toBe(400)
+  expect((await response.json()).error).toContain('Rezervoar 1: Početno stanje sonde')
+  expect(prisma.fuelEntry.create).not.toHaveBeenCalled()
+})
+
+it('does not expose unexpected database errors', async () => {
+  jest.mocked(prisma.fuelEntry.create).mockRejectedValue(new Error('secret database details'))
+  const response = await POST(request({}), { params: Promise.resolve({}) })
+  const body = await response.json()
+  expect(body.error).toContain('Prije ponovnog slanja provjerite listu prijava')
+  expect(body.error).not.toContain('secret')
+})
+
+
+it('warns against duplicate creation when audit fails after saving', async () => {
+  jest.mocked(prisma.fuelEntry.create).mockResolvedValue({ id: 'entry', registrationNumber: 125, warehouse: { code: 'TEST' } } as never)
+  jest.mocked(prisma.auditLog.create).mockRejectedValue(new Error('Audit unavailable'))
+  const response = await POST(request({}), { params: Promise.resolve({}) })
+  expect(response.status).toBe(500)
+  expect((await response.json()).error).toContain('Nemojte kreirati novu prijavu')
 })

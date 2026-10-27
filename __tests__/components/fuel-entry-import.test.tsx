@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
@@ -23,4 +24,14 @@ it.each(['PUMPA', 'OPERATOR', 'ADMIN', 'SUPER_ADMIN'])('shows the appropriate im
   } else {
     expect(screen.getByTitle('Uvezi po tipu goriva')).toBeInTheDocument()
   }
+})
+
+
+it('shows named missing fields in Bosnian before submitting an empty form', async () => {
+  jest.mocked(useSession).mockReturnValue({ data: { user: { id: 'test', role: 'ADMIN', warehouses: [], stations: [] }, expires: '' }, status: 'authenticated', update: jest.fn() } as ReturnType<typeof useSession>)
+  const { container } = render(<CreateFuelEntryModal warehouses={[]} stations={[]} onClose={jest.fn()} onSuccess={jest.fn()} />)
+  await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+  fireEvent.submit(container.querySelector('form')!)
+  expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Skladište, Naziv proizvoda, Količina (litara)'), expect.any(Object))
+  expect(global.fetch).not.toHaveBeenCalledWith('/api/fuel-entries', expect.objectContaining({ method: 'POST' }))
 })
