@@ -35,3 +35,22 @@ it('shows named missing fields in Bosnian before submitting an empty form', asyn
   expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Skladište, Naziv proizvoda, Količina (litara)'), expect.any(Object))
   expect(global.fetch).not.toHaveBeenCalledWith('/api/fuel-entries', expect.objectContaining({ method: 'POST' }))
 })
+
+it('selects the first assigned PUMPA station when session arrives and preserves a manual choice', async () => {
+  const assigned = [{ id: 'first', name: 'Pumpa Prva', code: 'P1', address: null }, { id: 'second', name: 'Pumpa Druga', code: 'P2', address: null }]
+  const setSession = (stations: typeof assigned) => jest.mocked(useSession).mockReturnValue({ data: { user: { id: 'test', role: 'PUMPA', warehouses: [], stations }, expires: '' }, status: 'authenticated', update: jest.fn() } as ReturnType<typeof useSession>)
+  setSession([])
+  const props = { warehouses: [], stations: [], onClose: jest.fn(), onSuccess: jest.fn() }
+  const { rerender } = render(<CreateFuelEntryModal {...props} />)
+  await waitFor(() => expect(global.fetch).toHaveBeenCalled())
+  expect(screen.getByRole('button', { name: /Odaberite poslovnicu/ })).toBeInTheDocument()
+  setSession(assigned)
+  rerender(<CreateFuelEntryModal {...props} />)
+  const selected = await screen.findByRole('button', { name: /Pumpa Prva/ })
+  fireEvent.click(selected)
+  fireEvent.click(screen.getByRole('button', { name: /Pumpa Druga/ }))
+  // Refreshing/reordering session assignments must not overwrite the user's choice.
+  setSession([{ id: 'third', name: 'Pumpa Treća', code: 'P3', address: null }, ...assigned])
+  rerender(<CreateFuelEntryModal {...props} />)
+  expect(screen.getByRole('button', { name: /Pumpa Druga/ })).toBeInTheDocument()
+})

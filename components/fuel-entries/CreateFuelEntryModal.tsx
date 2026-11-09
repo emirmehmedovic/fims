@@ -224,12 +224,18 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
     }
   })
 
-  // Reset stationId when client changes and it's not HIFA-PETROL (code 650)
+  // Session data may arrive after the modal mounts. Keep any manual/imported selection.
+  const defaultStationId = isPumpa ? session?.user?.stations?.[0]?.id : undefined
   useEffect(() => {
-    if (selectedClient && selectedClient.code !== '650') {
+    if (defaultStationId) setStationId(current => current || defaultStationId)
+  }, [defaultStationId])
+
+  // PUMPA always uses a station, regardless of the selected client.
+  useEffect(() => {
+    if (!isPumpa && selectedClient && selectedClient.code !== '650') {
       setStationId('')
     }
-  }, [selectedClient])
+  }, [selectedClient, isPumpa])
 
   // Close product menu when clicking outside
   useEffect(() => {
