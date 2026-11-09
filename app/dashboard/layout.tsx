@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import Link from 'next/link'
+import { FuelEntryGuideProvider } from '@/components/onboarding/FuelEntryGuide'
 import {
   LayoutDashboard,
   FileText,
@@ -174,7 +175,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <FuelEntryGuideProvider><DashboardLayoutContent>{children}</DashboardLayoutContent></FuelEntryGuideProvider>
     </SessionProvider>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { useFuelEntryGuide } from '@/components/onboarding/FuelEntryGuide'
+import ViewFuelEntryModal from '@/components/fuel-entries/ViewFuelEntryModal'
 import FuelEntryTable from '@/components/fuel-entries/FuelEntryTable'
 import CreateFuelEntryModal from '@/components/fuel-entries/CreateFuelEntryModal'
 import SearchableSelect from '@/components/ui/SearchableSelect'
@@ -68,6 +70,7 @@ interface Station {
 
 export default function FuelEntriesPage() {
   const { data: session } = useSession()
+  const guide = useFuelEntryGuide()
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [stations, setStations] = useState<Station[]>([])
@@ -1014,8 +1017,15 @@ export default function FuelEntriesPage() {
         )}
       </div>
 
+      {guide.active && guide.target !== 'print' && (
+        <CreateFuelEntryModal key="guide-preview" guidePreview warehouses={warehouses} stations={stations} onClose={guide.dismiss} onSuccess={() => {}} />
+      )}
+      {guide.active && guide.target === 'print' && entries[0] && (
+        <ViewFuelEntryModal guidePreview entry={entries[0]} onClose={guide.dismiss} />
+      )}
+
       {/* Create Modal */}
-      {showCreateModal && (
+      {showCreateModal && !guide.active && (
         <CreateFuelEntryModal
           warehouses={warehouses}
           stations={stations}

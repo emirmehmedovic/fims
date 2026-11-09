@@ -38,6 +38,7 @@ model User {
   fuelEntriesCreated FuelEntry[]     @relation("CreatedBy")
   fuelEntriesUpdated FuelEntry[]     @relation("UpdatedBy")
   auditLogs          AuditLog[]
+  guideCompletions   UserGuideCompletion[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -513,4 +514,15 @@ model FuelReceiptRecord {
   fuelEntry FuelEntry @relation(fields: [fuelEntryId], references: [id], onDelete: Cascade)
 
   @@map("fuel_receipt_records")
+}
+
+// Completion is scoped to the signed-in user and the version/role of the guide.
+model UserGuideCompletion {
+  userId      String   @map("user_id")
+  guideKey    String   @map("guide_key")
+  completedAt DateTime @default(now()) @map("completed_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, guideKey])
+  @@map("user_guide_completions")
 }

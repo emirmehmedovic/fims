@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { FuelEntryGuideLauncher } from '@/components/onboarding/FuelEntryGuide'
 import { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
@@ -58,6 +59,8 @@ export default function UputstvoOperativnoPage() {
             </div>
           </div>
         </div>
+
+        <FuelEntryGuideLauncher />
 
         {/* Video Tutorial */}
         <div className="bg-white rounded-3xl p-8 shadow-[var(--shadow-soft)] relative overflow-hidden">

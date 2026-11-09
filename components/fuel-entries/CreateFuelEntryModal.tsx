@@ -92,13 +92,14 @@ interface LookupItem {
 }
 
 interface Props {
+  guidePreview?: boolean
   warehouses: Warehouse[]
   stations: Station[]
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function CreateFuelEntryModal({ warehouses, stations, onClose, onSuccess }: Props) {
+export default function CreateFuelEntryModal({ warehouses, stations, onClose, onSuccess, guidePreview = false }: Props) {
   const { data: session } = useSession()
   const userRole = session?.user?.role
   const isPumpa = userRole === 'PUMPA'
@@ -252,6 +253,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   }, [showProductMenu])
 
   useEffect(() => {
+    if (guidePreview) return
     fetchSuppliers()
     fetchTransporters()
     fetchLaboratories()
@@ -276,7 +278,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         }
       }
     }
-  }, [warehouses, isPumpa])
+  }, [warehouses, isPumpa, guidePreview])
 
   // Validate date - allow up to 30 days in the future
   const validateDate = (dateValue: string): string => {
@@ -634,6 +636,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (guidePreview) return
 
     // Check for date validation errors
     if (entryDateError || deliveryNoteDateError || customsDeclarationDateError || testReportDateError) {
@@ -803,14 +806,14 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className={`${guidePreview ? 'guide-preview ' : ''}fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto`}>
       <div className="bg-white rounded-3xl shadow-[var(--shadow-soft-xl)] max-w-4xl w-full my-8 relative overflow-hidden">
         {/* Decorative background */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-30 -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-40 -ml-32 -mb-32"></div>
 
         {/* Header */}
-        <div className="relative z-10 px-8 py-6 border-b border-dark-100">
+        <div data-guide-header className="relative z-10 px-8 py-6 border-b border-dark-100">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-[var(--shadow-soft-lg)]">
@@ -833,7 +836,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
         {/* Form */}
         <form noValidate onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="relative z-10 px-8 py-6 max-h-[65vh] overflow-y-auto pb-64">
           {/* Import from last entry button with fuel type dropdown */}
-          <div className="mb-6 relative product-menu-container">
+          <div data-guide="import" className="mb-6 relative product-menu-container">
             <div className="inline-flex">
               {/* Main import button */}
               <button
@@ -1304,7 +1307,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
           {/* Station Information - Shown for HIFA-PETROL client (code: 650) or always for PUMPA users */}
           {(isPumpa || selectedClient?.code === '650') && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 shadow-sm">
+            <div data-guide="station" className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 shadow-sm">
               <FormSection title="Poslovnica (benzinska pumpa)" icon={Fuel}>
                 <FormField label="Odaberite poslovnicu" icon={Fuel} required={isPumpa}>
                 <SearchableSelect
@@ -1420,10 +1423,10 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
 
           {/* Certificate Upload */}
           <FormSection title="Certifikat / Izvještaj" icon={Upload} required>
-            <CertificateSelector
+            {guidePreview ? <p className="text-sm text-dark-500">Certifikat se odabire pri stvarnom unosu prijave.</p> : <CertificateSelector
               value={certificateSelection}
               onChange={setCertificateSelection}
-            />
+            />}
           </FormSection>
 
           {/* Zapisnik o prijemu goriva - Always for PUMPA, optional for ADMIN */}
@@ -1448,7 +1451,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                 <FormSection title="Zapisnik o prijemu goriva" icon={ClipboardList}>
                   <div className="space-y-6">
                     {/* Tank Measurements */}
-                    <div>
+                    <div data-guide="measurements">
                       <h4 className="text-sm font-bold text-slate-700 mb-3">Mjerenja rezervoara</h4>
                       <TankMeasurementsForm
                         measurements={tankMeasurements}
@@ -1460,7 +1463,7 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                     </div>
 
                     {/* Calculations */}
-                    <div>
+                    <div data-guide="quantities">
                       <h4 className="text-sm font-bold text-slate-700 mb-3">Količine i izračuni</h4>
                       <ReceiptCalculations
                         measurements={tankMeasurements}
@@ -1472,10 +1475,10 @@ export default function CreateFuelEntryModal({ warehouses, stations, onClose, on
                     </div>
 
                     {/* Documentation Checklist */}
-                    <DocumentationChecklist
+                    <div data-guide="checklist"><DocumentationChecklist
                       values={documentation}
                       onChange={setDocumentation}
-                    />
+                    /></div>
                   </div>
                 </FormSection>
               )}

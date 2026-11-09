@@ -121,11 +121,12 @@ interface FuelEntryDetail {
 }
 
 interface Props {
+  guidePreview?: boolean
   entry: { id: string }
   onClose: () => void
 }
 
-export default function ViewFuelEntryModal({ entry, onClose }: Props) {
+export default function ViewFuelEntryModal({ entry, onClose, guidePreview = false }: Props) {
   const [details, setDetails] = useState<FuelEntryDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exportingPdf, setExportingPdf] = useState(false)
@@ -416,7 +417,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
 
   if (loading || !details) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className={`${guidePreview ? 'guide-preview ' : ''}fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50`}>
         <div className="bg-white rounded-3xl p-8 max-w-4xl w-full shadow-[var(--shadow-soft-xl)]">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -430,7 +431,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className={`${guidePreview ? 'guide-preview ' : ''}fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto`}>
       <div className="bg-white rounded-3xl shadow-[var(--shadow-soft-xl)] max-w-4xl w-full my-8 relative overflow-hidden">
         {/* Decorative background */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-30 -mr-48 -mt-48"></div>
@@ -823,6 +824,7 @@ export default function ViewFuelEntryModal({ entry, onClose }: Props) {
                   )}
                 </button>
                 <button
+                  data-guide="print"
                   onClick={handlePrintPdf}
                   disabled={printingPdf}
                   className="group px-3 py-3 bg-gradient-to-br from-emerald-800 to-emerald-900 text-white font-semibold rounded-r-2xl hover:from-emerald-600 hover:to-emerald-700 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 border-l-2 border-emerald-400/50 transition-all duration-200"

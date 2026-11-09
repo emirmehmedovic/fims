@@ -195,3 +195,19 @@
     @apply border-b border-dark-100 hover:bg-dark-50 transition-colors;
   }
 }
+
+/* Leave room beside the real form for the guided walkthrough. */
+@media (min-width: 1024px) {
+  .guide-preview { padding-right: 400px; }
+}
+@media (max-width: 1023px) {
+  .guide-preview { align-items: flex-start; padding-bottom: 360px; }
+  .guide-preview > div { margin-top: 0; }
+  .guide-preview [data-guide-header] { display: none; }
+  .guide-preview form { max-height: 44dvh; padding: 16px; }
+  .guide-step-card { max-height: 50dvh; display: flex; flex-direction: column; }
+  .guide-step-body { overflow-y: auto; }
+  .guide-step-body h2 { font-size: 1.125rem; }
+  .guide-step-body p { font-size: .875rem; }
+  .guide-step-body > div:first-child { margin-bottom: 8px; }
+}
