@@ -77,10 +77,13 @@ try {
   if (!['postgres:', 'postgresql:'].includes(pg.protocol)) throw new Error('Očekuje se PostgreSQL DATABASE_URL')
   // Prisma-only options are not understood by libpq/pg_dump.
   for (const key of ['schema', 'connection_limit', 'pool_timeout', 'pgbouncer', 'statement_cache_size', 'socket_timeout']) pg.searchParams.delete(key)
+  const password = decodeURIComponent(pg.password)
+  pg.password = ''
+  if (!pg.username || !pg.hostname || !pg.pathname.slice(1)) throw new Error('Nepotpuni podaci konekcije')
   const upload = path.resolve(process.env.UPLOAD_DIR || './public/uploads/certificates')
   if (!fs.existsSync(upload)) throw new Error('UPLOAD_DIR ne postoji; provjerite putanju certifikata')
   const quote = value => "'" + value.replace(/'/g, "'\\''") + "'"
-  fs.writeFileSync(process.argv[2], Object.entries({ DATABASE_URL: database, PGDATABASE: pg.toString(), DEPLOY_UPLOAD_DIR: upload })
+  fs.writeFileSync(process.argv[2], Object.entries({ DATABASE_URL: database, DEPLOY_DATABASE_URL: pg.toString(), ...(password ? { PGPASSWORD: password } : {}), DEPLOY_UPLOAD_DIR: upload })
     .map(([key, value]) => `export ${key}=${quote(value)}`).join('\n') + '\n', { mode: 0o600 })
 } catch (error) {
   console.error('Provjera produkcijskog okruženja nije uspjela. Provjerite DATABASE_URL i UPLOAD_DIR; detalji konekcije nisu ispisani.')
@@ -110,7 +113,7 @@ NODE
 
   stage='backup produkcijske baze'
   echo 'Backup baze...'
-  pg_dump --no-password --format=custom --file="$backup_dir/database.dump"
+  pg_dump --dbname="$DEPLOY_DATABASE_URL" --no-password --format=custom --file="$backup_dir/database.dump"
   test -s "$backup_dir/database.dump"
   pg_restore --list "$backup_dir/database.dump" > "$backup_dir/database-contents.txt"
   test -s "$backup_dir/database-contents.txt"
@@ -131,7 +134,7 @@ NODE
   stage='produkcijski build'
   npm run build
 
-  unset PGDATABASE DEPLOY_UPLOAD_DIR
+  unset DEPLOY_DATABASE_URL PGPASSWORD DEPLOY_UPLOAD_DIR
   stage='pokretanje aplikacije'
   pm2 restart "$PM2_APP" --update-env
   stage='provjera HTTP odgovora'
